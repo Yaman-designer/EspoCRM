@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(node -e \"require\\('c:/Users/Win10/Documents/myespocrm/ebla-crm-dashboard/node_modules/zustand/middleware'\\)\")"
+    ]
+  }
+}

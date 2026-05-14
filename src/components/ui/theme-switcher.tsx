@@ -9,7 +9,14 @@ export function ThemeSwitcher({ className }: { className?: string }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => setMounted(true), [])
-  if (!mounted) return null
+  if (!mounted) {
+    return (
+      <div
+        className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-muted"
+        aria-hidden
+      />
+    )
+  }
 
   const isDark = theme === 'dark'
 
@@ -19,7 +26,7 @@ export function ThemeSwitcher({ className }: { className?: string }) {
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       className={[
         'flex h-9 w-9 items-center justify-center rounded-xl border border-border',
-        'bg-background text-muted-foreground transition-all duration-[250ms]',
+        'bg-background text-muted-foreground transition-all duration-250',
         'hover:bg-muted hover:text-foreground hover:border-border/70',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
         className,

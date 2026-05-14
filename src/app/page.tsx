@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
-// الـ middleware يعيد التوجيه للصفحات المناسبة
-// هذه الصفحة تُعيد التوجيه للوحة التحكم كاحتياط
+// The middleware handles routing to appropriate pages
+// This page redirects to the dashboard as a fallback
 export default function Home() {
   redirect('/dashboard')
 }

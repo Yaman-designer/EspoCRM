@@ -11,13 +11,13 @@ import {
 } from 'recharts'
 
 const data = [
-  { month: 'يناير', revenue: 82000, target: 75000 },
-  { month: 'فبراير', revenue: 95000, target: 80000 },
-  { month: 'مارس', revenue: 88000, target: 85000 },
-  { month: 'أبريل', revenue: 112000, target: 90000 },
-  { month: 'مايو', revenue: 128000, target: 100000 },
-  { month: 'يونيو', revenue: 119000, target: 110000 },
-  { month: 'يوليو', revenue: 142500, target: 120000 },
+  { month: 'Jan', revenue: 82000, target: 75000 },
+  { month: 'Feb', revenue: 95000, target: 80000 },
+  { month: 'Mar', revenue: 88000, target: 85000 },
+  { month: 'Apr', revenue: 112000, target: 90000 },
+  { month: 'May', revenue: 128000, target: 100000 },
+  { month: 'Jun', revenue: 119000, target: 110000 },
+  { month: 'Jul', revenue: 142500, target: 120000 },
 ]
 
 function formatValue(value: number) {
@@ -40,7 +40,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         <div key={entry.name} className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full" style={{ background: entry.color }} />
           <span className="text-muted-foreground">
-            {entry.name === 'revenue' ? 'الإيرادات' : 'الهدف'}:{' '}
+            {entry.name === 'revenue' ? 'Revenue' : 'Target'}:{' '}
             <span className="font-medium text-foreground">{formatValue(entry.value)}</span>
           </span>
         </div>

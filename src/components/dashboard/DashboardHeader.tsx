@@ -25,7 +25,7 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="search"
-            placeholder="بحث سريع..."
+            placeholder="Quick search..."
             className="h-9 w-56 rounded-xl border border-border bg-muted/50 ps-9 pe-4 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-ring focus:ring-4 focus:ring-ring/12 transition-all duration-250"
           />
         </div>

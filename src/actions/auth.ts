@@ -18,12 +18,12 @@ export async function loginAction(
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
-          return { error: 'اسم المستخدم أو كلمة المرور غير صحيحة' }
+          return { error: 'Invalid username or password' }
         default:
-          return { error: 'حدث خطأ غير متوقع، يرجى المحاولة مجدداً' }
+          return { error: 'An unexpected error occurred, please try again' }
       }
     }
-    // إعادة رمي خطأ الـ redirect — Next.js يتعامل معه تلقائياً
+    // Rethrow redirect error - Next.js handles it automatically
     throw error
   }
 }

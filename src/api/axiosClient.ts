@@ -6,7 +6,7 @@ const axiosClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// يضيف توكن EspoCRM تلقائياً لكل طلب (يُعبأ بواسطة AuthProvider)
+// Automatically adds EspoCRM token to each request (populated by AuthProvider)
 axiosClient.interceptors.request.use((config) => {
   const token = Cookies.get('espo-token')
   if (token) {
@@ -15,7 +15,7 @@ axiosClient.interceptors.request.use((config) => {
   return config
 })
 
-// معالجة أخطاء 401 — تسجيل خروج تلقائي
+// Handle 401 errors - auto logout
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {

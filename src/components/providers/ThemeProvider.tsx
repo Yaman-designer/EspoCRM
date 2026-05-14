@@ -9,7 +9,8 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       attribute="class"
       defaultTheme="light"
       enableSystem={false}
-      disableTransitionOnChange={false}
+      disableTransitionOnChange
+      storageKey="ebla-crm-theme"
       {...props}
     >
       {children}

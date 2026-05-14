@@ -45,7 +45,7 @@ export function LoginForm() {
       const result = await loginAction(data)
       if (result?.error) {
         toast.error(result.error, {
-          description: 'يرجى التحقق من بياناتك والمحاولة مجدداً',
+          description: 'Please check your credentials and try again',
         })
         form.setFocus('username')
         form.setValue('password', '')
@@ -64,7 +64,7 @@ export function LoginForm() {
             Ebla CRM
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
-            أدخل بيانات تسجيل الدخول للوصول إلى لوحة التحكم
+            Enter your login credentials to access the dashboard
           </CardDescription>
         </div>
       </CardHeader>
@@ -76,13 +76,13 @@ export function LoginForm() {
             className="space-y-5"
             noValidate
           >
-            {/* اسم المستخدم */}
+            {/* Username */}
             <FormField
               control={form.control}
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>اسم المستخدم</FormLabel>
+                  <FormLabel>Username</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="admin"
@@ -98,13 +98,13 @@ export function LoginForm() {
               )}
             />
 
-            {/* كلمة المرور */}
+            {/* Password */}
             <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>كلمة المرور</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -120,7 +120,7 @@ export function LoginForm() {
                         onClick={() => setShowPassword((v) => !v)}
                         disabled={isPending}
                         className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus:outline-none"
-                        aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -135,7 +135,7 @@ export function LoginForm() {
               )}
             />
 
-            {/* تذكرني */}
+            {/* Remember me */}
             <FormField
               control={form.control}
               name="rememberMe"
@@ -153,13 +153,13 @@ export function LoginForm() {
                     htmlFor="rememberMe"
                     className="cursor-pointer text-sm font-normal"
                   >
-                    تذكرني لمدة 7 أيام
+                    Remember me for 7 days
                   </FormLabel>
                 </FormItem>
               )}
             />
 
-            {/* زر تسجيل الدخول */}
+            {/* Login button */}
             <Button
               type="submit"
               className="h-11 w-full text-base font-semibold"
@@ -168,10 +168,10 @@ export function LoginForm() {
               {isPending ? (
                 <>
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                  جارٍ تسجيل الدخول...
+                  Signing in...
                 </>
               ) : (
-                'تسجيل الدخول'
+                'Sign in'
               )}
             </Button>
           </form>

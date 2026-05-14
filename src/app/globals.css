@@ -146,3 +146,53 @@
   .shadow-design-lg  { box-shadow: var(--shadow-lg); }
   .shadow-design-xl  { box-shadow: var(--shadow-xl); }
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   Sidebar & dashboard layout — CSS-first (no JS flash)
+   --sidebar-w is set by JS via document.documentElement.style
+   but falls back to 260px so layout is correct before JS runs.
+───────────────────────────────────────────────────────────────── */
+
+/* Sidebar: hidden on mobile by default */
+.app-sidebar {
+  width: var(--sidebar-w, 260px);
+  transform: translateX(-110%);
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.18s ease;
+}
+
+/* Sidebar: visible when toggled on mobile */
+.app-sidebar.sidebar-mobile-open {
+  transform: translateX(0);
+}
+
+/* Sidebar: always visible on desktop, only width animates */
+@media (min-width: 768px) {
+  .app-sidebar {
+    transform: none !important;
+    transition: width 0.18s ease;
+  }
+}
+
+/* Disable all transitions during drag */
+.app-sidebar[data-dragging] {
+  transition: none !important;
+}
+
+/* Main content: no margin on mobile (sidebar is overlay) */
+.dashboard-main {
+  transition: margin-left 0.2s ease;
+}
+
+/* Main content: offset by sidebar width on desktop */
+@media (min-width: 768px) {
+  .dashboard-main {
+    margin-left: var(--sidebar-w, 260px);
+  }
+}
+
+/* Disable margin transition during drag */
+.dashboard-main[data-dragging] {
+  transition: none !important;
+}
