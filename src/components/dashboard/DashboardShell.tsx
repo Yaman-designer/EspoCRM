@@ -3,7 +3,7 @@
 import { useLayoutEffect, useEffect } from 'react'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { AppSidebar } from '@/components/dashboard/AppSidebar'
-import { TopNavbar } from '@/components/dashboard/TopNavbar'
+import { TopNavbar } from '@/components/dashboard/navbar'
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { width, mobileOpen, setMobileOpen, dragging } = useSidebarStore()

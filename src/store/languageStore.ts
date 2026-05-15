@@ -18,7 +18,7 @@ export const useLanguageStore = create<LanguageStore>()(
   )
 )
 
-export const languageLabels: Record<Language, { label: string; flag: string }> = {
-  en: { label: 'English', flag: '🇬🇧' },
-  el: { label: 'Greek', flag: '🇬🇷' },
+export const languageLabels: Record<Language, { label: string; code: string }> = {
+  en: { label: 'English', code: 'GB' },
+  el: { label: 'Ελληνικά', code: 'GR' },
 }

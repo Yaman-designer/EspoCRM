@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc *)",
-      "Bash(node -e \"require\\('c:/Users/Win10/Documents/myespocrm/ebla-crm-dashboard/node_modules/zustand/middleware'\\)\")"
+      "Bash(node -e \"require\\('c:/Users/Win10/Documents/myespocrm/ebla-crm-dashboard/node_modules/zustand/middleware'\\)\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\src\" -Recurse -Force)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(node -e \"console.log\\(require\\('recharts/package.json'\\).version\\)\")",
+      "Bash(node -e \"const t = require\\('recharts'\\); console.log\\(Object.keys\\(t\\).filter\\(k => k.includes\\('Tooltip'\\)\\)\\)\")"
     ]
   }
 }

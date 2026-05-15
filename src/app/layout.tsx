@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Poppins, Geist_Mono } from "next/font/google"
-import Script from "next/script"
+import { cookies } from "next/headers"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/providers/AuthProvider"
@@ -24,22 +24,24 @@ export const metadata: Metadata = {
   description: "Customer Relationship Management System",
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies()
+  const savedTheme = cookieStore.get("ebla-crm-theme")?.value
+
+  /*
+   * Bake the theme class into the server-rendered HTML so the browser
+   * receives the correct class on the very first byte — zero flash.
+   */
+  const themeClass = savedTheme === "dark" ? "dark" : ""
+
   return (
     <html
       lang="en"
       dir="ltr"
       suppressHydrationWarning
-      className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${poppins.variable} ${geistMono.variable} h-full antialiased ${themeClass}`.trim()}
     >
       <body className="min-h-full flex flex-col">
-        <Script
-          id="ebla-theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `!function(){try{var e=localStorage.getItem('ebla-crm-theme')||'light';document.documentElement.classList.toggle('dark','dark'===e)}catch(t){}}()`,
-          }}
-        />
         <ThemeProvider>
           <AuthProvider>
             <TooltipProvider>
