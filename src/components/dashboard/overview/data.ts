@@ -10,7 +10,7 @@ export interface Stat {
 
 export const stats: Stat[] = [
   { emoji: '🧑',  title: 'Active Leads',   value: '120',    trend: '+12%', up: true  },
-  { emoji: '💰',  title: 'Total Revenue',  value: '$96,7M', trend: '+12%', up: true  },
+  { emoji: '💰',  title: 'Total Revenue',  value: '$96.7M', trend: '+12%', up: true  },
   { emoji: '🏠',  title: 'Active Listing', value: '23',     trend: '-12%', up: false },
   { emoji: '✅',  title: 'Total Closed',   value: '42',     trend: '+12%', up: true  },
 ]
@@ -83,7 +83,7 @@ export const featuredProperty = {
   sold:   175,
   rented: 125,
   views:  '2K+',
-  badge:  'Recommended to 14 Leads',
+  badge:  'Popular Property',
 }
 
 // ── Deals overview ────────────────────────────────────────────────────────────
@@ -95,41 +95,44 @@ export const dealsProgress = {
 
 // ── Reminders ─────────────────────────────────────────────────────────────────
 
-export type ReminderIcon = 'users' | 'loader' | 'hand'
-
 export interface Reminder {
-  id: number
-  label: string
+  id:          number
+  label:       string
   description: string
-  avatars: string[]
-  extra: number
-  iconType: ReminderIcon
+  avatars:     string[]
+  extra:       number
+  /** Mini-chart values; empty when row shows an avatar stack instead */
+  sparkline:   number[]
+  color:       'primary' | 'chart-3' | 'chart-4'
 }
 
 export const reminders: Reminder[] = [
   {
-    id: 1,
+    id:          1,
     label:       'Follow-Ups',
     description: '15 leads need to be followed up',
     avatars:     ['JC', 'JD', 'HS'],
     extra:       11,
-    iconType:    'users',
+    sparkline:   [],
+    color:       'primary',
   },
   {
-    id: 2,
+    id:          2,
     label:       'Visits',
     description: '2 Properties and 3 Leads visit today',
     avatars:     [],
     extra:       0,
-    iconType:    'loader',
+    sparkline:   [3, 6, 4, 8, 5, 9, 7, 10, 6, 11],
+    color:       'chart-3',
   },
   {
-    id: 3,
+    id:          3,
     label:       'Expire Listings',
     description: '2 Listings are about to expire in 3 days',
     avatars:     [],
     extra:       0,
-    iconType:    'hand',
+    sparkline:   [8, 5, 9, 4, 7, 3, 6, 5, 8, 4],
+    color:       'chart-4',
   },
 ]
 

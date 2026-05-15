@@ -1,4 +1,4 @@
-﻿import * as React from "react"
+import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
@@ -8,15 +8,23 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
+        /* ── Base variants ── */
         default:     "bg-primary text-primary-foreground",
         secondary:   "bg-secondary text-secondary-foreground border-border",
         outline:     "border-border text-foreground bg-transparent",
         ghost:       "bg-muted text-muted-foreground",
-        destructive: "bg-[#FEF3F2] text-[#B42318]",
-        success:     "bg-[#ECFDF3] text-[#027A48]",
-        warning:     "bg-[#FFFAEB] text-[#B54708]",
-        error:       "bg-[#FEF3F2] text-[#B42318]",
-        info:        "bg-[#EFF8FF] text-[#0061BC]",
+        destructive: "bg-brand-crimson-soft text-brand-crimson",
+        success:     "bg-brand-emerald-soft text-brand-emerald",
+        warning:     "bg-chart-4/15 text-chart-4",
+        error:       "bg-brand-crimson-soft text-brand-crimson",
+        info:        "bg-brand-azure-soft text-brand-azure",
+        /* ── Brand status variants ── */
+        won:         "bg-brand-emerald-soft  text-brand-emerald",
+        negotiating: "bg-brand-azure-soft    text-brand-azure",
+        "new-lead":  "bg-brand-teal-soft     text-brand-teal",
+        "on-process":"bg-brand-lavender-soft text-brand-lavender",
+        visit:       "bg-brand-navy-soft     text-brand-navy",
+        cancelled:   "bg-brand-crimson-soft  text-brand-crimson",
       },
     },
     defaultVariants: { variant: "default" },

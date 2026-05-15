@@ -1,46 +1,40 @@
-import { StatBar }             from './StatBar'
-import { PerformanceChart }    from './PerformanceChart'
-import { ActiveListingsTable } from './ActiveListingsTable'
+import { StatBar }              from './StatBar'
+import { PerformanceChart }     from './PerformanceChart'
+import { ActiveListingsTable }  from './ActiveListingsTable'
 import { FeaturedPropertyCard } from './FeaturedPropertyCard'
-import { DealsProgressBar }    from './DealsProgressBar'
-import { LeadsContactList }    from './LeadsContactList'
-import { ReminderList }        from './ReminderList'
-import { CalendarWidget }      from './CalendarWidget'
-import { AgendaStack }         from './AgendaStack'
-
+import { DealsProgressBar }     from './DealsProgressBar'
+import { LeadsContactList }     from './LeadsContactList'
+import { ReminderList }         from './ReminderList'
+import { CalendarAgendaPanel }  from './CalendarAgendaPanel'
 
 export function DashboardOverview() {
   return (
-    <div className="grid grid-cols-1 gap-2 lg:grid-cols-11">
+    <div className="grid grid-cols-1 gap-2 xl:grid-cols-[1fr_300px]">
 
-      {/* ── Left + Center zone (8 cols) ── */}
-      <div className="flex flex-col gap-2 lg:col-span-8">
+      {/* ── Main content ── */}
+      <div className="flex min-w-0 flex-col gap-2">
 
-        {/* Stat bar — 4 equal cards spanning the 8-col zone */}
         <StatBar />
 
-        {/* Nested 2-column body: analytics (5) | property+contacts (3) */}
-        <div className="grid grid-cols-1 gap-2 lg:grid-cols-8">
-
-          <div className="flex flex-col gap-2 lg:col-span-5">
-            <PerformanceChart />
-            <ActiveListingsTable />
-          </div>
-
-          <div className="flex flex-col gap-2 lg:col-span-3">
+        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+          <PerformanceChart />
+          <div className="flex flex-col gap-2">
             <FeaturedPropertyCard />
             <DealsProgressBar />
-            <LeadsContactList />
           </div>
-
         </div>
+
+        <div className="grid grid-cols-1 gap-2 lg:grid-cols-[1fr_240px]">
+          <ActiveListingsTable />
+          <LeadsContactList />
+        </div>
+
       </div>
 
-      {/* ── Right sidebar (3 cols) — full height ── */}
-      <div className="flex flex-col gap-2 lg:col-span-3">
+      {/* ── Right sidebar ── */}
+      <div className="flex flex-col gap-2">
         <ReminderList />
-        <CalendarWidget />
-        <AgendaStack />
+        <CalendarAgendaPanel />
       </div>
 
     </div>

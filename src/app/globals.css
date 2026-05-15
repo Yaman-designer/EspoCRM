@@ -8,6 +8,19 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  /* ── Brand palette ── */
+  --color-brand-emerald:        var(--brand-emerald);
+  --color-brand-emerald-soft:   var(--brand-emerald-soft);
+  --color-brand-azure:          var(--brand-azure);
+  --color-brand-azure-soft:     var(--brand-azure-soft);
+  --color-brand-teal:           var(--brand-teal);
+  --color-brand-teal-soft:      var(--brand-teal-soft);
+  --color-brand-lavender:       var(--brand-lavender);
+  --color-brand-lavender-soft:  var(--brand-lavender-soft);
+  --color-brand-navy:           var(--brand-navy);
+  --color-brand-navy-soft:      var(--brand-navy-soft);
+  --color-brand-crimson:        var(--brand-crimson);
+  --color-brand-crimson-soft:   var(--brand-crimson-soft);
   /* Poppins loaded via next/font, variable set on <html> */
   --font-sans: var(--font-poppins), "Poppins", "Noto Sans Arabic", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
@@ -53,6 +66,19 @@
 
 /* ---- Azure SaaS CRM — Light Mode ---- */
 :root {
+  /* ── Brand palette — 6 colours from design spec ── */
+  --brand-emerald:       #276B4E;
+  --brand-emerald-soft:  #E3F5EC;
+  --brand-azure:         #4285F4;
+  --brand-azure-soft:    #E3EFFE;
+  --brand-teal:          #1B5D75;
+  --brand-teal-soft:     #E4F0F8;
+  --brand-lavender:      #7B9DD8;
+  --brand-lavender-soft: #EEF0FC;
+  --brand-navy:          #1E3A5F;
+  --brand-navy-soft:     #E0EBF5;
+  --brand-crimson:       #8B1728;
+  --brand-crimson-soft:  #FDEAEA;
   --background: #F7F8FA;
   --foreground: #101828;
   --card: #FFFFFF;
@@ -95,6 +121,19 @@
 
 /* ---- Azure SaaS CRM — Dark Mode ---- */
 .dark {
+  /* ── Brand palette — dark mode ── */
+  --brand-emerald:       #3DAF7A;
+  --brand-emerald-soft:  #0F2E1E;
+  --brand-azure:         #6BA4F8;
+  --brand-azure-soft:    #0D1E3F;
+  --brand-teal:          #3A9CBF;
+  --brand-teal-soft:     #0B2530;
+  --brand-lavender:      #9FBAE8;
+  --brand-lavender-soft: #1A2040;
+  --brand-navy:          #6A8FBF;
+  --brand-navy-soft:     #0D1B30;
+  --brand-crimson:       #D04060;
+  --brand-crimson-soft:  #2E0B13;
   --background: #0F1115;
   --foreground: #FFFFFF;
   --card: #1B2230;

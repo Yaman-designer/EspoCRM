@@ -3,14 +3,19 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { listings, type Listing, type ListingStatus } from './data'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
-const STATUS_CLS: Record<ListingStatus, string> = {
-  Available:  'text-chart-3',
-  Occupied:   'text-chart-3',
-  'Sold Out': 'text-destructive',
+type BadgeVariant = React.ComponentProps<typeof Badge>['variant']
+
+const STATUS_VARIANT: Record<ListingStatus, BadgeVariant> = {
+  Available:  'won',
+  Occupied:   'visit',
+  'Sold Out': 'cancelled',
 }
 
 const THUMB_GRADIENT = [
@@ -30,11 +35,11 @@ const AVATAR_PALETTE = [
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function StatusBadge({ listing }: { listing: Listing }) {
-  const cls = STATUS_CLS[listing.status]
-  const label = listing.occupancy
+  const variant = STATUS_VARIANT[listing.status]
+  const label   = listing.occupancy
     ? `${listing.occupancy} ${listing.status}`
     : listing.status
-  return <span className={cn('text-xs font-semibold', cls)}>{label}</span>
+  return <Badge variant={variant}>{label}</Badge>
 }
 
 function LeadStack({ count }: { count: number }) {
@@ -115,17 +120,18 @@ export function ActiveListingsTable() {
   )
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-design-sm">
+    <Card className="gap-0 p-0">
+
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-3.5">
         <h3 className="text-sm font-semibold text-foreground">Active Listings</h3>
         <div className="relative">
           <Search className="pointer-events-none absolute inset-s-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search..."
-            className="h-8 w-36 rounded-lg border border-border bg-background ps-8 pe-3 text-xs placeholder:text-muted-foreground outline-none transition-all focus:border-ring focus:ring-2 focus:ring-ring/15"
+            className="h-8 w-36 ps-8 text-xs"
           />
         </div>
       </div>
@@ -136,15 +142,21 @@ export function ActiveListingsTable() {
           <thead>
             <tr className="border-b border-border bg-muted/30">
               {[
-                { label: 'Property',       cls: 'pl-4 pr-3'                           },
-                { label: 'Type',           cls: 'hidden px-3 sm:table-cell'            },
-                { label: 'Units',          cls: 'hidden px-3 md:table-cell'            },
-                { label: 'Cost',           cls: 'px-3'                                 },
-                { label: 'Active Leads',   cls: 'hidden px-3 lg:table-cell'            },
-                { label: 'Views',          cls: 'hidden px-3 xl:table-cell'            },
-                { label: 'Status',         cls: 'pl-3 pr-4'                            },
+                { label: 'Property',     cls: 'pl-4 pr-3'               },
+                { label: 'Type',         cls: 'hidden px-3 sm:table-cell' },
+                { label: 'Units',        cls: 'hidden px-3 md:table-cell' },
+                { label: 'Cost',         cls: 'px-3'                      },
+                { label: 'Active Leads', cls: 'hidden px-3 lg:table-cell' },
+                { label: 'Views',        cls: 'hidden px-3 xl:table-cell' },
+                { label: 'Status',       cls: 'pl-3 pr-4'                 },
               ].map(({ label, cls }) => (
-                <th key={label} className={cn('py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground', cls)}>
+                <th
+                  key={label}
+                  className={cn(
+                    'py-2.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground',
+                    cls,
+                  )}
+                >
                   {label}
                 </th>
               ))}
@@ -163,6 +175,7 @@ export function ActiveListingsTable() {
           </tbody>
         </table>
       </div>
-    </div>
+
+    </Card>
   )
 }

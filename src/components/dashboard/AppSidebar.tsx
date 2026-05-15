@@ -142,11 +142,7 @@ export function AppSidebar() {
 
       {/* ── Navigation ── */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2">
-        {!isCollapsed && (
-          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.8px] text-muted-foreground/60">
-            Navigation
-          </p>
-        )}
+       
 
         <div className="space-y-0.5">
           {navItems.map((item) => {
@@ -237,7 +233,7 @@ export function AppSidebar() {
       </nav>
 
       {/* ── Bottom user info ── */}
-      <div
+      {/* <div
         className={cn(
           'shrink-0 border-t border-sidebar-border py-3',
           isCollapsed ? 'flex justify-center' : 'px-4',
@@ -258,7 +254,7 @@ export function AppSidebar() {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* ── Resize handle (hidden on mobile via CSS) ── */}
       <div

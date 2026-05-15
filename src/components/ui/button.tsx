@@ -1,4 +1,4 @@
-﻿import * as React from "react"
+import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
 import { cn } from "@/lib/utils"
@@ -18,6 +18,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        /* ── Base variants ── */
         default:
           "bg-primary text-primary-foreground hover:bg-primary/90 hover:-translate-y-px shadow-design-sm hover:shadow-design-md",
         outline:
@@ -27,15 +28,41 @@ const buttonVariants = cva(
         ghost:
           "text-muted-foreground hover:bg-accent/60 hover:text-primary",
         destructive:
-          "bg-[#FEF3F2] text-[#B42318] border-[#F04438]/20 hover:bg-[#FEE4E2]",
+          "bg-brand-crimson-soft text-brand-crimson border-brand-crimson/20 hover:bg-brand-crimson/15",
         link: "text-primary underline-offset-4 hover:underline",
+        /* ── Brand solid variants ── */
+        emerald:
+          "bg-brand-emerald   text-white hover:bg-brand-emerald/90   hover:-translate-y-px shadow-design-sm hover:shadow-design-md",
+        azure:
+          "bg-brand-azure     text-white hover:bg-brand-azure/90     hover:-translate-y-px shadow-design-sm hover:shadow-design-md",
+        teal:
+          "bg-brand-teal      text-white hover:bg-brand-teal/90      hover:-translate-y-px shadow-design-sm hover:shadow-design-md",
+        lavender:
+          "bg-brand-lavender  text-white hover:bg-brand-lavender/90  hover:-translate-y-px shadow-design-sm hover:shadow-design-md",
+        navy:
+          "bg-brand-navy      text-white hover:bg-brand-navy/90      hover:-translate-y-px shadow-design-sm hover:shadow-design-md",
+        crimson:
+          "bg-brand-crimson   text-white hover:bg-brand-crimson/90   hover:-translate-y-px shadow-design-sm hover:shadow-design-md",
+        /* ── Brand soft/outline variants ── */
+        "emerald-soft":
+          "bg-brand-emerald-soft  text-brand-emerald  hover:bg-brand-emerald/15",
+        "azure-soft":
+          "bg-brand-azure-soft    text-brand-azure    hover:bg-brand-azure/15",
+        "teal-soft":
+          "bg-brand-teal-soft     text-brand-teal     hover:bg-brand-teal/15",
+        "lavender-soft":
+          "bg-brand-lavender-soft text-brand-lavender hover:bg-brand-lavender/15",
+        "navy-soft":
+          "bg-brand-navy-soft     text-brand-navy     hover:bg-brand-navy/15",
+        "crimson-soft":
+          "bg-brand-crimson-soft  text-brand-crimson  hover:bg-brand-crimson/15",
       },
       size: {
-        default: "h-12 px-[22px] text-sm",
-        xs:      "h-7  px-3 text-xs rounded-[10px]",
-        sm:      "h-9  px-4 text-sm rounded-[10px]",
-        lg:      "h-14 px-7 text-base",
-        icon:    "size-10",
+        default:   "h-12 px-[22px] text-sm",
+        xs:        "h-7  px-3 text-xs rounded-[10px]",
+        sm:        "h-9  px-4 text-sm rounded-[10px]",
+        lg:        "h-14 px-7 text-base",
+        icon:      "size-10",
         "icon-xs": "size-7  rounded-[10px]",
         "icon-sm": "size-9  rounded-[10px]",
         "icon-lg": "size-12",
