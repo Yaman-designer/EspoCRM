@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 import { CALENDAR } from './data'
 
 // Mon → Sun week order
-const WEEKDAYS    = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -11,8 +11,8 @@ const MONTH_NAMES = [
 
 function buildGrid(year: number, month: number): (number | null)[] {
   // Convert Sun=0…Sat=6 → Mon=0…Sun=6
-  const rawDay     = new Date(year, month, 1).getDay()
-  const firstCol   = (rawDay + 6) % 7
+  const rawDay = new Date(year, month, 1).getDay()
+  const firstCol = (rawDay + 6) % 7
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
   const cells: (number | null)[] = Array(firstCol).fill(null)
@@ -60,15 +60,15 @@ export function CalendarWidget() {
       <div className="grid grid-cols-7 gap-y-0.5">
         {cells.map((day, i) => {
           if (day === null) return <div key={`e-${i}`} className="h-8" />
-          const isToday  = day === today
+          const isToday = day === today
           const isActive = activeDays.includes(day)
           return (
             <button
               key={day}
               className={cn(
                 'mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors',
-                isToday  && 'bg-primary text-primary-foreground shadow-design-sm',
-                !isToday && isActive  && 'bg-primary/10 font-semibold text-primary',
+                isToday && 'bg-primary text-primary-foreground shadow-design-sm',
+                !isToday && isActive && 'bg-primary/10 font-semibold text-primary',
                 !isToday && !isActive && 'text-foreground hover:bg-muted',
               )}
             >

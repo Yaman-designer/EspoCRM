@@ -39,7 +39,7 @@ export function TopNavbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 flex h-[72px] items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-md md:gap-3 md:px-6">
+      <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-border bg-background/80 px-3 backdrop-blur-md md:gap-3 md:px-6">
 
         <SidebarToggle
           mobileOpen={mobileOpen}
@@ -98,7 +98,7 @@ export function TopNavbar() {
 
       {/* Mobile expandable search bar */}
       {searchOpen && (
-        <div className="sticky top-[72px] z-30 border-b border-border bg-background px-4 py-3 shadow-design-sm md:hidden">
+        <div className="sticky top-14 z-30 border-b border-border bg-background px-4 py-3 shadow-design-sm md:hidden">
           <div className="relative">
             <Search className="pointer-events-none absolute inset-s-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input

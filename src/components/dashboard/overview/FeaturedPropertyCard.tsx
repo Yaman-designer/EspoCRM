@@ -1,69 +1,84 @@
 import Image from 'next/image'
-import { ArrowUpRight, CheckCircle } from 'lucide-react'
-import { Card } from '@/components/ui/card'
+import { ArrowUpRight, Star, MapPin } from 'lucide-react'
 import { featuredProperty } from './data'
 
 export function FeaturedPropertyCard() {
-  const { name, type, sold, rented, views, badge } = featuredProperty
+  const { name, type, location, sold, rented, views, badge, occupancyPct } = featuredProperty
 
   return (
-    <Card className="flex-row gap-0 p-0">
+    <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md">
 
-      {/* Left: info */}
-      <div className="flex min-w-0 flex-1 flex-col justify-between p-4">
-        <div className="min-w-0">
-          <h3 className="truncate text-base font-bold leading-tight text-foreground">
-            {name}
-          </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">{type}</p>
+      {/* Image banner */}
+      <div className="relative h-28 w-full">
+        <Image
+          src="/imges/e9e46baaa351f4e0a9d3968652b277d4.jpg"
+          alt={name}
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 320px"
+        />
+
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/10 to-transparent" />
+
+        {/* Top-right action */}
+        <button
+          aria-label="View property"
+          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg bg-white/20 text-white backdrop-blur-sm transition-colors hover:bg-white/30"
+        >
+          <ArrowUpRight className="h-4 w-4" />
+        </button>
+
+        {/* Badge */}
+        <div className="absolute left-3 top-3">
+          <span className="inline-flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-semibold text-white backdrop-blur-md">
+            <Star className="h-2.5 w-2.5 fill-current text-yellow-400" />
+            {badge}
+          </span>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        {/* Property name over image */}
+        <div className="absolute inset-x-3 bottom-3">
+          <p className="text-sm font-bold leading-tight text-white">{name}</p>
+          <p className="flex items-center gap-1 text-[10px] text-white/80">
+            <MapPin className="h-2.5 w-2.5" />
+            {location}
+          </p>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="flex-1 flex flex-col justify-center px-6 py-4">
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{type}</p>
+
+        <div className="grid grid-cols-3 gap-2">
           {([
             { label: 'Sold',   value: sold   },
             { label: 'Rented', value: rented },
             { label: 'Views',  value: views  },
           ] as const).map(({ label, value }) => (
-            <div
-              key={label}
-              className="flex flex-col items-start rounded-xl bg-secondary px-3 py-1.5"
-            >
-              <span className="text-sm font-bold text-foreground">{value}</span>
-              <span className="text-[10px] text-muted-foreground">{label}</span>
+            <div key={label} className="rounded-lg bg-muted/30 px-2 py-2 text-center border border-border/40">
+              <p className="text-[15px] font-bold tracking-tight text-foreground">{value}</p>
+              <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
             </div>
           ))}
         </div>
-      </div>
 
-      {/* Right: image */}
-      <div className="w-32 shrink-0 p-2 pl-0">
-        <div className="relative h-full overflow-hidden rounded-xl">
-          <Image
-            src="/imges/e9e46baaa351f4e0a9d3968652b277d4.jpg"
-            alt={name}
-            fill
-            className="object-cover"
-            sizes="128px"
-          />
-
-          <button
-            aria-label="View property"
-            className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-md bg-background/90 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-90"
-          >
-            <ArrowUpRight className="h-3 w-3 text-foreground" />
-          </button>
-
-          <div className="absolute inset-x-2 bottom-2">
-            <div className="flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 backdrop-blur-md">
-              <CheckCircle className="h-3 w-3 shrink-0 text-brand-azure" />
-              <span className="truncate text-[9px] font-semibold text-white">
-                {badge}
-              </span>
-            </div>
+        {/* Occupancy */}
+        <div className="mt-2.5">
+          <div className="mb-1.5 flex items-center justify-between">
+            <span className="text-[10px] font-medium text-muted-foreground">Occupancy rate</span>
+            <span className="text-[10px] font-bold text-foreground">{occupancyPct}%</span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-700"
+              style={{ width: `${occupancyPct}%` }}
+            />
           </div>
         </div>
       </div>
 
-    </Card>
+    </div>
   )
 }

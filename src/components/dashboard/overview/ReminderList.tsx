@@ -1,18 +1,21 @@
 'use client'
 
-import { ChevronRight, ExternalLink } from 'lucide-react'
-import { AreaChart, Area, ResponsiveContainer } from 'recharts'
+import { AlertTriangle, Clock, Info, ChevronRight, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { reminders, type Reminder } from './data'
+import { reminders, type ActivityAlert, type AlertLevel } from './data'
 
-// ── Colour map → CSS variables ────────────────────────────────────────────────
+// ── Alert level config ────────────────────────────────────────────────────────
 
-const COLOR_VAR: Record<Reminder['color'], string> = {
-  'primary': 'var(--color-primary)',
-  'chart-3': 'var(--color-chart-3)',
-  'chart-4': 'var(--color-chart-4)',
+const LEVEL_CFG: Record<AlertLevel, {
+  bar: string
+  icon: React.ElementType
+  iconCls: string
+  bg: string
+}> = {
+  urgent: { bar: 'bg-brand-crimson', icon: AlertTriangle, iconCls: 'text-brand-crimson', bg: 'bg-brand-crimson-soft' },
+  warning: { bar: 'bg-chart-4', icon: Clock, iconCls: 'text-chart-4', bg: 'bg-chart-4/8' },
+  info: { bar: 'bg-primary', icon: Info, iconCls: 'text-primary', bg: 'bg-primary/6' },
 }
 
 const AVATAR_PALETTE = [
@@ -25,12 +28,12 @@ const AVATAR_PALETTE = [
 
 function AvatarStack({ avatars, extra }: { avatars: string[]; extra: number }) {
   return (
-    <div className="flex -space-x-2">
+    <div className="mt-1.5 flex -space-x-2">
       {avatars.map((init, i) => (
         <span
           key={i}
           className={cn(
-            'flex h-7 w-7 items-center justify-center rounded-full',
+            'flex h-6 w-6 items-center justify-center rounded-full',
             'border-2 border-card text-[9px] font-bold',
             AVATAR_PALETTE[i % AVATAR_PALETTE.length],
           )}
@@ -39,7 +42,7 @@ function AvatarStack({ avatars, extra }: { avatars: string[]; extra: number }) {
         </span>
       ))}
       {extra > 0 && (
-        <span className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-card bg-muted text-[9px] font-semibold text-muted-foreground">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-muted text-[9px] font-semibold text-muted-foreground">
           +{extra}
         </span>
       )}
@@ -47,61 +50,31 @@ function AvatarStack({ avatars, extra }: { avatars: string[]; extra: number }) {
   )
 }
 
-// ── Mini sparkline ────────────────────────────────────────────────────────────
+// ── Alert row ─────────────────────────────────────────────────────────────────
 
-function MiniSparkline({ values, color }: { values: number[]; color: string }) {
-  const data = values.map((v) => ({ v }))
-  const id   = `fill-${color.replace(/[^a-z0-9]/g, '')}`
-  return (
-    <div className="h-9 w-16">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor={color} stopOpacity={0.25} />
-              <stop offset="100%" stopColor={color} stopOpacity={0}    />
-            </linearGradient>
-          </defs>
-          <Area
-            type="monotone"
-            dataKey="v"
-            stroke={color}
-            strokeWidth={1.5}
-            fill={`url(#${id})`}
-            dot={false}
-            isAnimationActive={false}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
-    </div>
-  )
-}
-
-// ── Single row ────────────────────────────────────────────────────────────────
-
-function ReminderRow({ reminder }: { reminder: Reminder }) {
-  const hasAvatars  = reminder.avatars.length > 0
-  const strokeColor = COLOR_VAR[reminder.color]
+function AlertRow({ alert }: { alert: ActivityAlert }) {
+  const cfg = LEVEL_CFG[alert.level]
+  const Icon = cfg.icon
 
   return (
-    <div className="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-muted/50">
-      <div
-        className="h-8 w-1 shrink-0 rounded-full opacity-70"
-        style={{ backgroundColor: strokeColor }}
-      />
+    <div className="group flex gap-2.5 rounded-lg p-3 transition-colors hover:bg-muted/35">
+      {/* Colored accent bar */}
+      <div className={cn('mt-0.5 w-0.5 shrink-0 rounded-full self-stretch opacity-80', cfg.bar)} />
+
+      {/* Icon */}
+      <Icon className={cn('mt-0.5 h-3.5 w-3.5 shrink-0', cfg.iconCls)} />
+
+      {/* Content */}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-foreground">{reminder.label}</p>
-        <p className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
-          {reminder.description}
-        </p>
+        <p className="text-[13px] font-semibold text-foreground leading-snug">{alert.label}</p>
+        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground/80">{alert.description}</p>
+        {alert.avatars.length > 0 && (
+          <AvatarStack avatars={alert.avatars} extra={alert.extra} />
+        )}
       </div>
-      <div className="flex shrink-0 items-center gap-1.5">
-        {hasAvatars
-          ? <AvatarStack avatars={reminder.avatars} extra={reminder.extra} />
-          : <MiniSparkline values={reminder.sparkline} color={strokeColor} />
-        }
-        <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-      </div>
+
+      {/* Chevron */}
+      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-60" />
     </div>
   )
 }
@@ -110,21 +83,24 @@ function ReminderRow({ reminder }: { reminder: Reminder }) {
 
 export function ReminderList() {
   return (
-    <Card className="gap-0 p-0">
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md">
 
-      <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
-        <h3 className="text-sm font-semibold text-foreground">Reminder</h3>
-        <Button variant="ghost" size="icon-xs" aria-label="Open reminders">
-          <ExternalLink className="h-3.5 w-3.5" />
+      <div className="flex items-center justify-between border-b border-border/40 bg-muted/10 px-6 py-5">
+        <div>
+          <h3 className="text-[15px] font-semibold tracking-tight text-foreground">Activity Alerts</h3>
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{reminders.length} items need attention</p>
+        </div>
+        <Button variant="ghost" size="icon-xs" aria-label="Open alerts" className="text-muted-foreground hover:text-foreground">
+          <ExternalLink className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="flex flex-col divide-y divide-border/50 px-2 py-2">
+      <div className="flex flex-col gap-1 p-3">
         {reminders.map((r) => (
-          <ReminderRow key={r.id} reminder={r} />
+          <AlertRow key={r.id} alert={r} />
         ))}
       </div>
 
-    </Card>
+    </div>
   )
 }

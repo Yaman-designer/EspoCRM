@@ -1,26 +1,26 @@
 'use client'
 
 import { Moon, Sun } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useTheme } from '@/components/providers/ThemeProvider'
 import { cn } from '@/lib/utils'
-
-const THEME_COOKIE = 'ebla-crm-theme'
 
 export function ThemeSwitcher({ className }: { className?: string }) {
   const { setTheme } = useTheme()
 
   function toggle() {
-    const next = document.documentElement.classList.contains('dark') ? 'light' : 'dark'
-    setTheme(next)
     /*
-     * Write a cookie so the server can read the theme on the next request
-     * and bake the correct class into the HTML before the first paint.
+     * Read the CURRENT DOM class at click time rather than the React context
+     * value. The DOM is always up-to-date (it's the source of truth for our
+     * useSyncExternalStore), so this is immune to any React state timing lag
+     * between applyTheme() being called and the context value propagating.
      */
-    document.cookie = `${THEME_COOKIE}=${next};path=/;max-age=31536000;SameSite=Lax`
+    const isDark = document.documentElement.classList.contains('dark')
+    setTheme(isDark ? 'light' : 'dark')
   }
 
   return (
     <button
+      type="button"
       onClick={toggle}
       aria-label="Toggle theme"
       className={cn(
@@ -31,8 +31,13 @@ export function ThemeSwitcher({ className }: { className?: string }) {
         className,
       )}
     >
-      {/* Visibility is CSS-driven — both icons are always in the DOM,
-          no JS state or mounted guard needed, no hydration mismatch. */}
+      {/*
+       * CSS-driven visibility: both icons are always in the DOM.
+       * No React state involved → no hydration mismatch.
+       * The .dark class on <html> is set before React runs (by the
+       * blocking script in layout.tsx), so icons render correctly
+       * on the very first paint.
+       */}
       <Moon className="h-4 w-4 dark:hidden" />
       <Sun  className="h-4 w-4 hidden dark:block" />
     </button>

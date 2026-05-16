@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 export const SIDEBAR_MIN = 64      // icon-only
 export const SIDEBAR_MAX = 320
-export const SIDEBAR_DEFAULT = 260
+export const SIDEBAR_DEFAULT = 220
 export const SIDEBAR_SNAP = 120    // below this → snap to icon-only
 
 interface SidebarStore {

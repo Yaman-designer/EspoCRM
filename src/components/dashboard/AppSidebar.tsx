@@ -29,26 +29,52 @@ import {
   SIDEBAR_MAX,
 } from '@/store/sidebarStore'
 
-const navItems = [
-  { id: 'home',       label: 'Home',       href: '/dashboard',    icon: LayoutDashboard },
-  { id: 'properties', label: 'Properties', href: '/properties',   icon: Building2 },
-  { id: 'fspo',       label: 'FSPO',       href: '/fspo',         icon: Home },
-  { id: 'request',    label: 'Request',    href: '/request',      icon: ClipboardList },
-  { id: 'calls',      label: 'Calls',      href: '/calls',        icon: Phone },
-  { id: 'contracts',  label: 'Contracts',  href: '/contracts',    icon: FileText },
-  { id: 'contact',    label: 'Contact',    href: '/contact',      icon: Users },
-  { id: 'pipeline',   label: 'Pipeline',   href: '/pipeline',     icon: GitBranch },
-  { id: 'calendar',   label: 'Calendar',   href: '/calendar',     icon: Calendar },
+// ── Navigation structure with groups ─────────────────────────────────────────
+
+const navGroups = [
   {
-    id: 'company', label: 'Company', href: '/company', icon: Briefcase,
-    children: [
-      { id: 'company-users', label: 'Users', href: '/company/users', icon: UserSquare2 },
-      { id: 'company-teams', label: 'Teams', href: '/company/teams', icon: UsersRound },
+    id: 'main',
+    label: 'Main',
+    items: [
+      { id: 'home', label: 'Home', href: '/dashboard', icon: LayoutDashboard },
+      { id: 'properties', label: 'Properties', href: '/properties', icon: Building2 },
+      { id: 'fspo', label: 'FSPO', href: '/fspo', icon: Home },
     ],
   },
-  { id: 'documents',  label: 'Documents',  href: '/documents',    icon: FolderOpen },
-  { id: 'chat',       label: 'Chat',       href: '/chat',         icon: MessageSquare },
-  { id: 'email',      label: 'Email',      href: '/email',        icon: Mail },
+  {
+    id: 'operations',
+    label: 'Operations',
+    items: [
+      { id: 'request', label: 'Request', href: '/request', icon: ClipboardList },
+      { id: 'calls', label: 'Calls', href: '/calls', icon: Phone },
+      { id: 'contracts', label: 'Contracts', href: '/contracts', icon: FileText },
+      { id: 'contact', label: 'Contact', href: '/contact', icon: Users },
+      { id: 'pipeline', label: 'Pipeline', href: '/pipeline', icon: GitBranch },
+    ],
+  },
+  {
+    id: 'planning',
+    label: 'Planning',
+    items: [
+      { id: 'calendar', label: 'Calendar', href: '/calendar', icon: Calendar },
+      { id: 'documents', label: 'Documents', href: '/documents', icon: FolderOpen },
+    ],
+  },
+  {
+    id: 'admin',
+    label: 'Admin',
+    items: [
+      {
+        id: 'company', label: 'Company', href: '/company', icon: Briefcase,
+        children: [
+          { id: 'company-users', label: 'Users', href: '/company/users', icon: UserSquare2 },
+          { id: 'company-teams', label: 'Teams', href: '/company/teams', icon: UsersRound },
+        ],
+      },
+      { id: 'chat', label: 'Chat', href: '/chat', icon: MessageSquare },
+      { id: 'email', label: 'Email', href: '/email', icon: Mail },
+    ],
+  },
 ]
 
 export function AppSidebar() {
@@ -59,9 +85,8 @@ export function AppSidebar() {
   const dragRef = useRef({ active: false, startX: 0, startW: 0 })
 
   const isCollapsed = width <= SIDEBAR_MIN
-  const showLabels  = width > 110
+  const showLabels = width > 110
 
-  /* ── Resize drag (desktop only — CSS hides handle on mobile) ── */
   const onResizeDown = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault()
@@ -74,7 +99,6 @@ export function AppSidebar() {
           SIDEBAR_MIN,
           Math.min(SIDEBAR_MAX, dragRef.current.startW + ev.clientX - dragRef.current.startX),
         )
-        /* Update CSS variable immediately — no re-render lag during drag */
         document.documentElement.style.setProperty('--sidebar-w', `${newW}px`)
         setWidth(newW)
       }
@@ -102,14 +126,6 @@ export function AppSidebar() {
   }
 
   return (
-    /*
-     * "app-sidebar" is styled in globals.css:
-     *   – mobile: transform: translateX(-110%) by default
-     *   – "sidebar-mobile-open": transform: translateX(0)
-     *   – @media md: transform: none !important  (always visible)
-     *   – width comes from CSS variable --sidebar-w (set by DashboardShell)
-     * data-dragging disables CSS transitions during active drag.
-     */
     <aside
       data-dragging={dragging || undefined}
       className={cn(
@@ -121,19 +137,19 @@ export function AppSidebar() {
       {/* ── Logo ── */}
       <div
         className={cn(
-          'flex h-[72px] shrink-0 items-center border-b border-sidebar-border',
-          isCollapsed ? 'justify-center px-0' : 'gap-3 px-5',
+          'flex h-14 shrink-0 items-center border-b border-sidebar-border',
+          isCollapsed ? 'justify-center px-0' : 'gap-2.5 px-4',
         )}
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary shadow-design-sm">
-          <Building2 className="h-5 w-5 text-primary-foreground" />
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary shadow-design-sm">
+          <Building2 className="h-4 w-4 text-primary-foreground" />
         </div>
         {showLabels && (
           <div className="overflow-hidden">
-            <p className="whitespace-nowrap text-sm font-semibold leading-none text-foreground">
+            <p className="whitespace-nowrap text-[13px] font-semibold leading-none text-foreground">
               Ebla CRM
             </p>
-            <p className="mt-0.5 whitespace-nowrap text-[11px] leading-none text-muted-foreground">
+            <p className="mt-0.5 whitespace-nowrap text-[10px] leading-none text-muted-foreground">
               Real Estate Suite
             </p>
           </div>
@@ -141,122 +157,107 @@ export function AppSidebar() {
       </div>
 
       {/* ── Navigation ── */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2">
-       
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2">
+        <div className="flex flex-col gap-3">
+          {navGroups.map((group) => (
+            <div key={group.id}>
+              {/* Group label — only when expanded */}
+              {showLabels && (
+                <p className="mb-0.5 px-3 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/40">
+                  {group.label}
+                </p>
+              )}
+              {!showLabels && group.id !== 'main' && (
+                <div className="my-1 mx-auto h-px w-5 bg-sidebar-border/60" />
+              )}
 
-        <div className="space-y-0.5">
-          {navItems.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'))
-            const isChildActive = item.children?.some((c) => pathname === c.href) ?? false
-            const hasChildren   = !!item.children?.length
-            const isExpanded    = expanded.has(item.id)
-            const highlighted   = isActive || isChildActive
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const hasChildren = 'children' in item && !!item.children?.length
+                  const isActive = pathname === item.href || (!hasChildren && item.href !== '/dashboard' && pathname.startsWith(item.href + '/'))
+                  const isChildActive = hasChildren && item.children!.some((c) => pathname === c.href)
+                  const isExpanded = expanded.has(item.id)
+                  const highlighted = isActive || isChildActive
 
-            const iconCls = cn(
-              'h-[18px] w-[18px] shrink-0 stroke-[1.8] transition-colors',
-              highlighted
-                ? 'text-primary-foreground'
-                : 'text-muted-foreground group-hover:text-foreground',
-            )
-            const rowCls = cn(
-              'group flex h-11 items-center rounded-lg transition-colors duration-150 select-none',
-              isCollapsed ? 'justify-center px-2' : 'gap-2.5 px-3',
-              highlighted
-                ? 'bg-primary text-primary-foreground shadow-design-sm'
-                : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground',
-            )
+                  const iconCls = cn(
+                    'h-[17px] w-[17px] shrink-0 stroke-[1.8] transition-colors',
+                    highlighted
+                      ? 'text-primary-foreground'
+                      : 'text-muted-foreground group-hover:text-foreground',
+                  )
+                  const rowCls = cn(
+                    'group flex h-9 items-center rounded-lg transition-colors duration-150 select-none',
+                    isCollapsed ? 'justify-center px-2' : 'gap-2.5 px-3',
+                    highlighted
+                      ? 'bg-primary text-primary-foreground shadow-design-xs'
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground',
+                  )
 
-            return (
-              <div key={item.id}>
-                {hasChildren && !isCollapsed ? (
-                  <div className={cn(rowCls, 'cursor-pointer')} onClick={() => toggleExpand(item.id)}>
-                    <item.icon className={iconCls} />
-                    {showLabels && (
-                      <span className="flex-1 truncate text-sm font-medium">{item.label}</span>
-                    )}
-                    {showLabels && (
-                      isExpanded
-                        ? <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                        : <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-60" />
-                    )}
-                  </div>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className={rowCls}
-                    title={isCollapsed ? item.label : undefined}
-                  >
-                    <item.icon className={iconCls} />
-                    {showLabels && (
-                      <span className="flex-1 truncate text-sm font-medium">{item.label}</span>
-                    )}
-                    {showLabels && isActive && !hasChildren && (
-                      <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-50" />
-                    )}
-                  </Link>
-                )}
-
-                {/* Submenu */}
-                {hasChildren && isExpanded && !isCollapsed && (
-                  <div className="ms-5 mt-0.5 space-y-0.5 border-s border-sidebar-border ps-3">
-                    {item.children!.map((child) => {
-                      const childActive = pathname === child.href
-                      return (
-                        <Link
-                          key={child.id}
-                          href={child.href}
-                          className={cn(
-                            'flex h-9 items-center gap-2 rounded-md px-3 text-[13px] font-medium transition-colors duration-150',
-                            childActive
-                              ? 'bg-primary/10 text-primary'
-                              : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground',
+                  return (
+                    <div key={item.id}>
+                      {hasChildren && !isCollapsed ? (
+                        <div className={cn(rowCls, 'cursor-pointer')} onClick={() => toggleExpand(item.id)}>
+                          <item.icon className={iconCls} />
+                          {showLabels && (
+                            <span className="flex-1 truncate text-[13px] font-medium">{item.label}</span>
                           )}
+                          {showLabels && (
+                            isExpanded
+                              ? <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
+                              : <ChevronRight className="h-3 w-3 shrink-0 opacity-50" />
+                          )}
+                        </div>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className={rowCls}
+                          title={isCollapsed ? item.label : undefined}
                         >
-                          <child.icon
-                            className={cn(
-                              'h-4 w-4 shrink-0 stroke-[1.8]',
-                              childActive ? 'text-primary' : 'text-muted-foreground',
-                            )}
-                          />
-                          <span>{child.label}</span>
+                          <item.icon className={iconCls} />
+                          {showLabels && (
+                            <span className="flex-1 truncate text-[13px] font-medium">{item.label}</span>
+                          )}
                         </Link>
-                      )
-                    })}
-                  </div>
-                )}
+                      )}
+
+                      {/* Submenu */}
+                      {hasChildren && isExpanded && !isCollapsed && (
+                        <div className="ms-5 mt-0.5 space-y-0.5 border-s border-sidebar-border ps-3">
+                          {item.children!.map((child) => {
+                            const childActive = pathname === child.href
+                            return (
+                              <Link
+                                key={child.id}
+                                href={child.href}
+                                className={cn(
+                                  'flex h-8 items-center gap-2 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150',
+                                  childActive
+                                    ? 'bg-primary/10 text-primary'
+                                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground',
+                                )}
+                              >
+                                <child.icon
+                                  className={cn(
+                                    'h-3.5 w-3.5 shrink-0 stroke-[1.8]',
+                                    childActive ? 'text-primary' : 'text-muted-foreground',
+                                  )}
+                                />
+                                <span>{child.label}</span>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
+            </div>
+          ))}
         </div>
       </nav>
 
-      {/* ── Bottom user info ── */}
-      {/* <div
-        className={cn(
-          'shrink-0 border-t border-sidebar-border py-3',
-          isCollapsed ? 'flex justify-center' : 'px-4',
-        )}
-      >
-        {isCollapsed ? (
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-            <span className="text-xs font-semibold text-primary">AD</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <span className="text-xs font-semibold text-primary">AD</span>
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-xs font-medium leading-none text-foreground">Admin User</p>
-              <p className="mt-0.5 truncate text-[10px] text-muted-foreground">admin@ebla.crm</p>
-            </div>
-          </div>
-        )}
-      </div> */}
-
-      {/* ── Resize handle (hidden on mobile via CSS) ── */}
+      {/* ── Resize handle ── */}
       <div
         onMouseDown={onResizeDown}
         className="absolute inset-y-0 inset-e-0 z-10 hidden w-2 cursor-col-resize group md:block"

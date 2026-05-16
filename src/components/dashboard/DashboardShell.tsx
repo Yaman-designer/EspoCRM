@@ -48,7 +48,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         data-dragging={dragging || undefined}
       >
         <TopNavbar />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 sm:p-5 md:p-6">{children}</main>
       </div>
     </div>
   )

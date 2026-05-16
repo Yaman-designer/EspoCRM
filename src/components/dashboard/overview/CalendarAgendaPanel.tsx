@@ -1,137 +1,136 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { MapPin, Users, Phone, ChevronRight, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { CALENDAR, agendaItems } from './data'
+import { agendaItems, type AgendaItem, type AgendaType } from './data'
 
-// ── Calendar helpers ──────────────────────────────────────────────────────────
+// ── Agenda type config ────────────────────────────────────────────────────────
 
-const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
-const TABS = ['All', 'Assigned', 'My Schedule'] as const
-
-function buildGrid(year: number, month: number): (number | null)[] {
-  const rawDay      = new Date(year, month, 1).getDay()
-  const firstCol    = (rawDay + 6) % 7
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const cells: (number | null)[] = Array(firstCol).fill(null)
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d)
-  while (cells.length % 7 !== 0) cells.push(null)
-  return cells
+const TYPE_CFG: Record<AgendaType, {
+  icon:    React.ElementType
+  dot:     string
+  label:   string
+  labelBg: string
+  labelText: string
+}> = {
+  visit:    { icon: MapPin, dot: 'bg-primary',   label: 'Visit',    labelBg: 'bg-primary/10',   labelText: 'text-primary'   },
+  meeting:  { icon: Users,  dot: 'bg-chart-4',   label: 'Meeting',  labelBg: 'bg-chart-4/10',   labelText: 'text-chart-4'   },
+  followup: { icon: Phone,  dot: 'bg-chart-3',   label: 'Follow-up', labelBg: 'bg-chart-3/10', labelText: 'text-chart-3'   },
 }
 
-// ── Combined panel ────────────────────────────────────────────────────────────
+// ── Timeline item ─────────────────────────────────────────────────────────────
 
-export function CalendarAgendaPanel() {
-  const { year, month, today, activeDays } = CALENDAR
-  const cells = buildGrid(year, month)
+function ScheduleItem({ item, isLast }: { item: AgendaItem; isLast: boolean }) {
+  const cfg  = TYPE_CFG[item.type]
+  const Icon = cfg.icon
 
   return (
-    <Card className="gap-0 p-0">
+    <div className="group flex gap-3">
 
-      {/* ── Calendar section ── */}
-      <div className="p-4">
-
-        {/* Month navigation */}
-        <div className="mb-3 flex items-center justify-between">
-          <Button variant="ghost" size="icon-xs" aria-label="Previous month">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <p className="text-sm font-semibold text-foreground">
-            {MONTH_NAMES[month]} {year}
-          </p>
-          <Button variant="ghost" size="icon-xs" aria-label="Next month">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {/* Weekday headers */}
-        <div className="mb-1 grid grid-cols-7">
-          {WEEKDAYS.map((d) => (
-            <div key={d} className="py-1 text-center text-[11px] font-semibold text-muted-foreground">
-              {d}
-            </div>
-          ))}
-        </div>
-
-        {/* Day grid */}
-        <div className="grid grid-cols-7 gap-y-0.5">
-          {cells.map((day, i) => {
-            if (day === null) return <div key={`e-${i}`} className="h-8" />
-            const isToday  = day === today
-            const isActive = activeDays.includes(day)
-            return (
-              <button
-                key={day}
-                className={cn(
-                  'mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors',
-                  isToday  && 'bg-primary text-primary-foreground shadow-design-sm',
-                  !isToday && isActive  && 'bg-primary/10 font-semibold text-primary',
-                  !isToday && !isActive && 'text-foreground hover:bg-muted',
-                )}
-              >
-                {day}
-              </button>
-            )
-          })}
-        </div>
+      {/* Time column */}
+      <div className="w-[52px] shrink-0 pt-0.5 text-right">
+        <span className="text-[10px] font-semibold leading-none text-muted-foreground">
+          {item.time}
+        </span>
       </div>
 
-      <Separator />
-
-      {/* ── Agenda section ── */}
-      <div className="p-4">
-        <Tabs defaultValue="All">
-          <TabsList
-            className={cn(
-              'mb-3 h-auto w-full justify-start gap-0',
-              'rounded-none border-b border-border bg-transparent p-0',
-            )}
-          >
-            {TABS.map((tab) => (
-              <TabsTrigger
-                key={tab}
-                value={tab}
-                className={cn(
-                  'h-auto rounded-none border-0 bg-transparent px-3 pb-2.5 pt-0',
-                  'text-xs font-medium shadow-none',
-                  /* active indicator — thin primary underline */
-                  'after:absolute after:inset-x-0 after:-bottom-px after:h-0.5',
-                  'after:rounded-full after:bg-primary after:opacity-0 after:transition-opacity',
-                  'data-[state=active]:bg-transparent data-[state=active]:text-primary',
-                  'data-[state=active]:shadow-none data-[state=active]:after:opacity-100',
-                )}
-              >
-                {tab}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {TABS.map((tab) => (
-            <TabsContent key={tab} value={tab} className="mt-0">
-              <div className="flex flex-col gap-2">
-                {agendaItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-col gap-1 rounded-xl bg-muted/40 px-3.5 py-3 transition-colors hover:bg-muted/70"
-                  >
-                    <p className="text-sm font-medium text-foreground">{item.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{item.detail}</p>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+      {/* Timeline track */}
+      <div className="flex flex-col items-center">
+        <div className={cn('mt-1 h-2 w-2 shrink-0 rounded-full', cfg.dot)} />
+        {!isLast && <div className="mt-1 w-px flex-1 bg-border" />}
       </div>
 
-    </Card>
+      {/* Content */}
+      <div className={cn('flex-1 pb-2.5', isLast && 'pb-0')}>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-[12px] font-semibold leading-snug text-foreground">{item.name}</p>
+          <span className={cn(
+            'shrink-0 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-semibold',
+            cfg.labelBg, cfg.labelText,
+          )}>
+            <Icon className="h-2.5 w-2.5" />
+            {cfg.label}
+          </span>
+        </div>
+        <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">{item.detail}</p>
+      </div>
+
+    </div>
+  )
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+export function CalendarAgendaPanel() {
+  const today = new Date()
+  const dateLabel = today.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month:   'long',
+    day:     'numeric',
+  })
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md">
+
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-border/40 bg-muted/10 px-6 py-5">
+        <div>
+          <h3 className="text-[15px] font-semibold tracking-tight text-foreground">Today's Schedule</h3>
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{dateLabel}</p>
+        </div>
+        <button
+          className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold tracking-wide text-primary transition-colors hover:bg-primary/20"
+          aria-label="Open full calendar"
+        >
+          <Calendar className="h-3 w-3" />
+          Calendar
+        </button>
+      </div>
+
+      {/* Summary chips */}
+      <div className="flex flex-wrap gap-2 border-b border-border/40 bg-muted/5 px-6 py-3">
+        {(
+          [
+            { type: 'visit',    count: 2 },
+            { type: 'meeting',  count: 1 },
+            { type: 'followup', count: 1 },
+          ] as { type: AgendaType; count: number }[]
+        ).map(({ type, count }) => {
+          const cfg = TYPE_CFG[type]
+          return (
+            <span
+              key={type}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide',
+                cfg.labelBg, cfg.labelText,
+              )}
+            >
+              <cfg.icon className="h-3 w-3" />
+              {count} {cfg.label}{count > 1 ? 's' : ''}
+            </span>
+          )
+        })}
+      </div>
+
+      {/* Timeline */}
+      <div className="flex-1 overflow-auto px-6 py-4">
+        {agendaItems.map((item, i) => (
+          <ScheduleItem
+            key={item.id}
+            item={item}
+            isLast={i === agendaItems.length - 1}
+          />
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-border/50 px-4 py-2.5">
+        <button className="flex w-full items-center justify-center gap-1 text-[11px] font-medium text-primary transition-opacity hover:opacity-80">
+          View full schedule
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+    </div>
   )
 }

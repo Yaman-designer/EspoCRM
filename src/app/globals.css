@@ -79,7 +79,7 @@
   --brand-navy-soft:     #E0EBF5;
   --brand-crimson:       #8B1728;
   --brand-crimson-soft:  #FDEAEA;
-  --background: #F7F8FA;
+  --background: #F4F6F8;
   --foreground: #101828;
   --card: #FFFFFF;
   --card-foreground: #101828;
@@ -94,7 +94,7 @@
   --accent: #EAF4FF;
   --accent-foreground: #0061BC;
   --destructive: #F04438;
-  --border: #E4E7EC;
+  --border: #E3E8EF;
   --input: #FFFFFF;
   --ring: #4DA9FF;
   --radius: 0.875rem;
@@ -103,20 +103,20 @@
   --chart-3: #12B76A;
   --chart-4: #F79009;
   --chart-5: #F04438;
-  --sidebar: #FFFFFF;
+  --sidebar: #FAFBFC;
   --sidebar-foreground: #344054;
   --sidebar-primary: #0061BC;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F0F2F5;
+  --sidebar-accent: #EFF1F4;
   --sidebar-accent-foreground: #101828;
-  --sidebar-border: #E4E7EC;
+  --sidebar-border: #E3E8EF;
   --sidebar-ring: #4DA9FF;
-  /* Shadows */
-  --shadow-xs: 0 1px 2px rgba(16,24,40,0.04);
-  --shadow-sm: 0 2px 4px rgba(16,24,40,0.06);
-  --shadow-md: 0 6px 12px rgba(16,24,40,0.08);
-  --shadow-lg: 0 12px 24px rgba(16,24,40,0.10);
-  --shadow-xl: 0 20px 40px rgba(16,24,40,0.12);
+  /* Shadows — multi-layer for premium surface depth */
+  --shadow-xs: 0 1px 2px rgba(16,24,40,0.03), 0 1px 3px rgba(16,24,40,0.04);
+  --shadow-sm: 0 1px 2px rgba(16,24,40,0.03), 0 2px 6px rgba(16,24,40,0.05);
+  --shadow-md: 0 2px 4px rgba(16,24,40,0.04), 0 6px 16px rgba(16,24,40,0.07);
+  --shadow-lg: 0 4px 8px rgba(16,24,40,0.06), 0 16px 32px rgba(16,24,40,0.10);
+  --shadow-xl: 0 8px 16px rgba(16,24,40,0.08), 0 24px 48px rgba(16,24,40,0.14);
 }
 
 /* ---- Azure SaaS CRM — Dark Mode ---- */
@@ -184,6 +184,10 @@
   .shadow-design-md  { box-shadow: var(--shadow-md); }
   .shadow-design-lg  { box-shadow: var(--shadow-lg); }
   .shadow-design-xl  { box-shadow: var(--shadow-xl); }
+  .card-hover {
+    transition: box-shadow 0.15s ease;
+    &:hover { box-shadow: var(--shadow-md); }
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -194,7 +198,7 @@
 
 /* Sidebar: hidden on mobile by default */
 .app-sidebar {
-  width: var(--sidebar-w, 260px);
+  width: var(--sidebar-w, 220px);
   transform: translateX(-110%);
   transition:
     transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
@@ -227,7 +231,7 @@
 /* Main content: offset by sidebar width on desktop */
 @media (min-width: 768px) {
   .dashboard-main {
-    margin-left: var(--sidebar-w, 260px);
+    margin-left: var(--sidebar-w, 220px);
   }
 }
 
