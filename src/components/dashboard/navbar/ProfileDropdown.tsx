@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/providers/AuthProvider'
 import { logoutAction } from '@/actions/auth'
 import { ChevronDown, User, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export function ProfileDropdown({ isOpen, onToggle }: Props) {
-  const { data: session } = useSession()
+  const { session } = useAuth()
   const userName = session?.user?.name ?? 'User'
   const initials = userName.slice(0, 2).toUpperCase()
 

@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
-import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { cn } from '@/lib/utils'
 import { btnCls } from './styles'
@@ -76,8 +75,6 @@ export function TopNavbar() {
           >
             {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
           </button>
-
-          <ThemeSwitcher />
 
           <LangDropdown
             isOpen={openDropdown === 'lang'}

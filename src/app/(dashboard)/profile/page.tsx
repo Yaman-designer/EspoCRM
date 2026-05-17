@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/providers/AuthProvider'
 import { Camera, Save } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function ProfilePage() {
-  const { data: session } = useSession()
+  const { session } = useAuth()
 
   const [form, setForm] = useState({
     name: session?.user?.name ?? '',

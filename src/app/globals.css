@@ -2,8 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* Class-based dark variant (next-themes adds .dark to <html>) */
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -66,6 +64,7 @@
 
 /* ---- Azure SaaS CRM — Light Mode ---- */
 :root {
+  color-scheme: light;
   /* ── Brand palette — 6 colours from design spec ── */
   --brand-emerald:       #276B4E;
   --brand-emerald-soft:  #E3F5EC;
@@ -119,58 +118,6 @@
   --shadow-xl: 0 8px 16px rgba(16,24,40,0.08), 0 24px 48px rgba(16,24,40,0.14);
 }
 
-/* ---- Azure SaaS CRM — Dark Mode ---- */
-.dark {
-  /* ── Brand palette — dark mode ── */
-  --brand-emerald:       #3DAF7A;
-  --brand-emerald-soft:  #0F2E1E;
-  --brand-azure:         #6BA4F8;
-  --brand-azure-soft:    #0D1E3F;
-  --brand-teal:          #3A9CBF;
-  --brand-teal-soft:     #0B2530;
-  --brand-lavender:      #9FBAE8;
-  --brand-lavender-soft: #1A2040;
-  --brand-navy:          #6A8FBF;
-  --brand-navy-soft:     #0D1B30;
-  --brand-crimson:       #D04060;
-  --brand-crimson-soft:  #2E0B13;
-  --background: #0F1115;
-  --foreground: #FFFFFF;
-  --card: #1B2230;
-  --card-foreground: #FFFFFF;
-  --popover: #1B2230;
-  --popover-foreground: #FFFFFF;
-  --primary: #4DA9FF;
-  --primary-foreground: #FFFFFF;
-  --secondary: #222B3A;
-  --secondary-foreground: #C7CDD8;
-  --muted: #222B3A;
-  --muted-foreground: #8B95A7;
-  --accent: #222B3A;
-  --accent-foreground: #7BBFFF;
-  --destructive: #F04438;
-  --border: #2C3444;
-  --input: #222B3A;
-  --ring: #4DA9FF;
-  --chart-1: #4DA9FF;
-  --chart-2: #7BBFFF;
-  --chart-3: #12B76A;
-  --chart-4: #F79009;
-  --chart-5: #F04438;
-  --sidebar: #151922;
-  --sidebar-foreground: #C7CDD8;
-  --sidebar-primary: #4DA9FF;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #222B3A;
-  --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #2C3444;
-  --sidebar-ring: #4DA9FF;
-  --shadow-xs: 0 1px 2px rgba(0,0,0,0.20);
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.25);
-  --shadow-md: 0 6px 12px rgba(0,0,0,0.30);
-  --shadow-lg: 0 12px 24px rgba(0,0,0,0.40);
-  --shadow-xl: 0 20px 40px rgba(0,0,0,0.45);
-}
 
 @layer base {
   * { @apply border-border outline-ring/50; }
