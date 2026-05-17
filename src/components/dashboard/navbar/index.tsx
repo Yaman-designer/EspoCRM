@@ -10,6 +10,7 @@ import { SidebarToggle } from './SidebarToggle'
 import { LangDropdown } from './LangDropdown'
 import { NotifDropdown } from './NotifDropdown'
 import { ProfileDropdown } from './ProfileDropdown'
+import { SearchDropdown } from './SearchDropdown'
 
 type OpenDropdown = 'lang' | 'notif' | 'profile' | null
 
@@ -18,7 +19,7 @@ export function TopNavbar() {
 
   const [openDropdown, setOpenDropdown] = useState<OpenDropdown>(null)
   const [searchOpen, setSearchOpen] = useState(false)
-  const searchInputRef = useRef<HTMLInputElement>(null)
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null)
 
   const { t } = useTranslation('common')
   const isCollapsed = width <= 64
@@ -27,7 +28,7 @@ export function TopNavbar() {
     setOpenDropdown((prev) => (prev === name ? null : name))
 
   useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus()
+    if (searchOpen) mobileSearchInputRef.current?.focus()
   }, [searchOpen])
 
   function handleSidebarToggle() {
@@ -48,19 +49,9 @@ export function TopNavbar() {
           onToggle={handleSidebarToggle}
         />
 
-        {/* Search bar — desktop only */}
-        <div className="relative hidden flex-1 md:block">
-          <Search className="pointer-events-none absolute inset-s-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            placeholder={t('search')}
-            className={cn(
-              'h-10 w-full max-w-sm rounded-xl border border-border bg-muted/50',
-              'ps-9 pe-20 text-sm text-foreground placeholder:text-muted-foreground',
-              'outline-none transition-all duration-200 focus:border-ring focus:ring-4 focus:ring-ring/12',
-            )}
-          />
-
+        {/* Search bar with live results — desktop only */}
+        <div className="hidden flex-1 md:block">
+          <SearchDropdown />
         </div>
 
         {/* Spacer — pushes right group to end on mobile */}
@@ -98,19 +89,11 @@ export function TopNavbar() {
       {/* Mobile expandable search bar */}
       {searchOpen && (
         <div className="sticky top-14 z-30 border-b border-border bg-background px-4 py-3 shadow-design-sm md:hidden">
-          <div className="relative">
-            <Search className="pointer-events-none absolute inset-s-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              ref={searchInputRef}
-              type="search"
-              placeholder={t('search')}
-              className={cn(
-                'h-10 w-full rounded-xl border border-border bg-muted/50',
-                'ps-9 pe-4 text-sm text-foreground placeholder:text-muted-foreground',
-                'outline-none transition-all duration-200 focus:border-ring focus:ring-4 focus:ring-ring/12',
-              )}
-            />
-          </div>
+          <SearchDropdown
+            inputRef={mobileSearchInputRef}
+            className="w-full"
+            onClose={() => setSearchOpen(false)}
+          />
         </div>
       )}
     </>

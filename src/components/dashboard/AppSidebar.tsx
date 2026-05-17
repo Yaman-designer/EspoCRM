@@ -139,8 +139,8 @@ export function AppSidebar() {
     <aside
       data-dragging={dragging || undefined}
       className={cn(
-        'app-sidebar fixed inset-y-0 inset-s-0 z-50 flex flex-col',
-        'bg-sidebar border-e border-sidebar-border shadow-design-sm',
+        'app-sidebar fixed top-3 bottom-3 inset-s-3 z-50 flex flex-col overflow-hidden',
+        'bg-sidebar rounded-2xl border border-sidebar-border shadow-design-md',
         mobileOpen && 'sidebar-mobile-open',
       )}
     >

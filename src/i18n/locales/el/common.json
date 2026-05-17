@@ -7,5 +7,11 @@
   "selectLanguage": "Επιλογή γλώσσας",
   "openSearch": "Αναζήτηση",
   "closeSearch": "Κλείσιμο αναζήτησης",
-  "saveChanges": "Αποθήκευση αλλαγών"
+  "saveChanges": "Αποθήκευση αλλαγών",
+  "search.searching": "Αναζήτηση...",
+  "search.noResults": "Δεν βρέθηκαν αποτελέσματα",
+  "search.entities.contact": "Επαφή",
+  "search.entities.request": "Αίτημα",
+  "search.entities.account": "Εταιρεία",
+  "search.entities.contract": "Μέρος Σύμβασης"
 }
