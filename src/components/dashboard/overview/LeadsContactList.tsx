@@ -1,3 +1,6 @@
+'use client'
+
+import { useTranslation } from 'react-i18next'
 import { Phone, ChevronRight, Flame, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -22,6 +25,7 @@ const AVATAR_PALETTE = [
 // ── Contact item ──────────────────────────────────────────────────────────────
 
 function LeadItem({ contact, index }: { contact: Contact; index: number }) {
+  const { t } = useTranslation('dashboard')
   const cfg = TEMP_CFG[contact.temp]
   const Icon = cfg.icon
 
@@ -46,7 +50,7 @@ function LeadItem({ contact, index }: { contact: Contact; index: number }) {
             cfg.bg, cfg.text,
           )}>
             <Icon className="h-2.5 w-2.5" />
-            {cfg.label}
+            {t(`leads.${contact.temp}`)}
           </span>
         </div>
         <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{contact.location}</p>
@@ -68,6 +72,7 @@ function LeadItem({ contact, index }: { contact: Contact; index: number }) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function LeadsContactList() {
+  const { t } = useTranslation('dashboard')
   const hotCount = contacts.filter((c) => c.temp === 'hot').length
 
   return (
@@ -75,12 +80,12 @@ export function LeadsContactList() {
 
       <div className="flex items-center justify-between border-b border-border/40 bg-muted/10 px-6 py-5">
         <div>
-          <h3 className="text-[15px] font-semibold tracking-tight text-foreground">Active Leads</h3>
+          <h3 className="text-[15px] font-semibold tracking-tight text-foreground">{t('leads.title')}</h3>
           <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            {hotCount} hot leads need follow-up
+            {t('leads.followUp', { count: hotCount })}
           </p>
         </div>
-        <Button variant="ghost" size="icon-xs" aria-label="View all leads" className="text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" size="icon-xs" aria-label={t('leads.viewAll', { count: contacts.length })} className="text-muted-foreground hover:text-foreground">
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
@@ -93,7 +98,7 @@ export function LeadsContactList() {
 
       <div className="border-t border-border/50 px-4 py-2.5">
         <button className="flex w-full items-center justify-center gap-1 text-[11px] font-medium text-primary transition-opacity hover:opacity-80">
-          View all {contacts.length} leads
+          {t('leads.viewAll', { count: contacts.length })}
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>

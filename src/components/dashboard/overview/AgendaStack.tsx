@@ -1,10 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { agendaItems, type AgendaItem, type AgendaTab } from './data'
-
-const TABS: AgendaTab[] = ['All', 'Assigned', 'My Schedule']
+import { agendaItems, type AgendaItem } from './data'
 
 function AgendaCard({ item }: { item: AgendaItem }) {
   return (
@@ -16,30 +15,35 @@ function AgendaCard({ item }: { item: AgendaItem }) {
 }
 
 export function AgendaStack() {
-  const [activeTab, setActiveTab] = useState<AgendaTab>('All')
+  const { t } = useTranslation('dashboard')
+
+  const TABS = [
+    { key: 'all',        label: t('tabs.all')        },
+    { key: 'assigned',   label: t('tabs.assigned')   },
+    { key: 'mySchedule', label: t('tabs.mySchedule') },
+  ]
+
+  const [activeTab, setActiveTab] = useState('all')
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-design-sm">
-
-      {/* Tabs */}
       <div className="mb-4 flex gap-0 border-b border-border">
         {TABS.map((tab) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
             className={cn(
               'pb-2.5 pr-4 text-xs font-medium transition-colors',
-              activeTab === tab
+              activeTab === tab.key
                 ? 'border-b-2 border-primary text-primary'
                 : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            {tab}
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Items */}
       <div className="flex flex-col gap-2.5">
         {agendaItems.map((item) => (
           <AgendaCard key={item.id} item={item} />

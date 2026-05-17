@@ -3,6 +3,7 @@ import { Poppins, Geist_Mono } from "next/font/google"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/providers/AuthProvider"
+import { I18nProvider } from "@/i18n/I18nProvider"
 import "./globals.css"
 
 const poppins = Poppins({
@@ -32,10 +33,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col">
         <AuthProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster richColors />
-          </TooltipProvider>
+          <I18nProvider>
+            <TooltipProvider>
+              {children}
+              <Toaster richColors />
+            </TooltipProvider>
+          </I18nProvider>
         </AuthProvider>
       </body>
     </html>

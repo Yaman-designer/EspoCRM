@@ -1,0 +1,23 @@
+{
+  "appName": "Ebla CRM",
+  "appTagline": "Real Estate Suite",
+  "main": "Main",
+  "home": "Home",
+  "properties": "Properties",
+  "fspo": "FSPO",
+  "operations": "Operations",
+  "request": "Request",
+  "calls": "Calls",
+  "contracts": "Contracts",
+  "contact": "Contact",
+  "pipeline": "Pipeline",
+  "planning": "Planning",
+  "calendar": "Calendar",
+  "documents": "Documents",
+  "admin": "Admin",
+  "company": "Company",
+  "users": "Users",
+  "teams": "Teams",
+  "chat": "Chat",
+  "email": "Email"
+}

@@ -1,0 +1,23 @@
+{
+  "appName": "Ebla CRM",
+  "appTagline": "Σουίτα Ακινήτων",
+  "main": "Κύριο",
+  "home": "Αρχική",
+  "properties": "Ακίνητα",
+  "fspo": "FSPO",
+  "operations": "Λειτουργίες",
+  "request": "Αίτηση",
+  "calls": "Κλήσεις",
+  "contracts": "Συμβόλαια",
+  "contact": "Επαφή",
+  "pipeline": "Αγωγός",
+  "planning": "Σχεδιασμός",
+  "calendar": "Ημερολόγιο",
+  "documents": "Έγγραφα",
+  "admin": "Διαχείριση",
+  "company": "Εταιρεία",
+  "users": "Χρήστες",
+  "teams": "Ομάδες",
+  "chat": "Συνομιλία",
+  "email": "Email"
+}

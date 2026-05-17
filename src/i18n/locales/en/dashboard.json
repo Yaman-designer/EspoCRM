@@ -1,0 +1,86 @@
+{
+  "stats": {
+    "activeLeads": "Active Leads",
+    "totalRevenue": "Total Revenue",
+    "activeListing": "Active Listing",
+    "totalClosed": "Total Closed",
+    "reminder": "Reminder"
+  },
+  "schedule": {
+    "title": "Today's Schedule",
+    "calendar": "Calendar",
+    "viewFull": "View full schedule",
+    "visit": "Visit",
+    "meeting": "Meeting",
+    "followup": "Follow-up"
+  },
+  "property": {
+    "sold": "Sold",
+    "rented": "Rented",
+    "views": "Views",
+    "occupancyRate": "Occupancy rate",
+    "topPerformer": "Top Performer",
+    "luxuryVilla": "Luxury Villa"
+  },
+  "pipeline": {
+    "title": "Deals",
+    "prospect": "Prospect",
+    "qualified": "Qualified",
+    "proposal": "Proposal",
+    "negotiation": "Negotiation",
+    "closed": "Closed",
+    "closedDeals": "Closed Deals",
+    "onProgress": "On Progress"
+  },
+  "alerts": {
+    "followUps": "Follow-Ups",
+    "propertyVisits": "Property Visits",
+    "expiringListings": "Expiring Listings"
+  },
+  "tabs": {
+    "all": "All",
+    "assigned": "Assigned",
+    "mySchedule": "My Schedule"
+  },
+  "listings": {
+    "title": "Active Listings",
+    "search": "Search listings...",
+    "newListing": "New Listing",
+    "noResults": "No listings match your search",
+    "noResultsHint": "Try adjusting your search terms",
+    "viewAll": "View all listings",
+    "showing": "Showing {{shown}} of {{total}} listings",
+    "properties": "{{count}} properties",
+    "columns": {
+      "property": "Property",
+      "type": "Type",
+      "price": "Price",
+      "status": "Status",
+      "leads": "Leads",
+      "views": "Views"
+    }
+  },
+  "leads": {
+    "title": "Active Leads",
+    "followUp": "{{count}} hot leads need follow-up",
+    "viewAll": "View all {{count}} leads",
+    "hot": "Hot",
+    "warm": "Warm",
+    "cold": "Cold"
+  },
+  "performance": {
+    "title": "Revenue Performance",
+    "revenue": "Revenue",
+    "visits": "Visits",
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "yearly": "Yearly",
+    "revenueYTD": "Revenue YTD",
+    "annualTarget": "Annual Target",
+    "achieved": "{{percent}}% achieved"
+  },
+  "reminders": {
+    "title": "Activity Alerts",
+    "needAttention": "{{count}} items need attention"
+  }
+}

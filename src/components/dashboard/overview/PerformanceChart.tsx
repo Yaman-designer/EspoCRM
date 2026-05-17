@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   ComposedChart,
   Area,
@@ -24,7 +25,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { chartData } from './data'
 
-const PERIODS = ['Monthly', 'Quarterly', 'Yearly'] as const
+const PERIODS = ['monthly', 'quarterly', 'yearly'] as const
+type Period = typeof PERIODS[number]
 
 // ── Custom tooltip ────────────────────────────────────────────────────────────
 
@@ -54,7 +56,8 @@ function CustomTooltip() {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function PerformanceChart() {
-  const [period, setPeriod] = useState('Monthly')
+  const { t } = useTranslation('dashboard')
+  const [period, setPeriod] = useState<Period>('monthly')
 
   return (
     <div className="flex h-full flex-col rounded-xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md overflow-hidden">
@@ -70,7 +73,7 @@ export function PerformanceChart() {
       {/* LEFT */}
       <div className="min-w-0">
         <h3 className="text-base font-semibold tracking-tight text-foreground">
-          Revenue Performance
+          {t('performance.title')}
         </h3>
       </div>
 
@@ -81,12 +84,12 @@ export function PerformanceChart() {
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <span className="h-2 w-2 rounded-full bg-primary" />
-            Revenue
+            {t('performance.revenue')}
           </span>
 
           <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <span className="h-2 w-2 rounded-full bg-chart-3" />
-            Visits
+            {t('performance.visits')}
           </span>
         </div>
 
@@ -98,7 +101,7 @@ export function PerformanceChart() {
               size="sm"
               className="h-8 rounded-lg px-3 text-xs"
             >
-              {period}
+              {t(`performance.${period}`)}
               <ChevronDown className="ml-1 h-3.5 w-3.5" />
             </Button>
           </DropdownMenuTrigger>
@@ -112,7 +115,7 @@ export function PerformanceChart() {
                   period === p && 'font-medium text-primary'
                 )}
               >
-                {p}
+                {t(`performance.${p}`)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -131,7 +134,7 @@ export function PerformanceChart() {
         </p>
 
         <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Revenue YTD
+          {t('performance.revenueYTD')}
         </p>
       </div>
 
@@ -145,13 +148,13 @@ export function PerformanceChart() {
         </p>
 
         <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Annual Target
+          {t('performance.annualTarget')}
         </p>
       </div>
 
       {/* Badge */}
       <div className="inline-flex h-9 items-center rounded-full bg-brand-emerald/10 px-3.5 text-xs font-semibold text-brand-emerald">
-        81% achieved
+        {t('performance.achieved', { percent: 81 })}
       </div>
 
     </div>

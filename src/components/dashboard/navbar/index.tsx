@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Search, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { cn } from '@/lib/utils'
 import { btnCls } from './styles'
@@ -19,6 +20,7 @@ export function TopNavbar() {
   const [searchOpen, setSearchOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  const { t } = useTranslation('common')
   const isCollapsed = width <= 64
 
   const toggleDropdown = (name: OpenDropdown) =>
@@ -51,7 +53,7 @@ export function TopNavbar() {
           <Search className="pointer-events-none absolute inset-s-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="search"
-            placeholder="Type here to search..."
+            placeholder={t('search')}
             className={cn(
               'h-10 w-full max-w-sm rounded-xl border border-border bg-muted/50',
               'ps-9 pe-20 text-sm text-foreground placeholder:text-muted-foreground',
@@ -71,7 +73,7 @@ export function TopNavbar() {
           <button
             onClick={() => setSearchOpen((p) => !p)}
             className={cn(btnCls, 'md:hidden', searchOpen && 'bg-muted text-foreground')}
-            aria-label={searchOpen ? 'Close search' : 'Search'}
+            aria-label={searchOpen ? t('closeSearch') : t('openSearch')}
           >
             {searchOpen ? <X className="h-4 w-4" /> : <Search className="h-4 w-4" />}
           </button>
@@ -101,7 +103,7 @@ export function TopNavbar() {
             <input
               ref={searchInputRef}
               type="search"
-              placeholder="Type here to search..."
+              placeholder={t('search')}
               className={cn(
                 'h-10 w-full rounded-xl border border-border bg-muted/50',
                 'ps-9 pe-4 text-sm text-foreground placeholder:text-muted-foreground',

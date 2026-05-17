@@ -1,0 +1,19 @@
+{
+  "title": "Προφίλ",
+  "personalInfo": "Προσωπικές Πληροφορίες",
+  "fullName": "Πλήρες Όνομα",
+  "emailAddress": "Διεύθυνση Email",
+  "phoneNumber": "Αριθμός Τηλεφώνου",
+  "personalBio": "Προσωπική Βιογραφία",
+  "saveChanges": "Αποθήκευση αλλαγών",
+  "savedSuccess": "Το προφίλ ενημερώθηκε επιτυχώς",
+  "changeAvatar": "Αλλαγή εικόνας",
+  "role": "Πράκτορας Ακινήτων · Ebla CRM",
+  "yourName": "Το Όνομά σας",
+  "placeholders": {
+    "fullName": "Εισάγετε το πλήρες όνομά σας",
+    "email": "you@example.com",
+    "phone": "+30 6900 000000",
+    "bio": "Πείτε στους πελάτες σας λίγα πράγματα για εσάς..."
+  }
+}

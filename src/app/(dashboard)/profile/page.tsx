@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/providers/AuthProvider'
 import { Camera, Save } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function ProfilePage() {
+  const { t } = useTranslation('profile')
   const { session } = useAuth()
 
   const [form, setForm] = useState({
@@ -33,16 +35,15 @@ export default function ProfilePage() {
 
       {/* Header card */}
       <div className="rounded-xl border border-border bg-card p-6 shadow-design-xs flex flex-col sm:flex-row items-center gap-5">
-        {/* Avatar */}
         <div className="relative shrink-0">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-2xl select-none">
             {initials}
           </div>
           <button
             type="button"
-            aria-label="Change avatar"
+            aria-label={t('changeAvatar')}
             className={cn(
-              'absolute bottom-0 end-0 flex h-7 w-7 items-center justify-center rounded-full',
+              'absolute bottom-0 inset-e-0 flex h-7 w-7 items-center justify-center rounded-full',
               'border-2 border-background bg-primary text-primary-foreground shadow-design-sm',
               'hover:bg-primary/90 transition-colors',
             )}
@@ -52,30 +53,26 @@ export default function ProfilePage() {
         </div>
 
         <div className="text-center sm:text-start">
-          <p className="text-lg font-semibold text-foreground">{form.name || 'Your Name'}</p>
+          <p className="text-lg font-semibold text-foreground">{form.name || t('yourName')}</p>
           <p className="text-sm text-muted-foreground">{form.email}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Real Estate Agent · Ebla CRM</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('role')}</p>
         </div>
       </div>
 
       {/* Profile form */}
       <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-card p-6 shadow-design-xs space-y-5">
         <p className="text-sm font-semibold text-foreground border-b border-border pb-3">
-          Personal Information
+          {t('personalInfo')}
         </p>
 
-        {/* Name */}
         <div className="space-y-1.5">
           <label htmlFor="name" className="block text-sm font-medium text-foreground">
-            Full Name
+            {t('fullName')}
           </label>
           <input
-            id="name"
-            name="name"
-            type="text"
-            value={form.name}
-            onChange={handleChange}
-            placeholder="Enter your full name"
+            id="name" name="name" type="text"
+            value={form.name} onChange={handleChange}
+            placeholder={t('placeholders.fullName')}
             className={cn(
               'w-full h-10 rounded-xl border border-border bg-muted/40 px-3.5',
               'text-sm text-foreground placeholder:text-muted-foreground',
@@ -84,18 +81,14 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* Email */}
         <div className="space-y-1.5">
           <label htmlFor="email" className="block text-sm font-medium text-foreground">
-            Email Address
+            {t('emailAddress')}
           </label>
           <input
-            id="email"
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="you@example.com"
+            id="email" name="email" type="email"
+            value={form.email} onChange={handleChange}
+            placeholder={t('placeholders.email')}
             className={cn(
               'w-full h-10 rounded-xl border border-border bg-muted/40 px-3.5',
               'text-sm text-foreground placeholder:text-muted-foreground',
@@ -104,18 +97,14 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* Phone */}
         <div className="space-y-1.5">
           <label htmlFor="phone" className="block text-sm font-medium text-foreground">
-            Phone Number
+            {t('phoneNumber')}
           </label>
           <input
-            id="phone"
-            name="phone"
-            type="tel"
-            value={form.phone}
-            onChange={handleChange}
-            placeholder="+971 50 000 0000"
+            id="phone" name="phone" type="tel"
+            value={form.phone} onChange={handleChange}
+            placeholder={t('placeholders.phone')}
             className={cn(
               'w-full h-10 rounded-xl border border-border bg-muted/40 px-3.5',
               'text-sm text-foreground placeholder:text-muted-foreground',
@@ -124,18 +113,14 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* Bio */}
         <div className="space-y-1.5">
           <label htmlFor="bio" className="block text-sm font-medium text-foreground">
-            Personal Bio
+            {t('personalBio')}
           </label>
           <textarea
-            id="bio"
-            name="bio"
-            rows={4}
-            value={form.bio}
-            onChange={handleChange}
-            placeholder="Tell your clients a bit about yourself..."
+            id="bio" name="bio" rows={4}
+            value={form.bio} onChange={handleChange}
+            placeholder={t('placeholders.bio')}
             className={cn(
               'w-full rounded-xl border border-border bg-muted/40 px-3.5 py-2.5',
               'text-sm text-foreground placeholder:text-muted-foreground resize-none',
@@ -144,7 +129,6 @@ export default function ProfilePage() {
           />
         </div>
 
-        {/* Submit */}
         <div className="flex items-center gap-3 pt-1">
           <button
             type="submit"
@@ -155,10 +139,10 @@ export default function ProfilePage() {
             )}
           >
             <Save className="h-4 w-4" />
-            Save Changes
+            {t('saveChanges')}
           </button>
           {saved && (
-            <p className="text-sm font-medium text-[#12B76A]">Profile updated successfully</p>
+            <p className="text-sm font-medium text-[#12B76A]">{t('savedSuccess')}</p>
           )}
         </div>
       </form>

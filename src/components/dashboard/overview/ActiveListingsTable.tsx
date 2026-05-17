@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Search, Plus, Building2, Eye, Pencil, ChevronRight, ArrowUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatNumber } from '@/lib/format'
@@ -169,6 +170,7 @@ function ListingRow({ listing, index }: { listing: Listing; index: number }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 export function ActiveListingsTable() {
+  const { t } = useTranslation('dashboard')
   const [search, setSearch] = useState('')
 
   const filtered = listings.filter(
@@ -183,9 +185,9 @@ export function ActiveListingsTable() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/40 bg-muted/10 px-6 py-5">
         <div>
-          <h3 className="text-[15px] font-semibold tracking-tight text-foreground">Active Listings</h3>
+          <h3 className="text-[15px] font-semibold tracking-tight text-foreground">{t('listings.title')}</h3>
           <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            {filtered.length} properties
+            {t('listings.properties', { count: filtered.length })}
           </p>
         </div>
 
@@ -195,13 +197,13 @@ export function ActiveListingsTable() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search listings..."
+              placeholder={t('listings.search')}
               className="h-8 w-44 ps-8 text-xs"
             />
           </div>
           <Button size="xs" className="gap-1.5 text-xs">
             <Plus className="h-3.5 w-3.5" />
-            New Listing
+            {t('listings.newListing')}
           </Button>
         </div>
       </div>
@@ -211,12 +213,12 @@ export function ActiveListingsTable() {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-border/50 bg-muted/25">
-              <ColumnHeader label="Property" sortable cls="pl-5 pr-4" />
-              <ColumnHeader label="Type" cls="hidden px-3 sm:table-cell" />
-              <ColumnHeader label="Price" sortable cls="px-3" />
-              <ColumnHeader label="Status" cls="px-3" />
-              <ColumnHeader label="Leads" sortable cls="hidden px-3 lg:table-cell" />
-              <ColumnHeader label="Views" sortable cls="hidden px-3 xl:table-cell" />
+              <ColumnHeader label={t('listings.columns.property')} sortable cls="pl-5 pr-4" />
+              <ColumnHeader label={t('listings.columns.type')} cls="hidden px-3 sm:table-cell" />
+              <ColumnHeader label={t('listings.columns.price')} sortable cls="px-3" />
+              <ColumnHeader label={t('listings.columns.status')} cls="px-3" />
+              <ColumnHeader label={t('listings.columns.leads')} sortable cls="hidden px-3 lg:table-cell" />
+              <ColumnHeader label={t('listings.columns.views')} sortable cls="hidden px-3 xl:table-cell" />
               <th className="py-2 pr-5" />
             </tr>
           </thead>
@@ -228,8 +230,8 @@ export function ActiveListingsTable() {
                   <td colSpan={7} className="py-14 text-center">
                     <div className="flex flex-col items-center gap-2">
                       <Building2 className="h-8 w-8 text-muted-foreground/40" />
-                      <p className="text-sm font-medium text-muted-foreground">No listings match your search</p>
-                      <p className="text-xs text-muted-foreground/70">Try adjusting your search terms</p>
+                      <p className="text-sm font-medium text-muted-foreground">{t('listings.noResults')}</p>
+                      <p className="text-xs text-muted-foreground/70">{t('listings.noResultsHint')}</p>
                     </div>
                   </td>
                 </tr>
@@ -241,9 +243,11 @@ export function ActiveListingsTable() {
 
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-border/50 px-5 py-2.5">
-        <p className="text-[11px] text-muted-foreground">Showing {filtered.length} of {listings.length} listings</p>
+        <p className="text-[11px] text-muted-foreground">
+          {t('listings.showing', { shown: filtered.length, total: listings.length })}
+        </p>
         <button className="flex items-center gap-1 text-[11px] font-medium text-primary transition-opacity hover:opacity-80">
-          View all listings
+          {t('listings.viewAll')}
           <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Clock, Info, ChevronRight, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -82,13 +83,16 @@ function AlertRow({ alert }: { alert: ActivityAlert }) {
 // ── Container ─────────────────────────────────────────────────────────────────
 
 export function ReminderList() {
+  const { t } = useTranslation('dashboard')
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md">
 
       <div className="flex items-center justify-between border-b border-border/40 bg-muted/10 px-6 py-5">
         <div>
-          <h3 className="text-[15px] font-semibold tracking-tight text-foreground">Activity Alerts</h3>
-          <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{reminders.length} items need attention</p>
+          <h3 className="text-[15px] font-semibold tracking-tight text-foreground">{t('reminders.title')}</h3>
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            {t('reminders.needAttention', { count: reminders.length })}
+          </p>
         </div>
         <Button variant="ghost" size="icon-xs" aria-label="Open alerts" className="text-muted-foreground hover:text-foreground">
           <ExternalLink className="h-4 w-4" />

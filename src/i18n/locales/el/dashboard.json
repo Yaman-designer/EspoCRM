@@ -1,0 +1,86 @@
+{
+  "stats": {
+    "activeLeads": "Ενεργά Leads",
+    "totalRevenue": "Συνολικά Έσοδα",
+    "activeListing": "Ενεργές Καταχωρίσεις",
+    "totalClosed": "Συνολικά Κλειστά",
+    "reminder": "Υπενθύμιση"
+  },
+  "schedule": {
+    "title": "Πρόγραμμα Σήμερα",
+    "calendar": "Ημερολόγιο",
+    "viewFull": "Προβολή πλήρους προγράμματος",
+    "visit": "Επίσκεψη",
+    "meeting": "Σύσκεψη",
+    "followup": "Παρακολούθηση"
+  },
+  "property": {
+    "sold": "Πωλήθηκε",
+    "rented": "Ενοικιάστηκε",
+    "views": "Προβολές",
+    "occupancyRate": "Ποσοστό πληρότητας",
+    "topPerformer": "Κορυφαία Απόδοση",
+    "luxuryVilla": "Πολυτελής Βίλα"
+  },
+  "pipeline": {
+    "title": "Συμφωνίες",
+    "prospect": "Υποψήφιος",
+    "qualified": "Αξιολογημένος",
+    "proposal": "Πρόταση",
+    "negotiation": "Διαπραγμάτευση",
+    "closed": "Κλειστό",
+    "closedDeals": "Κλειστές Συμφωνίες",
+    "onProgress": "Σε Εξέλιξη"
+  },
+  "alerts": {
+    "followUps": "Παρακολουθήσεις",
+    "propertyVisits": "Επισκέψεις Ακινήτων",
+    "expiringListings": "Καταχωρίσεις που Λήγουν"
+  },
+  "tabs": {
+    "all": "Όλα",
+    "assigned": "Ανατεθειμένα",
+    "mySchedule": "Το Πρόγραμμά μου"
+  },
+  "listings": {
+    "title": "Ενεργές Καταχωρίσεις",
+    "search": "Αναζήτηση καταχωρίσεων...",
+    "newListing": "Νέα Καταχώριση",
+    "noResults": "Δεν βρέθηκαν καταχωρίσεις",
+    "noResultsHint": "Δοκιμάστε διαφορετικούς όρους αναζήτησης",
+    "viewAll": "Προβολή όλων των καταχωρίσεων",
+    "showing": "Εμφάνιση {{shown}} από {{total}} καταχωρίσεις",
+    "properties": "{{count}} ακίνητα",
+    "columns": {
+      "property": "Ακίνητο",
+      "type": "Τύπος",
+      "price": "Τιμή",
+      "status": "Κατάσταση",
+      "leads": "Leads",
+      "views": "Προβολές"
+    }
+  },
+  "leads": {
+    "title": "Ενεργά Leads",
+    "followUp": "{{count}} hot leads χρειάζονται παρακολούθηση",
+    "viewAll": "Προβολή όλων των {{count}} leads",
+    "hot": "Hot",
+    "warm": "Warm",
+    "cold": "Cold"
+  },
+  "performance": {
+    "title": "Απόδοση Εσόδων",
+    "revenue": "Έσοδα",
+    "visits": "Επισκέψεις",
+    "monthly": "Μηνιαία",
+    "quarterly": "Τριμηνιαία",
+    "yearly": "Ετήσια",
+    "revenueYTD": "Έσοδα Έτους",
+    "annualTarget": "Ετήσιος Στόχος",
+    "achieved": "{{percent}}% επιτεύχθηκε"
+  },
+  "reminders": {
+    "title": "Ειδοποιήσεις Δραστηριότητας",
+    "needAttention": "{{count}} στοιχεία χρειάζονται προσοχή"
+  }
+}

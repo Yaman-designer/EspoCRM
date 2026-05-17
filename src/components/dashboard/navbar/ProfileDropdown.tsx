@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/providers/AuthProvider'
 import { logoutAction } from '@/actions/auth'
 import { ChevronDown, User, LogOut } from 'lucide-react'
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function ProfileDropdown({ isOpen, onToggle }: Props) {
+  const { t } = useTranslation('common')
   const { session } = useAuth()
   const userName = session?.user?.name ?? 'User'
   const initials = userName.slice(0, 2).toUpperCase()
@@ -56,7 +58,7 @@ export function ProfileDropdown({ isOpen, onToggle }: Props) {
                 className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted"
               >
                 <User className="h-4 w-4 text-muted-foreground" />
-                Profile
+                {t('profile')}
               </Link>
             </div>
 
@@ -67,7 +69,7 @@ export function ProfileDropdown({ isOpen, onToggle }: Props) {
                   className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-destructive transition-colors hover:bg-destructive/10"
                 >
                   <LogOut className="h-4 w-4" />
-                  Log Out
+                  {t('logOut')}
                 </button>
               </form>
             </div>

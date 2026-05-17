@@ -1,0 +1,38 @@
+{
+  "title": "Notifications",
+  "subtitle": "Stay updated with your activities",
+  "markRead": "Mark read",
+  "viewAll": "View all",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "earlier": "Earlier",
+  "allCaughtUp": "All caught up",
+  "noNew": "No new notifications right now",
+  "noNotifications": "No notifications to show",
+  "loadFailed": "Couldn't load notifications",
+  "tryAgain": "Try again",
+  "loading": "Loading…",
+  "showMore": "Show more",
+  "loadMore": "Load more",
+  "refresh": "Refresh notifications",
+  "count_one": "{{count}} notification",
+  "count_other": "{{count}} notifications",
+  "deleteConfirm": "Delete this notification?",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "moreOptions": "More options",
+  "actions": {
+    "postedOn": "posted on",
+    "created": "created",
+    "assigned": "assigned",
+    "updated": "updated",
+    "assignedToYou": "assigned to you",
+    "toYou": "to you"
+  },
+  "entity": {
+    "dialog": "dialog",
+    "request": "request",
+    "contact": "contact",
+    "contractParty": "contract party"
+  }
+}

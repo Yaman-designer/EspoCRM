@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, Loader2, Building2 } from 'lucide-react'
 import { toast } from 'sonner'
 
+import { useTranslation } from 'react-i18next'
 import { loginSchema, type LoginInput } from '@/lib/schemas/auth'
 import { loginAction } from '@/actions/auth'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,7 @@ import {
 } from '@/components/ui/card'
 
 export function LoginForm() {
+  const { t } = useTranslation('auth')
   const [isPending, startTransition] = useTransition()
   const [showPassword, setShowPassword] = useState(false)
 
@@ -45,7 +47,7 @@ export function LoginForm() {
       const result = await loginAction(data)
       if (result?.error) {
         toast.error(result.error, {
-          description: 'Please check your credentials and try again',
+          description: t('credentialError'),
         })
         form.setFocus('username')
         form.setValue('password', '')
@@ -61,10 +63,10 @@ export function LoginForm() {
         </div>
         <div className="space-y-1">
           <CardTitle className="text-2xl font-bold tracking-tight">
-            Ebla CRM
+            {t('title')}
           </CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
-            Enter your login credentials to access the dashboard
+            {t('subtitle')}
           </CardDescription>
         </div>
       </CardHeader>
@@ -82,7 +84,7 @@ export function LoginForm() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>{t('username')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="admin"
@@ -104,7 +106,7 @@ export function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t('password')}</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Input
@@ -120,7 +122,7 @@ export function LoginForm() {
                         onClick={() => setShowPassword((v) => !v)}
                         disabled={isPending}
                         className="absolute inset-y-0 end-0 flex items-center px-3 text-muted-foreground hover:text-foreground focus:outline-none"
-                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        aria-label={showPassword ? t('hidePassword') : t('showPassword')}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -153,7 +155,7 @@ export function LoginForm() {
                     htmlFor="rememberMe"
                     className="cursor-pointer text-sm font-normal"
                   >
-                    Remember me for 7 days
+                    {t('rememberMe')}
                   </FormLabel>
                 </FormItem>
               )}
@@ -168,10 +170,10 @@ export function LoginForm() {
               {isPending ? (
                 <>
                   <Loader2 className="me-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  {t('signingIn')}
                 </>
               ) : (
-                'Sign in'
+                t('signIn')
               )}
             </Button>
           </form>

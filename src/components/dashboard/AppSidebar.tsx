@@ -21,71 +21,84 @@ import {
   ChevronDown,
   UserSquare2,
   UsersRound,
+  type LucideIcon,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import {
-  useSidebarStore,
-  SIDEBAR_MIN,
-  SIDEBAR_MAX,
-} from '@/store/sidebarStore'
+import { useSidebarStore, SIDEBAR_MIN, SIDEBAR_MAX } from '@/store/sidebarStore'
 
-// ── Navigation structure with groups ─────────────────────────────────────────
+// ── Navigation structure (ids = translation keys in nav namespace) ────────────
 
-const navGroups = [
+interface NavChild {
+  id: string
+  labelKey: string
+  href: string
+  icon: LucideIcon
+}
+
+interface NavItem {
+  id: string
+  href: string
+  icon: LucideIcon
+  children?: NavChild[]
+}
+
+interface NavGroup {
+  id: string
+  items: NavItem[]
+}
+
+const NAV_GROUPS: NavGroup[] = [
   {
     id: 'main',
-    label: 'Main',
     items: [
-      { id: 'home', label: 'Home', href: '/dashboard', icon: LayoutDashboard },
-      { id: 'properties', label: 'Properties', href: '/properties', icon: Building2 },
-      { id: 'fspo', label: 'FSPO', href: '/fspo', icon: Home },
+      { id: 'home',       href: '/dashboard',  icon: LayoutDashboard },
+      { id: 'properties', href: '/properties', icon: Building2        },
+      { id: 'fspo',       href: '/fspo',       icon: Home             },
     ],
   },
   {
     id: 'operations',
-    label: 'Operations',
     items: [
-      { id: 'request', label: 'Request', href: '/request', icon: ClipboardList },
-      { id: 'calls', label: 'Calls', href: '/calls', icon: Phone },
-      { id: 'contracts', label: 'Contracts', href: '/contracts', icon: FileText },
-      { id: 'contact', label: 'Contact', href: '/contact', icon: Users },
-      { id: 'pipeline', label: 'Pipeline', href: '/pipeline', icon: GitBranch },
+      { id: 'request',   href: '/request',   icon: ClipboardList },
+      { id: 'calls',     href: '/calls',     icon: Phone         },
+      { id: 'contracts', href: '/contracts', icon: FileText      },
+      { id: 'contact',   href: '/contact',   icon: Users         },
+      { id: 'pipeline',  href: '/pipeline',  icon: GitBranch     },
     ],
   },
   {
     id: 'planning',
-    label: 'Planning',
     items: [
-      { id: 'calendar', label: 'Calendar', href: '/calendar', icon: Calendar },
-      { id: 'documents', label: 'Documents', href: '/documents', icon: FolderOpen },
+      { id: 'calendar',  href: '/calendar',  icon: Calendar   },
+      { id: 'documents', href: '/documents', icon: FolderOpen },
     ],
   },
   {
     id: 'admin',
-    label: 'Admin',
     items: [
       {
-        id: 'company', label: 'Company', href: '/company', icon: Briefcase,
+        id: 'company', href: '/company', icon: Briefcase,
         children: [
-          { id: 'company-users', label: 'Users', href: '/company/users', icon: UserSquare2 },
-          { id: 'company-teams', label: 'Teams', href: '/company/teams', icon: UsersRound },
+          { id: 'company-users', labelKey: 'users',  href: '/company/users',  icon: UserSquare2 },
+          { id: 'company-teams', labelKey: 'teams', href: '/company/teams', icon: UsersRound  },
         ],
       },
-      { id: 'chat', label: 'Chat', href: '/chat', icon: MessageSquare },
-      { id: 'email', label: 'Email', href: '/email', icon: Mail },
+      { id: 'chat',  href: '/chat',  icon: MessageSquare },
+      { id: 'email', href: '/email', icon: Mail          },
     ],
   },
 ]
 
 export function AppSidebar() {
+  const { t } = useTranslation('nav')
   const pathname = usePathname()
-  const { width, mobileOpen, dragging, setWidth, snapAfterDrag, setDragging } =
-    useSidebarStore()
+  const { width, mobileOpen, dragging, setWidth, snapAfterDrag, setDragging } = useSidebarStore()
   const [expanded, setExpanded] = useState(new Set(['company']))
   const dragRef = useRef({ active: false, startX: 0, startW: 0 })
 
   const isCollapsed = width <= SIDEBAR_MIN
-  const showLabels = width > 110
+  const showLabels  = width > 110
 
   const onResizeDown = useCallback(
     (e: React.MouseEvent) => {
@@ -95,10 +108,7 @@ export function AppSidebar() {
 
       const onMove = (ev: MouseEvent) => {
         if (!dragRef.current.active) return
-        const newW = Math.max(
-          SIDEBAR_MIN,
-          Math.min(SIDEBAR_MAX, dragRef.current.startW + ev.clientX - dragRef.current.startX),
-        )
+        const newW = Math.max(SIDEBAR_MIN, Math.min(SIDEBAR_MAX, dragRef.current.startW + ev.clientX - dragRef.current.startX))
         document.documentElement.style.setProperty('--sidebar-w', `${newW}px`)
         setWidth(newW)
       }
@@ -147,10 +157,10 @@ export function AppSidebar() {
         {showLabels && (
           <div className="overflow-hidden">
             <p className="whitespace-nowrap text-[13px] font-semibold leading-none text-foreground">
-              Ebla CRM
+              {t('appName')}
             </p>
             <p className="mt-0.5 whitespace-nowrap text-[10px] leading-none text-muted-foreground">
-              Real Estate Suite
+              {t('appTagline')}
             </p>
           </div>
         )}
@@ -159,12 +169,11 @@ export function AppSidebar() {
       {/* ── Navigation ── */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2">
         <div className="flex flex-col gap-3">
-          {navGroups.map((group) => (
+          {NAV_GROUPS.map((group) => (
             <div key={group.id}>
-              {/* Group label — only when expanded */}
               {showLabels && (
                 <p className="mb-0.5 px-3 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/40">
-                  {group.label}
+                  {t(group.id)}
                 </p>
               )}
               {!showLabels && group.id !== 'main' && (
@@ -173,17 +182,16 @@ export function AppSidebar() {
 
               <div className="space-y-0.5">
                 {group.items.map((item) => {
-                  const hasChildren = 'children' in item && !!item.children?.length
-                  const isActive = pathname === item.href || (!hasChildren && item.href !== '/dashboard' && pathname.startsWith(item.href + '/'))
+                  const hasChildren   = !!item.children?.length
+                  const label         = t(item.id)
+                  const isActive      = pathname === item.href || (!hasChildren && item.href !== '/dashboard' && pathname.startsWith(item.href + '/'))
                   const isChildActive = hasChildren && item.children!.some((c) => pathname === c.href)
-                  const isExpanded = expanded.has(item.id)
-                  const highlighted = isActive || isChildActive
+                  const isExpanded    = expanded.has(item.id)
+                  const highlighted   = isActive || isChildActive
 
                   const iconCls = cn(
                     'h-[17px] w-[17px] shrink-0 stroke-[1.8] transition-colors',
-                    highlighted
-                      ? 'text-primary-foreground'
-                      : 'text-muted-foreground group-hover:text-foreground',
+                    highlighted ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground',
                   )
                   const rowCls = cn(
                     'group flex h-9 items-center rounded-lg transition-colors duration-150 select-none',
@@ -198,9 +206,7 @@ export function AppSidebar() {
                       {hasChildren && !isCollapsed ? (
                         <div className={cn(rowCls, 'cursor-pointer')} onClick={() => toggleExpand(item.id)}>
                           <item.icon className={iconCls} />
-                          {showLabels && (
-                            <span className="flex-1 truncate text-[13px] font-medium">{item.label}</span>
-                          )}
+                          {showLabels && <span className="flex-1 truncate text-[13px] font-medium">{label}</span>}
                           {showLabels && (
                             isExpanded
                               ? <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
@@ -208,15 +214,9 @@ export function AppSidebar() {
                           )}
                         </div>
                       ) : (
-                        <Link
-                          href={item.href}
-                          className={rowCls}
-                          title={isCollapsed ? item.label : undefined}
-                        >
+                        <Link href={item.href} className={rowCls} title={isCollapsed ? label : undefined}>
                           <item.icon className={iconCls} />
-                          {showLabels && (
-                            <span className="flex-1 truncate text-[13px] font-medium">{item.label}</span>
-                          )}
+                          {showLabels && <span className="flex-1 truncate text-[13px] font-medium">{label}</span>}
                         </Link>
                       )}
 
@@ -242,7 +242,7 @@ export function AppSidebar() {
                                     childActive ? 'text-primary' : 'text-muted-foreground',
                                   )}
                                 />
-                                <span>{child.label}</span>
+                                <span>{t(child.labelKey)}</span>
                               </Link>
                             )
                           })}

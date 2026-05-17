@@ -1,0 +1,19 @@
+{
+  "title": "Profile",
+  "personalInfo": "Personal Information",
+  "fullName": "Full Name",
+  "emailAddress": "Email Address",
+  "phoneNumber": "Phone Number",
+  "personalBio": "Personal Bio",
+  "saveChanges": "Save Changes",
+  "savedSuccess": "Profile updated successfully",
+  "changeAvatar": "Change avatar",
+  "role": "Real Estate Agent · Ebla CRM",
+  "yourName": "Your Name",
+  "placeholders": {
+    "fullName": "Enter your full name",
+    "email": "you@example.com",
+    "phone": "+971 50 000 0000",
+    "bio": "Tell your clients a bit about yourself..."
+  }
+}
