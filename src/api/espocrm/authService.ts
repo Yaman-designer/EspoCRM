@@ -2,7 +2,7 @@ import axios from 'axios'
 
 // We use a separate instance without interceptors to avoid conflicts during login
 const authAxios = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_ESPO_API_URL,
+baseURL: process.env.NEXT_PUBLIC_ESPO_API_URL!,
   headers: { 'Content-Type': 'application/json' },
 })
 

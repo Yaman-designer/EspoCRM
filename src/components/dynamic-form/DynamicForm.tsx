@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
@@ -98,6 +99,7 @@ export function DynamicForm<T = Record<string, unknown>>({
   maxWidth = '2xl',
   transformSubmit,
 }: DynamicFormProps<T>) {
+  const { t } = useTranslation('common')
   const isEdit = mode === 'edit'
   const isView = mode === 'view'
 
@@ -136,7 +138,7 @@ export function DynamicForm<T = Record<string, unknown>>({
   const onSubmit = (data: Record<string, unknown>) => mutation.mutate(data)
 
   const resolvedSubmitLabel =
-    submitLabel ?? (isEdit ? 'Save Changes' : `Create ${title.split(' ').pop() ?? ''}`)
+    submitLabel ?? (isEdit ? t('saveChanges') : `Create ${title.split(' ').pop() ?? ''}`)
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>

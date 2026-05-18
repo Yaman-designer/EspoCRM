@@ -33,10 +33,12 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
         {/* Notification bell */}
         <button
           aria-label="Notifications"
-          className="relative flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-all duration-250 hover:bg-muted hover:text-foreground"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground transition-all duration-250 hover:bg-muted hover:text-foreground"
         >
-          <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 end-1.5 h-2 w-2 rounded-full bg-[#F04438] ring-2 ring-background" />
+          <div className="relative">
+            <Bell className="h-4 w-4" />
+            <span className="absolute -top-1.5 -right-1.5 h-2 w-2 rounded-full bg-[#F04438] ring-2 ring-background" />
+          </div>
         </button>
 
         {/* Avatar */}

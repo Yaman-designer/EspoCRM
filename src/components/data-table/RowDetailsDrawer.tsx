@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import {
   Sheet,
@@ -141,6 +142,7 @@ export function RowDetailsDrawer<T extends object>({
   rowActions = [],
   renderContent,
 }: RowDetailsDrawerProps<T>) {
+  const { t } = useTranslation('common')
   if (!row) return null
 
   const r = row as Record<string, unknown>
@@ -174,7 +176,7 @@ export function RowDetailsDrawer<T extends object>({
             )}
             <div className="min-w-0">
               <SheetTitle className="truncate text-[15px] font-semibold">
-                {primaryName || 'Record Details'}
+                {primaryName || t('table.recordDetails')}
               </SheetTitle>
               {primarySub && (
                 <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
@@ -202,7 +204,7 @@ export function RowDetailsDrawer<T extends object>({
         {rowActions.length > 0 && (
           <div className="border-t border-border/50 bg-muted/20 px-5 py-4">
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Actions
+              {t('table.actions')}
             </p>
             <div className="flex flex-wrap gap-2">
               {rowActions

@@ -27,7 +27,8 @@
     "assigned": "ανέθεσε",
     "updated": "ενημέρωσε",
     "assignedToYou": "ανατέθηκε σε εσάς",
-    "toYou": "σε εσάς"
+    "toYou": "σε εσάς",
+    "to": "σε"
   },
   "entity": {
     "dialog": "διάλογο",

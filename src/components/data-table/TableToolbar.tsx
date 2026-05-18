@@ -1,7 +1,8 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Search, Plus, Download, RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Search, Plus, RefreshCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -16,11 +17,9 @@ interface TableToolbarProps {
   searchPlaceholder?: string
   searchable?: boolean
 
-  exportable?: boolean
   addable?: boolean
   addLabel?: string
   onAdd?: () => void
-  onExport?: () => void
 
   onRefetch?: () => void
   isRefetching?: boolean
@@ -41,11 +40,9 @@ export function TableToolbar({
   onSearchChange,
   searchPlaceholder = 'Search…',
   searchable = true,
-  exportable = false,
   addable = true,
-  addLabel = 'Add New',
+  addLabel,
   onAdd,
-  onExport,
   onRefetch,
   isRefetching = false,
   columnVisibility,
@@ -54,6 +51,8 @@ export function TableToolbar({
   extraActions,
   className,
 }: TableToolbarProps) {
+  const { t } = useTranslation('common')
+  const resolvedAddLabel = addLabel ?? t('table.addNew')
   return (
     <div className={cn('border-b border-border/50 bg-card px-5 py-4', className)}>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -64,7 +63,7 @@ export function TableToolbar({
             <p className="mt-0.5 text-[12px] text-muted-foreground">
               {subtitle ??
                 (totalRows !== undefined
-                  ? `${totalRows.toLocaleString('en-US')} record${totalRows !== 1 ? 's' : ''}`
+                  ? t('table.records', { count: totalRows })
                   : '')}
             </p>
           </div>
@@ -75,7 +74,7 @@ export function TableToolbar({
           {/* Record count when no title */}
           {!title && totalRows !== undefined && (
             <span className="text-[12px] text-muted-foreground">
-              {totalRows.toLocaleString('en-US')} record{totalRows !== 1 ? 's' : ''}
+              {t('table.records', { count: totalRows })}
             </span>
           )}
 
@@ -102,22 +101,10 @@ export function TableToolbar({
                 size="icon"
                 onClick={onRefetch}
                 disabled={isRefetching}
-                aria-label="Refresh"
+                aria-label={t('table.refresh')}
                 className="h-8 w-8 border-border/60"
               >
                 <RefreshCw className={cn('h-3.5 w-3.5', isRefetching && 'animate-spin')} />
-              </Button>
-            )}
-
-            {exportable && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onExport}
-                className="h-8 gap-1.5 border-border/60 text-xs"
-              >
-                <Download className="h-3.5 w-3.5" />
-                Export
               </Button>
             )}
 
@@ -126,7 +113,7 @@ export function TableToolbar({
             {addable && onAdd && (
               <Button size="sm" onClick={onAdd} className="h-8 gap-1.5 text-xs font-medium">
                 <Plus className="h-4 w-4" />
-                {addLabel}
+                {resolvedAddLabel}
               </Button>
             )}
           </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -12,12 +13,13 @@ interface TableBulkActionsProps<T> {
 }
 
 export function TableBulkActions<T>({ selectedRows, actions, onClear }: TableBulkActionsProps<T>) {
+  const { t } = useTranslation('common')
   if (selectedRows.length === 0) return null
 
   return (
     <div className="flex items-center gap-3 rounded-lg border border-primary/15 bg-accent/60 px-3.5 py-2.5">
       <span className="text-[13px] font-semibold text-foreground">
-        {selectedRows.length} selected
+        {t('table.selected', { count: selectedRows.length })}
       </span>
 
       <span className="h-4 w-px bg-border/70" />
@@ -43,7 +45,7 @@ export function TableBulkActions<T>({ selectedRows, actions, onClear }: TableBul
 
       <button
         onClick={onClear}
-        aria-label="Clear selection"
+        aria-label={t('table.clearSelection')}
         className="ml-auto flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
         <X className="h-3.5 w-3.5" />

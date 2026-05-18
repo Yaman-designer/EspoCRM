@@ -138,7 +138,6 @@ export interface DataTableProps<T extends object = object> {
   // Toolbar options
   searchable?: boolean
   searchPlaceholder?: string
-  exportable?: boolean
   addable?: boolean
   addLabel?: string
 

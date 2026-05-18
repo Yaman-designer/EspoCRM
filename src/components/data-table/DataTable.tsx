@@ -14,6 +14,7 @@ import {
   type RowSelectionState,
   type VisibilityState,
 } from '@tanstack/react-table'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowUp, ArrowDown, ArrowUpDown,
   AlertCircle, ImageIcon,
@@ -224,7 +225,6 @@ export function DataTable<T extends object>({
   bulkActions = [],
   searchable = true,
   searchPlaceholder,
-  exportable = false,
   addable = true,
   addLabel = 'Add New',
   pageSize: defaultPageSize = 20,
@@ -243,6 +243,7 @@ export function DataTable<T extends object>({
   onRefetch,
   className,
 }: DataTableProps<T>) {
+  const { t } = useTranslation('common')
   const serverMode = !!endpoint
 
   // ── State ──────────────────────────────────────────────────────────────────
@@ -529,7 +530,7 @@ export function DataTable<T extends object>({
     <div className="flex h-8 items-center rounded-md border border-border/60 bg-background p-0.5">
       <button
         onClick={() => setViewMode('list')}
-        aria-label="List view"
+        aria-label={t('table.listView')}
         className={cn(
           'flex h-6 w-7 items-center justify-center rounded transition-colors duration-150',
           viewMode === 'list'
@@ -541,7 +542,7 @@ export function DataTable<T extends object>({
       </button>
       <button
         onClick={() => setViewMode('grid')}
-        aria-label="Grid view"
+        aria-label={t('table.gridView')}
         className={cn(
           'flex h-6 w-7 items-center justify-center rounded transition-colors duration-150',
           viewMode === 'grid'
@@ -571,7 +572,6 @@ export function DataTable<T extends object>({
         onSearchChange={setSearchInput}
         searchPlaceholder={searchPlaceholder}
         searchable={searchable}
-        exportable={exportable}
         addable={addable}
         addLabel={addLabel}
         onAdd={Form ? handleAdd : undefined}
@@ -699,14 +699,14 @@ export function DataTable<T extends object>({
                         <AlertCircle className="h-6 w-6 text-destructive/70" />
                       </div>
                       <p className="text-sm font-semibold text-foreground">
-                        Failed to load data
+                        {t('table.failedToLoad')}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Something went wrong. Please try again.
+                        {t('table.failedToLoadHint')}
                       </p>
                       {handleRefetch && (
                         <Button variant="outline" size="sm" onClick={handleRefetch}>
-                          Try again
+                          {t('table.tryAgain')}
                         </Button>
                       )}
                     </div>
@@ -716,8 +716,8 @@ export function DataTable<T extends object>({
                 <EmptyState
                   colSpan={colCount}
                   icon={emptyIcon}
-                  title={emptyTitle}
-                  description={emptyDescription}
+                  title={emptyTitle ?? t('table.noResults')}
+                  description={emptyDescription ?? t('table.noResultsHint')}
                 />
               ) : (
                 table.getRowModel().rows.map((row) => (

@@ -4,10 +4,9 @@ import { useState, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Bell, RefreshCw, Trash2, Clock,
-  MessageCircle, Headphones, UserRound, Users, BellOff,
-  AlertTriangle, X, Check,
+ BellOff, AlertTriangle, X, Check,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 import {
   fetchNotifications,
@@ -15,75 +14,14 @@ import {
 } from '@/api/espocrm/notificationService'
 import type { EspoNotification } from '@/api/espocrm/notificationService'
 
-// ─── Entity config ────────────────────────────────────────────────────────────
 
-const ENTITY_KEY: Record<string, string> = {
-  Dialog:            'entity.dialog',
-  RealEstateRequest: 'entity.request',
-  Contact:           'entity.contact',
-  EblaContractParty: 'entity.contractParty',
-}
-
-type EntityCfg = { icon: LucideIcon; bg: string; fg: string }
-const ENTITY_CONFIG: Record<string, EntityCfg> = {
-  Dialog:            { icon: MessageCircle, bg: 'bg-emerald-50',  fg: 'text-emerald-600' },
-  RealEstateRequest: { icon: Headphones,    bg: 'bg-blue-50',     fg: 'text-blue-600'    },
-  Contact:           { icon: UserRound,     bg: 'bg-violet-50',   fg: 'text-violet-600'  },
-  EblaContractParty: { icon: Users,         bg: 'bg-slate-100',   fg: 'text-slate-500'   },
-}
-
-const AVATAR_PALETTE = [
-  'bg-teal-500', 'bg-blue-500', 'bg-violet-500',
-  'bg-orange-500', 'bg-emerald-500', 'bg-rose-500',
-]
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/)
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-}
-
-function getAvatarColor(name: string): string {
-  if (name.toLowerCase() === 'system') return 'bg-slate-400'
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h)
-  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length]
-}
-
-function parseUTCDate(s: string): Date {
-  return new Date(s.replace(' ', 'T') + 'Z')
-}
-
-function formatDisplayTime(s: string): string {
-  const d = parseUTCDate(s)
-  const now = new Date()
-  if (d.toDateString() === now.toDateString()) {
-    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-  }
-  return (
-    d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) +
-    ' · ' +
-    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-  )
-}
-
-interface MsgParts { actor: string; prefix: string; parent: string; suffix: string }
-
-function buildMessage(n: EspoNotification, t: (key: string) => string): MsgParts {
-  const { noteData } = n
-  const actor = noteData.createdByName ?? 'System'
-  const parent = noteData.parentName ?? ''
-  const entityKey = ENTITY_KEY[noteData.parentType ?? '']
-  const ent = entityKey ? t(entityKey) : (noteData.parentType ?? '').toLowerCase()
-  switch (noteData.type) {
-    case 'Post':   return { actor, prefix: `${t('actions.postedOn')} ${ent} `,   parent, suffix: '' }
-    case 'Create': return { actor, prefix: `${t('actions.created')} ${ent} `,    parent, suffix: ` ${t('actions.assignedToYou')}` }
-    case 'Assign': return { actor, prefix: `${t('actions.assigned')} ${ent} `,   parent, suffix: ` ${t('actions.toYou')}` }
-    default:       return { actor, prefix: `${t('actions.updated')} ${ent} `,    parent, suffix: '' }
-  }
-}
+import {
+  ENTITY_CONFIG,
+  getInitials,
+  getAvatarColor,
+  formatDisplayTime,
+  buildMessage,
+} from '@/lib/notificationUtils'
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -173,6 +111,11 @@ function NotifCard({ n, confirming, deleting, onRequestDelete, onCancelDelete, o
             )}
             {msg.suffix && (
               <span className="text-[12.5px] text-muted-foreground">{msg.suffix}</span>
+
+            )}
+                    {/* Assigned user name — shown inline when API returns it */}
+            {msg.assignedTo && (
+              <span className="text-[12.5px] font-semibold text-foreground">{msg.assignedTo}</span>
             )}
           </div>
 
@@ -270,7 +213,8 @@ export default function NotificationsPage() {
       )
       setHasMore(data.list.length === PAGE_SIZE)
       setError(null)
-    } catch {
+      } catch (err) {
+      console.error('[NotificationsPage] Failed to load notifications:', err)
       setError(t('loadFailed'))
     }
   }, [t])
@@ -300,8 +244,8 @@ export default function NotificationsPage() {
     try {
       await deleteNotification(id)
       setNotifications((prev) => prev.filter((n) => n.id !== id))
-    } catch {
-      // silent — keep item in list if delete fails
+     } catch (err) {
+      console.error('[NotificationsPage] Failed to delete notification:', err)
     } finally {
       setDeletingId(null)
     }

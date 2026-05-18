@@ -5,11 +5,9 @@ import Link from 'next/link'
 import { useTranslation } from 'react-i18next'
 import { Drawer } from 'vaul'
 import {
-  Bell, Check, ChevronRight, Clock, MoreVertical,
-  MessageCircle, Headphones, UserRound, Users, RefreshCw,
-  BellOff,
+  Bell, Check, ChevronRight, Clock, RefreshCw, BellOff,
 } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { btnCls } from './styles'
@@ -18,99 +16,14 @@ import {
   markAllRead,
 } from '@/api/espocrm/notificationService'
 import type { EspoNotification } from '@/api/espocrm/notificationService'
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Entity config
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-const ENTITY_KEY: Record<string, string> = {
-  Dialog:            'entity.dialog',
-  RealEstateRequest: 'entity.request',
-  Contact:           'entity.contact',
-  EblaContractParty: 'entity.contractParty',
-}
-
-type EntityConfig = { icon: LucideIcon; bg: string; fg: string }
-const ENTITY_CONFIG: Record<string, EntityConfig> = {
-  Dialog:            { icon: MessageCircle, bg: 'bg-emerald-50',  fg: 'text-emerald-600' },
-  RealEstateRequest: { icon: Headphones,    bg: 'bg-blue-50',     fg: 'text-blue-600'    },
-  Contact:           { icon: UserRound,     bg: 'bg-violet-50',   fg: 'text-violet-600'  },
-  EblaContractParty: { icon: Users,         bg: 'bg-slate-100',   fg: 'text-slate-500'   },
-}
-
-const AVATAR_PALETTE = [
-  'bg-teal-500', 'bg-blue-500', 'bg-violet-500',
-  'bg-orange-500', 'bg-emerald-500', 'bg-rose-500',
-]
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Helpers — untouched business logic
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/)
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
-}
-
-function getAvatarColor(name: string): string {
-  if (name.toLowerCase() === 'system') return 'bg-slate-400'
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h)
-  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length]
-}
-
-function parseUTCDate(s: string): Date {
-  return new Date(s.replace(' ', 'T') + 'Z')
-}
-
-function formatDisplayTime(s: string): string {
-  const d = parseUTCDate(s)
-  const now = new Date()
-  if (d.toDateString() === now.toDateString()) {
-    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-  }
-  return (
-    d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) +
-    ', ' +
-    d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-  )
-}
-
-function dateGroup(s: string): 'today' | 'yesterday' | 'earlier' {
-  const d = parseUTCDate(s)
-  const now = new Date()
-  if (d.toDateString() === now.toDateString()) return 'today'
-  const yest = new Date(now)
-  yest.setDate(yest.getDate() - 1)
-  if (d.toDateString() === yest.toDateString()) return 'yesterday'
-  return 'earlier'
-}
-
-function groupNotifications(list: EspoNotification[]) {
-  const b: Record<string, EspoNotification[]> = { today: [], yesterday: [], earlier: [] }
-  for (const n of list) b[dateGroup(n.createdAt)].push(n)
-  return (['today', 'yesterday', 'earlier'] as const)
-    .map((key) => ({ key, items: b[key] }))
-    .filter((g) => g.items.length > 0)
-}
-
-interface MsgParts { actor: string; prefix: string; parent: string; suffix: string }
-
-function buildMessage(n: EspoNotification, t: (key: string) => string): MsgParts {
-  const { noteData } = n
-  const actor = noteData.createdByName ?? 'System'
-  const parent = noteData.parentName ?? ''
-  const entityKey = ENTITY_KEY[noteData.parentType ?? '']
-  const ent = entityKey ? t(entityKey) : (noteData.parentType ?? '').toLowerCase()
-  switch (noteData.type) {
-    case 'Post':   return { actor, prefix: `${t('actions.postedOn')} ${ent} `,   parent, suffix: '' }
-    case 'Create': return { actor, prefix: `${t('actions.created')} ${ent} `,    parent, suffix: ` ${t('actions.assignedToYou')}` }
-    case 'Assign': return { actor, prefix: `${t('actions.assigned')} ${ent} `,   parent, suffix: ` ${t('actions.toYou')}` }
-    default:       return { actor, prefix: `${t('actions.updated')} ${ent} `,    parent, suffix: '' }
-  }
-}
-
+import {
+  ENTITY_CONFIG,
+  getInitials,
+  getAvatarColor,
+  formatDisplayTime,
+  groupNotifications,
+  buildMessage,
+} from '@/lib/notificationUtils'
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // UI Primitives
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -182,6 +95,10 @@ function NotifCard({ n }: { n: EspoNotification }) {
             )}
             {msg.suffix && (
               <span className="text-[12px] text-muted-foreground">{msg.suffix}</span>
+            )}
+              {/* Assigned user name — shown inline when API returns it */}
+            {msg.assignedTo && (
+              <span className="text-[12px] font-semibold text-foreground">{msg.assignedTo}</span>
             )}
           </div>
 
@@ -406,14 +323,16 @@ function BellButton({ isOpen, unreadCount, onClick }: { isOpen: boolean; unreadC
     <button
       onClick={onClick}
       aria-label={t('title')}
-      className={cn('relative', btnCls, isOpen && 'bg-muted text-foreground')}
+      className={cn(btnCls, isOpen && 'bg-muted text-foreground')}
     >
-      <Bell className="h-4 w-4" />
-      {unreadCount > 0 && (
-        <span className="absolute -top-2 -right-2 flex min-w-[18px] h-[18px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-white ring-2 ring-background">
-          {unreadCount}
-        </span>
-      )}
+      <div className="relative">
+        <Bell className="h-4 w-4" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 flex min-w-[14px] h-[14px] items-center justify-center rounded-full bg-destructive px-0.5 text-[9px] font-bold leading-none text-white ring-2 ring-background">
+            {unreadCount}
+          </span>
+        )}
+      </div>
     </button>
   )
 }
@@ -450,7 +369,8 @@ export function NotifDropdown({ isOpen, onToggle }: Props) {
       const data = await fetchNotifications(PAGE_SIZE, 0)
       setNotifications(data.list)
       setHasMore(data.list.length === PAGE_SIZE)
-    } catch {
+ } catch (err) {
+      console.error('[NotifDropdown] Failed to load notifications:', err)
       setError(t('loadFailed'))
     } finally {
       setLoading(false)
@@ -470,8 +390,10 @@ export function NotifDropdown({ isOpen, onToggle }: Props) {
       const data = await fetchNotifications(PAGE_SIZE, notifications.length)
       setNotifications((prev) => [...prev, ...data.list])
       setHasMore(data.list.length === PAGE_SIZE)
-    } catch { /* silent */ } finally {
-      setLoadingMore(false)
+  } catch (err) {
+      console.error('[NotifDropdown] Failed to load more notifications:', err)
+    } finally {
+            setLoadingMore(false)
     }
   }
 
@@ -479,7 +401,9 @@ export function NotifDropdown({ isOpen, onToggle }: Props) {
     try {
       await markAllRead()
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-    } catch { /* silent */ }
+      } catch (err) {
+      console.error('[NotifDropdown] Failed to mark all as read:', err)
+    }
   }
 
   const headerProps: HeaderProps = {

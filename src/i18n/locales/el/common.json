@@ -13,5 +13,40 @@
   "search.entities.contact": "Επαφή",
   "search.entities.request": "Αίτημα",
   "search.entities.account": "Εταιρεία",
-  "search.entities.contract": "Μέρος Σύμβασης"
+  "search.entities.contract": "Μέρος Σύμβασης",
+  "table": {
+    "records_one": "{{count}} εγγραφή",
+    "records_other": "{{count}} εγγραφές",
+    "noRecords": "Χωρίς εγγραφές",
+    "range": "{{from}}–{{to}} από {{total}}",
+    "perPage": "Ανά σελίδα",
+    "pageOf": "Σελίδα {{page}} από {{total}}",
+    "selected_one": "{{count}} επιλεγμένο",
+    "selected_other": "{{count}} επιλεγμένα",
+    "clearSelection": "Καθαρισμός επιλογής",
+    "addNew": "Προσθήκη νέου",
+    "refresh": "Ανανέωση",
+    "columns": "Στήλες",
+    "toggleColumns": "Εναλλαγή στηλών",
+    "actions": "Ενέργειες",
+    "first": "Πρώτη",
+    "previous": "Προηγούμενη",
+    "next": "Επόμενη",
+    "last": "Τελευταία",
+    "failedToLoad": "Αποτυχία φόρτωσης δεδομένων",
+    "failedToLoadHint": "Κάτι πήγε στραβά. Παρακαλώ προσπαθήστε ξανά.",
+    "tryAgain": "Δοκιμάστε ξανά",
+    "noResults": "Δεν βρέθηκαν αποτελέσματα",
+    "noResultsHint": "Δοκιμάστε να προσαρμόσετε την αναζήτηση ή τα φίλτρα σας.",
+    "recordDetails": "Λεπτομέρειες εγγραφής",
+    "listView": "Προβολή λίστας",
+    "gridView": "Προβολή πλέγματος"
+  },
+  "form": {
+    "close": "Κλείσιμο",
+    "cancel": "Ακύρωση",
+    "saving": "Αποθήκευση…",
+    "fieldsRequired": "Τα πεδία με * είναι υποχρεωτικά",
+    "failedToSave": "Αποτυχία αποθήκευσης. Παρακαλώ προσπαθήστε ξανά."
+  }
 }

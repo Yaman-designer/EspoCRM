@@ -1,9 +1,11 @@
 'use client'
 
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { DataTable } from '@/components/data-table'
 import { PageHeader } from '@/components/dashboard/PageHeader'
 import { pipelineColumns } from '@/features/pipeline/columns'
-import { pipelineRowActions, pipelineBulkActions } from '@/features/pipeline/actions'
 import { PipelineForm } from '@/features/pipeline/PipelineForm'
 import type { Pipeline } from '@/features/pipeline/types'
 import type { QuickFilter } from '@/components/data-table'
@@ -223,63 +225,60 @@ const mockPipelines: Pipeline[] = [
   },
 ]
 
-// ── Quick filters ──────────────────────────────────────────────────────────────
-
-const pipelineQuickFilters: QuickFilter[] = [
-  { label: 'Open',          column: 'status', value: 'Open',          badgeVariant: 'info' },
-  { label: 'Won',           column: 'status', value: 'Won',           badgeVariant: 'success' },
-  { label: 'Lost',          column: 'status', value: 'Lost',          badgeVariant: 'destructive' },
-  { label: 'On Hold',       column: 'status', value: 'On Hold',       badgeVariant: 'warning' },
-  { label: 'Qualification', column: 'stage',  value: 'Qualification', badgeVariant: 'ghost' },
-  { label: 'Negotiation',   column: 'stage',  value: 'Negotiation',   badgeVariant: 'negotiating' },
-  { label: 'Closing',       column: 'stage',  value: 'Closing',       badgeVariant: 'new-lead' },
-]
-
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function PipelinePage() {
+  const { t } = useTranslation('dashboard')
+
+  const rowActions = useMemo(() => [
+    { label: t('pipeline.actions.view'),   icon: Eye,    onClick: (row: Pipeline) => console.log('view', row.id) },
+    { label: t('pipeline.actions.edit'),   icon: Pencil, onClick: (row: Pipeline) => console.log('edit', row.id) },
+    { label: t('pipeline.actions.delete'), icon: Trash2, variant: 'destructive' as const, onClick: (row: Pipeline) => console.log('delete', row.id) },
+  ], [t])
+
+  const bulkActions = useMemo(() => [
+    { label: t('pipeline.actions.deleteSelected'), icon: Trash2, variant: 'destructive' as const, onClick: (rows: Pipeline[]) => console.log('bulk delete', rows.length) },
+  ], [t])
+
+  const quickFilters = useMemo<QuickFilter[]>(() => [
+    { label: t('pipeline.filter.open'),          column: 'status', value: 'Open',          badgeVariant: 'info' },
+    { label: t('pipeline.filter.won'),            column: 'status', value: 'Won',           badgeVariant: 'success' },
+    { label: t('pipeline.filter.lost'),           column: 'status', value: 'Lost',          badgeVariant: 'destructive' },
+    { label: t('pipeline.filter.onHold'),         column: 'status', value: 'On Hold',       badgeVariant: 'warning' },
+    { label: t('pipeline.filter.qualification'),  column: 'stage',  value: 'Qualification', badgeVariant: 'ghost' },
+    { label: t('pipeline.filter.negotiation'),    column: 'stage',  value: 'Negotiation',   badgeVariant: 'negotiating' },
+    { label: t('pipeline.filter.closing'),        column: 'stage',  value: 'Closing',       badgeVariant: 'new-lead' },
+  ], [t])
+
   return (
     <div className="flex flex-col gap-5 p-6">
-      {/* Page header with breadcrumb — outside the table */}
       <PageHeader
-        title="Pipeline"
-        subtitle="Track deals from qualification through to close"
+        title={t('pipeline.page.title')}
+        subtitle={t('pipeline.page.subtitle')}
         breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Pipeline' },
+          { label: t('pipeline.breadcrumb.dashboard'), href: '/dashboard' },
+          { label: t('pipeline.page.title') },
         ]}
       />
 
       <DataTable<Pipeline>
-        // ── Data (swap for endpoint="/api/pipeline" with a live backend) ──
         data={mockPipelines}
-
-        // ── Structure ──────────────────────────────────────────────────────
         columns={pipelineColumns}
-        rowActions={pipelineRowActions}
-        bulkActions={pipelineBulkActions}
+        rowActions={rowActions}
+        bulkActions={bulkActions}
         form={PipelineForm}
-
-        // ── Quick filters ──────────────────────────────────────────────────
-        quickFilters={pipelineQuickFilters}
-
-        // ── Toolbar ────────────────────────────────────────────────────────
+        quickFilters={quickFilters}
         showRowNumbers
         showViewToggle
         rowDetails
         searchable
-        searchPlaceholder="Search deals, companies, owners…"
-        exportable
+        searchPlaceholder={t('pipeline.form.search')}
         addable
-        addLabel="Add Deal"
-
-        // ── Pagination ─────────────────────────────────────────────────────
+        addLabel={t('pipeline.form.addLabel')}
         pageSize={10}
         pageSizeOptions={[10, 20, 50]}
-
-        // ── Empty state ────────────────────────────────────────────────────
-        emptyTitle="No deals in pipeline"
-        emptyDescription="Start by adding your first deal to track progress."
+        emptyTitle={t('pipeline.form.emptyTitle')}
+        emptyDescription={t('pipeline.form.emptyDesc')}
       />
     </div>
   )

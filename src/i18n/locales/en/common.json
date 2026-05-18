@@ -13,5 +13,40 @@
   "search.entities.contact": "Contact",
   "search.entities.request": "Request",
   "search.entities.account": "Company",
-  "search.entities.contract": "Contract Party"
+  "search.entities.contract": "Contract Party",
+  "table": {
+    "records_one": "{{count}} record",
+    "records_other": "{{count}} records",
+    "noRecords": "No records",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "perPage": "Per page",
+    "pageOf": "Page {{page}} of {{total}}",
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "clearSelection": "Clear selection",
+    "addNew": "Add New",
+    "refresh": "Refresh",
+    "columns": "Columns",
+    "toggleColumns": "Toggle columns",
+    "actions": "Actions",
+    "first": "First",
+    "previous": "Previous",
+    "next": "Next",
+    "last": "Last",
+    "failedToLoad": "Failed to load data",
+    "failedToLoadHint": "Something went wrong. Please try again.",
+    "tryAgain": "Try again",
+    "noResults": "No results found",
+    "noResultsHint": "Try adjusting your search or filter criteria.",
+    "recordDetails": "Record Details",
+    "listView": "List view",
+    "gridView": "Grid view"
+  },
+  "form": {
+    "close": "Close",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "fieldsRequired": "Fields marked * are required",
+    "failedToSave": "Failed to save. Please try again."
+  }
 }

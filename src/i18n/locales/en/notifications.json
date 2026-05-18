@@ -27,7 +27,8 @@
     "assigned": "assigned",
     "updated": "updated",
     "assignedToYou": "assigned to you",
-    "toYou": "to you"
+    "toYou": "to you",
+    "to": "to"
   },
   "entity": {
     "dialog": "dialog",

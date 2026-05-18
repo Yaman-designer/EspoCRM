@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -30,6 +31,7 @@ export function TablePagination({
   onPageSizeChange,
   className,
 }: TablePaginationProps) {
+  const { t } = useTranslation('common')
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const from = Math.min((page - 1) * pageSize + 1, total)
   const to = Math.min(page * pageSize, total)
@@ -45,13 +47,15 @@ export function TablePagination({
     >
       {/* Count */}
       <p className="text-[12px] text-muted-foreground">
-        {total === 0 ? 'No records' : `${from}–${to} of ${total.toLocaleString('en-US')}`}
+        {total === 0
+          ? t('table.noRecords')
+          : t('table.range', { from, to, total: total.toLocaleString() })}
       </p>
 
       <div className="flex items-center gap-3">
         {/* Page size */}
         <div className="hidden items-center gap-2 sm:flex">
-          <span className="text-[12px] text-muted-foreground">Per page</span>
+          <span className="text-[12px] text-muted-foreground">{t('table.perPage')}</span>
           <Select
             value={String(pageSize)}
             onValueChange={(v) => {
@@ -75,7 +79,7 @@ export function TablePagination({
         {/* Page indicator */}
         {totalPages > 1 && (
           <span className="hidden text-[12px] text-muted-foreground md:block">
-            Page {page} of {totalPages}
+            {t('table.pageOf', { page, total: totalPages })}
           </span>
         )}
 
@@ -83,10 +87,10 @@ export function TablePagination({
         <div className="flex items-center gap-1">
           {(
             [
-              { icon: ChevronsLeft, onClick: () => onPageChange(1), disabled: !canPrev, label: 'First' },
-              { icon: ChevronLeft, onClick: () => onPageChange(page - 1), disabled: !canPrev, label: 'Previous' },
-              { icon: ChevronRight, onClick: () => onPageChange(page + 1), disabled: !canNext, label: 'Next' },
-              { icon: ChevronsRight, onClick: () => onPageChange(totalPages), disabled: !canNext, label: 'Last' },
+              { icon: ChevronsLeft, onClick: () => onPageChange(1), disabled: !canPrev, label: t('table.first') },
+              { icon: ChevronLeft, onClick: () => onPageChange(page - 1), disabled: !canPrev, label: t('table.previous') },
+              { icon: ChevronRight, onClick: () => onPageChange(page + 1), disabled: !canNext, label: t('table.next') },
+              { icon: ChevronsRight, onClick: () => onPageChange(totalPages), disabled: !canNext, label: t('table.last') },
             ] as const
           ).map(({ icon: Icon, onClick, disabled, label }) => (
             <Button

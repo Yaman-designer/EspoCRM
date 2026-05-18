@@ -30,7 +30,41 @@
     "negotiation": "Negotiation",
     "closed": "Closed",
     "closedDeals": "Closed Deals",
-    "onProgress": "On Progress"
+    "onProgress": "On Progress",
+    "page": {
+      "title": "Pipeline",
+      "subtitle": "Track deals from qualification through to close"
+    },
+    "breadcrumb": {
+      "dashboard": "Dashboard"
+    },
+    "filter": {
+      "open": "Open",
+      "won": "Won",
+      "lost": "Lost",
+      "onHold": "On Hold",
+      "qualification": "Qualification",
+      "negotiation": "Negotiation",
+      "closing": "Closing"
+    },
+    "actions": {
+      "view": "View deal",
+      "edit": "Edit deal",
+      "delete": "Delete deal",
+      "deleteSelected": "Delete selected"
+    },
+    "form": {
+      "addTitle": "Add New Deal",
+      "editTitle": "Edit Deal",
+      "addDesc": "Create a new deal and add it to your pipeline.",
+      "editDesc": "Update deal information in your pipeline.",
+      "assignedUser": "Assigned User",
+      "selectUser": "Select user…",
+      "search": "Search deals, companies, owners…",
+      "addLabel": "Add Deal",
+      "emptyTitle": "No deals in pipeline",
+      "emptyDesc": "Start by adding your first deal to track progress."
+    }
   },
   "alerts": {
     "followUps": "Follow-Ups",

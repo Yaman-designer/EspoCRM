@@ -19,7 +19,7 @@ export function FeaturedPropertyCard() {
     <div className="flex flex-1 flex-col overflow-hidden rounded-xl border border-border/50 bg-card shadow-sm transition-all hover:shadow-md">
       <div className="relative h-28 w-full">
         <Image
-          src="/imges/e9e46baaa351f4e0a9d3968652b277d4.jpg"
+          src="/imges/unnamed.webp"
           alt={name}
           fill
           className="object-cover"
