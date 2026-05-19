@@ -1,102 +1,97 @@
 import type { ColumnConfig } from '@/components/data-table'
-import { cn } from '@/lib/utils'
-import type { Pipeline } from './types'
-import { STAGE_BADGE_MAP, STATUS_BADGE_MAP } from './fields'
+import { StatusBadge } from '@/components/data-table/StatusBadge'
 import type { BadgeVariant } from '@/components/data-table'
+import type { Pipeline } from './types'
+import { STAGE_LABEL_MAP, STATUS_BADGE_MAP, CONTACT_TYPE_BADGE_MAP } from './fields'
 
-// ── Probability progress cell ──────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-function ProbabilityCell({ value }: { value: number }) {
-  const pct = Math.max(0, Math.min(100, value))
-
-  const track =
-    pct >= 75 ? 'bg-brand-emerald' :
-    pct >= 50 ? 'bg-primary' :
-    pct >= 25 ? 'bg-chart-4' :
-    'bg-chart-5'
-
-  return (
-    <div className="flex items-center gap-2.5">
-      <div className="relative h-1.5 w-16 overflow-hidden rounded-full bg-muted/60">
-        <div
-          className={cn('absolute inset-y-0 left-0 rounded-full transition-all duration-300', track)}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className="w-8 text-right text-[12px] font-medium tabular-nums text-foreground">
-        {pct}%
-      </span>
-    </div>
-  )
+function firstValue(obj: Record<string, string> | undefined): string {
+  if (!obj) return '—'
+  const first = Object.values(obj)[0]
+  return first || '—'
 }
 
-// ── Column definitions ─────────────────────────────────────────────────────────
+function formatDate(raw: string | null | undefined): string {
+  if (!raw) return '—'
+  const d = new Date(raw.replace(' ', 'T'))
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+// ── Column definitions ────────────────────────────────────────────────────────
 
 export const pipelineColumns: ColumnConfig<Pipeline>[] = [
   {
-    key: 'title',
-    label: 'Name',
-    type: 'avatar',
-    subtitleKey: 'company',
-    sortable: true,
+    key: 'contactsNames',
+    label: 'Contact',
+    type: 'custom',
+    sortable: false,
+    render: (_value, row) => {
+      const name = firstValue(row.contactsNames)
+      return (
+        <div className="flex flex-col min-w-0">
+          <span className="truncate text-[13px] font-semibold text-foreground">{name}</span>
+          {row.description && (
+            <span className="truncate text-[11px] text-muted-foreground">{row.description}</span>
+          )}
+        </div>
+      )
+    },
   },
   {
-    key: 'owner',
+    key: 'assignedUserName',
     label: 'Assigned User',
     type: 'avatar',
-    subtitleKey: 'ownerEmail',
     sortable: true,
     responsive: 'md',
   },
   {
-    key: 'stage',
-    label: 'Status in Pipeline',
+    key: 'contactType',
+    label: 'Contact Type',
     type: 'badge',
-    badgeMap: STAGE_BADGE_MAP as Record<string, BadgeVariant>,
+    badgeMap: CONTACT_TYPE_BADGE_MAP as Record<string, BadgeVariant>,
     sortable: true,
+  },
+  {
+    key: 'status2',
+    label: 'Stage',
+    type: 'custom',
+    sortable: true,
+    render: (value) => {
+      const v = String(value ?? '')
+      if (!v || v === 'none') return <span className="text-muted-foreground text-[12px]">—</span>
+      const label = STAGE_LABEL_MAP[v] ?? v
+      return <span className="text-[12px] text-foreground">{label}</span>
+    },
   },
   {
     key: 'status',
     label: 'Status',
     type: 'badge',
     badgeMap: STATUS_BADGE_MAP as Record<string, BadgeVariant>,
-  },
-  {
-    key: 'value',
-    label: 'Amount',
-    type: 'currency',
-    currency: 'USD',
     sortable: true,
   },
   {
-    key: 'probability',
-    label: 'Probability',
+    key: 'dateStart',
+    label: 'Date',
     type: 'custom',
     sortable: true,
+    render: (value) => (
+      <span className="text-[12px] tabular-nums text-foreground">
+        {formatDate(String(value ?? ''))}
+      </span>
+    ),
+  },
+  {
+    key: 'teamsNames',
+    label: 'Team',
+    type: 'custom',
+    sortable: false,
     responsive: 'lg',
-    render: (value) => <ProbabilityCell value={Number(value ?? 0)} />,
-  },
-  {
-    key: 'closingDate',
-    label: 'Close Date',
-    type: 'date',
-    sortable: true,
-    responsive: 'xl',
-  },
-  {
-    key: 'updatedAt',
-    label: 'Date Modified',
-    type: 'date',
-    sortable: true,
-    responsive: 'xl',
-    defaultHidden: true,
-  },
-  {
-    key: 'createdAt',
-    label: 'Date Created',
-    type: 'date',
-    sortable: true,
-    responsive: 'xl',
-    defaultHidden: true,
+    render: (_value, row) => {
+      const name = firstValue(row.teamsNames)
+      return <span className="text-[12px] text-foreground">{name}</span>
+    },
   },
 ]

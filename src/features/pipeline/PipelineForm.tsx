@@ -121,18 +121,23 @@ export function PipelineForm({ open, onClose, onSuccess, initialData, mode }: Fo
   ], [t, users, teams, contacts])
 
   // ── Payload transformer ───────────────────────────────────────────────────────
-  const transformSubmit = useCallback((values: Record<string, unknown>) => {
-    const contactType = (values.contactType as string) || 'pipeline'
-    return {
-      ...values,
-      name: `${contactType} - ${new Date().toLocaleDateString('en-US')}`,
-      status: 'Planned',
-      contactsIds: values.contactsIds ? [values.contactsIds] : undefined,
-      teamsIds: Array.isArray(values.teamsIds) && values.teamsIds.length > 0
+ const transformSubmit = useCallback((values: Record<string, unknown>) => {
+  const contactType = (values.contactType as string) || 'pipeline'
+  const rawDate = values.dateStart as string | undefined
+  const dateStart = rawDate ? `${rawDate.substring(0, 10)} 00:00:00` : undefined
+  return {
+    ...values,
+    name: `${contactType} - ${new Date().toLocaleDateString('en-US')}`,
+    status: 'Planned',
+    dateStart,
+    assignedUserId: (values.assignedUserId as string) || undefined,
+    contactsIds: values.contactsIds ? [values.contactsIds] : undefined,
+    teamsIds:
+      Array.isArray(values.teamsIds) && values.teamsIds.length > 0
         ? values.teamsIds
         : undefined,
-    }
-  }, [])
+  }
+}, [])
 
   return (
     <DynamicForm<Pipeline>

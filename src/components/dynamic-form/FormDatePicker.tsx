@@ -13,7 +13,9 @@ import type { FieldConfig } from './types'
 
 function parseISODate(value: unknown): Date | undefined {
   if (!value || typeof value !== 'string') return undefined
-  const d = new Date(value + 'T00:00:00')
+  // Normalize "YYYY-MM-DD HH:MM:SS" (from EspoCRM) to ISO format before parsing
+  const iso = value.length > 10 ? value.substring(0, 10) : value
+  const d = new Date(iso + 'T00:00:00')
   return isNaN(d.getTime()) ? undefined : d
 }
 
