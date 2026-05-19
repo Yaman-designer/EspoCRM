@@ -435,7 +435,6 @@ export function DataTable<T extends object>({
     }
 
     return cols
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [columnConfigs, bulkActions.length, rowActions, showRowNumbers])
 
   // ── TanStack Table instance ────────────────────────────────────────────────

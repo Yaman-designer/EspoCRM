@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useReducer } from 'react'
 import Link from 'next/link'
 import { Search, X, Loader2, UserRound, Headphones, Building2, Users, SearchX } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -29,6 +29,29 @@ function useDebounce<T>(value: T, delay: number): T {
     return () => clearTimeout(timer)
   }, [value, delay])
   return debouncedValue
+}
+
+// ── Search state via useReducer (avoids synchronous useState setters in effects) ─
+
+type SearchState = {
+  results: SearchResult[]
+  loading: boolean
+  open: boolean
+}
+
+type SearchAction =
+  | { type: 'fetch_start' }
+  | { type: 'fetch_done'; results: SearchResult[] }
+  | { type: 'clear' }
+  | { type: 'open' }
+
+function searchReducer(state: SearchState, action: SearchAction): SearchState {
+  switch (action.type) {
+    case 'fetch_start': return { ...state, loading: true, open: true }
+    case 'fetch_done':  return { loading: false, open: true, results: action.results }
+    case 'clear':       return { results: [], loading: false, open: false }
+    case 'open':        return { ...state, open: true }
+  }
 }
 
 // ── Result item ──────────────────────────────────────────────────────────────
@@ -119,9 +142,11 @@ interface SearchDropdownProps {
 export function SearchDropdown({ inputRef, className, onClose }: SearchDropdownProps) {
   const { t } = useTranslation('common')
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [{ results, loading, open }, dispatch] = useReducer(searchReducer, {
+    results: [],
+    loading: false,
+    open: false,
+  })
   const containerRef = useRef<HTMLDivElement>(null)
   const localInputRef = useRef<HTMLInputElement>(null)
   const activeRef = inputRef ?? localInputRef
@@ -130,23 +155,22 @@ export function SearchDropdown({ inputRef, className, onClose }: SearchDropdownP
   useEffect(() => {
     const q = debouncedQuery.trim()
     if (!q) {
-      setResults([])
-      setOpen(false)
+      dispatch({ type: 'clear' })
       return
     }
-    setLoading(true)
-    setOpen(true)
+    dispatch({ type: 'fetch_start' })
+    let cancelled = false
     globalSearch(q).then((res) => {
-      setResults(res)
-      setLoading(false)
+      if (!cancelled) dispatch({ type: 'fetch_done', results: res })
     })
+    return () => { cancelled = true }
   }, [debouncedQuery])
 
   // Close on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
+        dispatch({ type: 'clear' })
       }
     }
     document.addEventListener('mousedown', handleClick)
@@ -155,8 +179,7 @@ export function SearchDropdown({ inputRef, className, onClose }: SearchDropdownP
 
   const handleClose = useCallback(() => {
     setQuery('')
-    setResults([])
-    setOpen(false)
+    dispatch({ type: 'clear' })
     onClose?.()
   }, [onClose])
 
@@ -175,7 +198,7 @@ export function SearchDropdown({ inputRef, className, onClose }: SearchDropdownP
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          onFocus={() => { if (query.trim() && results.length > 0) setOpen(true) }}
+          onFocus={() => { if (query.trim() && results.length > 0) dispatch({ type: 'open' }) }}
           placeholder={t('search')}
           className={cn(
             'h-10 w-full rounded-xl border border-border bg-muted/50',

@@ -1,5 +1,4 @@
 import type { ColumnConfig } from '@/components/data-table'
-import { StatusBadge } from '@/components/data-table/StatusBadge'
 import type { BadgeVariant } from '@/components/data-table'
 import type { Pipeline } from './types'
 import { STAGE_LABEL_MAP, STATUS_BADGE_MAP, CONTACT_TYPE_BADGE_MAP } from './fields'

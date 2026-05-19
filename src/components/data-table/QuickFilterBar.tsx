@@ -59,6 +59,14 @@ export function QuickFilterBar({
   )
 }
 
+const BADGE_VARIANT_CLASSES: Partial<Record<BadgeVariant, string>> = {
+  destructive: 'bg-destructive/15 text-destructive',
+  error:       'bg-destructive/15 text-destructive',
+  success:     'bg-emerald-500/15 text-emerald-600',
+  warning:     'bg-amber-500/15 text-amber-600',
+  info:        'bg-blue-500/15 text-blue-600',
+}
+
 function FilterChip({
   label,
   count,
@@ -72,6 +80,10 @@ function FilterChip({
   badgeVariant?: BadgeVariant
   onClick: () => void
 }) {
+  const badgeClass = badgeVariant && !active
+    ? (BADGE_VARIANT_CLASSES[badgeVariant] ?? 'bg-muted text-muted-foreground')
+    : active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+
   return (
     <button
       onClick={onClick}
@@ -88,7 +100,7 @@ function FilterChip({
         className={cn(
           'flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1',
           'text-[10px] font-semibold tabular-nums leading-none',
-          active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground',
+          badgeClass,
         )}
       >
         {count}

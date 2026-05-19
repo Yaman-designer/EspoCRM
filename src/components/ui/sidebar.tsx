@@ -587,11 +587,11 @@ function SidebarMenuSkeleton({
 }: React.ComponentProps<"div"> & {
   showIcon?: boolean
 }) {
-  // Stable SSR value; randomised on the client after hydration to avoid mismatch.
-  const [width, setWidth] = React.useState('66%')
-  React.useEffect(() => {
-    setWidth(`${Math.floor(Math.random() * 40) + 50}%`)
-  }, [])
+  // Deterministic width derived from stable useId — no state or effect needed,
+  // consistent across SSR and client so there is no hydration mismatch.
+  const id = React.useId()
+  const hash = id.split('').reduce((s, c) => (s * 31 + c.charCodeAt(0)) | 0, 0)
+  const width = `${Math.abs(hash % 40) + 50}%`
 
   return (
     <div

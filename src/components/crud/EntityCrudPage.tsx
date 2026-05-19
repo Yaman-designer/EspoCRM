@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -55,9 +55,10 @@ function buildSchema(config: EntityConfig): z.ZodObject<Record<string, z.ZodType
 export function EntityCrudPage({ config }: { config: EntityConfig }) {
   const [rows, setRows]           = useState<Row[]>([])
   const [total, setTotal]         = useState(0)
-  const [loading, setLoading]     = useState(false)
+  const [loading, setLoading]     = useState(true)
   const [search, setSearch]       = useState('')
   const [page, setPage]           = useState(0)
+  const [loadTrigger, setLoadTrigger] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
   const [editRow, setEditRow]     = useState<Row | null>(null)
   const [deleteId, setDeleteId]   = useState<string | null>(null)
@@ -71,24 +72,28 @@ export function EntityCrudPage({ config }: { config: EntityConfig }) {
     defaultValues: emptyValues,
   })
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await getEntityList<Row>(config.entityType, {
-        maxSize: PAGE_SIZE,
-        offset: page * PAGE_SIZE,
-        textFilter: search || undefined,
-      })
-      setRows(res.list)
-      setTotal(res.total)
-    } catch {
-      toast.error('Failed to load data')
-    } finally {
-      setLoading(false)
-    }
-  }, [config.entityType, page, search])
-
-  useEffect(() => { loadData() }, [loadData])
+  // Fetch directly via the library function — setState only in async callbacks,
+  // not synchronously in the effect body, so no cascading-render issues.
+  useEffect(() => {
+    let cancelled = false
+    getEntityList<Row>(config.entityType, {
+      maxSize: PAGE_SIZE,
+      offset: page * PAGE_SIZE,
+      textFilter: search || undefined,
+    }).then((res) => {
+      if (!cancelled) {
+        setRows(res.list)
+        setTotal(res.total)
+        setLoading(false)
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        toast.error('Failed to load data')
+        setLoading(false)
+      }
+    })
+    return () => { cancelled = true }
+  }, [config.entityType, page, search, loadTrigger])
 
   const openAdd = () => {
     setEditRow(null)
@@ -113,7 +118,7 @@ export function EntityCrudPage({ config }: { config: EntityConfig }) {
         toast.success('Created successfully')
       }
       setModalOpen(false)
-      loadData()
+      setLoadTrigger((n) => n + 1)
     } catch {
       toast.error('Operation failed')
     } finally {
@@ -127,7 +132,7 @@ export function EntityCrudPage({ config }: { config: EntityConfig }) {
       await deleteEntity(config.entityType, deleteId)
       toast.success('Deleted successfully')
       setDeleteId(null)
-      loadData()
+      setLoadTrigger((n) => n + 1)
     } catch {
       toast.error('Delete failed')
     }

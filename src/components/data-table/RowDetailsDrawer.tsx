@@ -10,7 +10,6 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { StatusBadge } from './StatusBadge'
-import { TableRowActions } from './TableRowActions'
 import type { ColumnConfig, RowAction } from './types'
 
 // ── Avatar helpers (mirrored from DataTable) ─────────────────────────────────

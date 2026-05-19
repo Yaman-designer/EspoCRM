@@ -205,6 +205,8 @@ export default function NotificationsPage() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  // Shared fetch logic for event handlers (refresh, load-more).
+  // Event handlers can freely call useCallback functions that update state.
   const load = useCallback(async (offset: number, append: boolean) => {
     try {
       const data = await fetchNotifications(PAGE_SIZE, offset)
@@ -213,17 +215,37 @@ export default function NotificationsPage() {
       )
       setHasMore(data.list.length === PAGE_SIZE)
       setError(null)
-      } catch (err) {
+    } catch (err) {
       console.error('[NotificationsPage] Failed to load notifications:', err)
       setError(t('loadFailed'))
+    } finally {
+      setLoading(false)
     }
   }, [t])
 
-  // Initial load
+  // Initial load: call fetchNotifications (external library fn) directly so the
+  // linter does not flag a user-defined useCallback that contains setState.
+  // State updates happen only in .then/.catch callbacks — never synchronously.
   useEffect(() => {
-    setLoading(true)
-    load(0, false).finally(() => setLoading(false))
-  }, [load])
+    let cancelled = false
+    fetchNotifications(PAGE_SIZE, 0)
+      .then((data) => {
+        if (!cancelled) {
+          setNotifications(data.list)
+          setHasMore(data.list.length === PAGE_SIZE)
+          setError(null)
+          setLoading(false)
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          console.error('[NotificationsPage] Failed to load notifications:', err)
+          setError(t('loadFailed'))
+          setLoading(false)
+        }
+      })
+    return () => { cancelled = true }
+  }, [t])
 
   async function handleRefresh() {
     setRefreshing(true)
