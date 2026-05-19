@@ -8,6 +8,14 @@ export const STAGE_OPTIONS = PIPELINE_STAGES.map((s) => ({ label: s, value: s })
 
 export const STATUS_OPTIONS = PIPELINE_STATUSES.map((s) => ({ label: s, value: s }))
 
+// ── Contact type options ───────────────────────────────────────────────────────
+
+export const CONTACT_TYPE_OPTIONS = [
+  { label: 'Meeting', value: 'meeting' },
+  { label: 'Call / Follow-up', value: 'call' },
+  { label: 'Email', value: 'email' },
+]
+
 // ── Probability quick-picks ────────────────────────────────────────────────────
 
 export const PROBABILITY_PRESETS = [10, 25, 50, 75, 90, 100] as const

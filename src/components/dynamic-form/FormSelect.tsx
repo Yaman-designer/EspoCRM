@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { ControllerRenderProps, FieldValues } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
+import Cookies from 'js-cookie'
 import { ChevronsUpDown, Loader2, X } from 'lucide-react'
 import axiosClient from '@/api/axiosClient'
 import { resourceRegistry } from '@/shared/registry'
@@ -32,6 +33,8 @@ import type { FieldConfig, SelectOption } from './types'
 function useAsyncOptions(config: FieldConfig, fetchEnabled: boolean) {
   const resourceDef = config.resource ? resourceRegistry[config.resource] : undefined
   const isAsync = !!(resourceDef || config.api)
+  // Don't fire any API call if there is no auth token — avoids guaranteed 401s
+  const hasToken = !!Cookies.get('espo-token')
 
   const { data, isLoading, isError } = useQuery<SelectOption[]>({
     queryKey: resourceDef
@@ -50,7 +53,7 @@ function useAsyncOptions(config: FieldConfig, fetchEnabled: boolean) {
             value: String(item[vk] ?? ''),
           }))
         },
-    enabled: isAsync && fetchEnabled,
+    enabled: isAsync && fetchEnabled && hasToken,
     staleTime: resourceDef?.staleTime ?? 5 * 60 * 1000,
     retry: 0,
   })

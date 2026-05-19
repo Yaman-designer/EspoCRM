@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { auth } from '@/lib/auth'
 
 const ESPO_BASE = process.env.NEXT_PUBLIC_ESPO_API_URL!
 const ENTITIES = ['Contact', 'RealEstateRequest', 'Account', 'EblaContractParty'] as const
@@ -8,8 +8,8 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get('q')?.trim()
   if (!q) return NextResponse.json([])
 
-  const cookieStore = await cookies()
-  const token = cookieStore.get('espo-token')?.value
+  const session = await auth()
+  const token = session?.espoToken
   if (!token) return NextResponse.json([], { status: 401 })
 
   const headers = {
@@ -22,7 +22,6 @@ export async function GET(req: NextRequest) {
       const url = new URL(`${ESPO_BASE}/${entity}`)
       url.searchParams.set('maxSize', '5')
       url.searchParams.set('offset', '0')
-      // Use where[] format — most compatible across EspoCRM versions
       url.searchParams.set('where[0][type]', 'textFilter')
       url.searchParams.set('where[0][value]', q)
 
