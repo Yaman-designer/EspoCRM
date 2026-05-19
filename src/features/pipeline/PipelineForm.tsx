@@ -1,58 +1,19 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TrendingUp } from 'lucide-react'
-import axiosClient from '@/api/axiosClient'
 import { DynamicForm } from '@/components/dynamic-form'
 import { pipelineSchema } from './schema'
 import { STAGE_OPTIONS, CONTACT_TYPE_OPTIONS } from './fields'
 import type { FormProps } from '@/components/data-table'
-import type { FormSectionConfig, SelectOption } from '@/components/dynamic-form'
-import type { Pipeline } from './types'
+import type { FormSectionConfig } from '@/components/dynamic-form'
+import type { PipelineFormValues } from './types'
 
-// ── EspoCRM list response shape ────────────────────────────────────────────────
-interface EspoList<T = Record<string, string>> {
-  list: T[]
-  total: number
-}
-
-export function PipelineForm({ open, onClose, onSuccess, initialData, mode }: FormProps<Pipeline>) {
+export function PipelineForm({ open, onClose, onSuccess, initialData, mode }: FormProps<PipelineFormValues>) {
   const { t } = useTranslation('dashboard')
 
-  // ── Async option lists (fetched once on mount, same as reference) ─────────────
-  const [users, setUsers] = useState<SelectOption[]>([])
-  const [teams, setTeams] = useState<SelectOption[]>([])
-  const [contacts, setContacts] = useState<SelectOption[]>([])
-
-  useEffect(() => {
-    axiosClient
-      .get<EspoList>('/User', {
-        params: { maxSize: 50, offset: 0, orderBy: 'name', order: 'asc', attributeSelect: 'id,name' },
-      })
-      .then((res) => setUsers(res.data.list.map((u) => ({ label: u.name, value: u.id }))))
-      .catch(() => setUsers([]))
-  }, [])
-
-  useEffect(() => {
-    axiosClient
-      .get<EspoList>('/Team', {
-        params: { maxSize: 50, offset: 0, attributeSelect: 'id,name' },
-      })
-      .then((res) => setTeams(res.data.list.map((tm) => ({ label: tm.name, value: tm.id }))))
-      .catch(() => setTeams([]))
-  }, [])
-
-  useEffect(() => {
-    axiosClient
-      .get<EspoList>('/Contact', {
-        params: { maxSize: 50, offset: 0, orderBy: 'name', order: 'asc', attributeSelect: 'id,name' },
-      })
-      .then((res) => setContacts(res.data.list.map((c) => ({ label: c.name, value: c.id }))))
-      .catch(() => setContacts([]))
-  }, [])
-
-  // ── Form sections ─────────────────────────────────────────────────────────────
+  // ── Form sections — options loaded via resource registry (deduped, cached) ───
   const sections = useMemo<FormSectionConfig[]>(() => [
     {
       key: 'agent',
@@ -63,14 +24,14 @@ export function PipelineForm({ open, onClose, onSuccess, initialData, mode }: Fo
           name: 'assignedUserId',
           label: t('pipeline.form.assignedUser'),
           type: 'select',
-          options: users,
+          resource: 'users',
           placeholder: t('pipeline.form.selectUser'),
         },
         {
           name: 'teamsIds',
           label: t('pipeline.form.teams'),
           type: 'multi-select',
-          options: teams,
+          resource: 'departments',
           placeholder: t('pipeline.form.selectTeams'),
         },
       ],
@@ -85,7 +46,7 @@ export function PipelineForm({ open, onClose, onSuccess, initialData, mode }: Fo
           label: t('pipeline.form.contact'),
           type: 'select',
           required: true,
-          options: contacts,
+          resource: 'contacts',
           placeholder: t('pipeline.form.selectContact'),
         },
         {
@@ -118,29 +79,29 @@ export function PipelineForm({ open, onClose, onSuccess, initialData, mode }: Fo
         },
       ],
     },
-  ], [t, users, teams, contacts])
+  ], [t])
 
   // ── Payload transformer ───────────────────────────────────────────────────────
- const transformSubmit = useCallback((values: Record<string, unknown>) => {
-  const contactType = (values.contactType as string) || 'pipeline'
-  const rawDate = values.dateStart as string | undefined
-  const dateStart = rawDate ? `${rawDate.substring(0, 10)} 00:00:00` : undefined
-  return {
-    ...values,
-    name: `${contactType} - ${new Date().toLocaleDateString('en-US')}`,
-    status: 'Planned',
-    dateStart,
-    assignedUserId: (values.assignedUserId as string) || undefined,
-    contactsIds: values.contactsIds ? [values.contactsIds] : undefined,
-    teamsIds:
-      Array.isArray(values.teamsIds) && values.teamsIds.length > 0
-        ? values.teamsIds
-        : undefined,
-  }
-}, [])
+  const transformSubmit = useCallback((values: Record<string, unknown>) => {
+    const contactType = (values.contactType as string) || 'pipeline'
+    const rawDate = values.dateStart as string | undefined
+    const dateStart = rawDate ? `${rawDate.substring(0, 10)} 00:00:00` : undefined
+    return {
+      ...values,
+      name: `${contactType} - ${new Date().toLocaleDateString('en-US')}`,
+      status: 'Planned',
+      dateStart,
+      assignedUserId: (values.assignedUserId as string) || undefined,
+      contactsIds: values.contactsIds ? [values.contactsIds] : undefined,
+      teamsIds:
+        Array.isArray(values.teamsIds) && values.teamsIds.length > 0
+          ? values.teamsIds
+          : undefined,
+    }
+  }, [])
 
   return (
-    <DynamicForm<Pipeline>
+    <DynamicForm<PipelineFormValues>
       open={open}
       onClose={onClose}
       onSuccess={onSuccess}

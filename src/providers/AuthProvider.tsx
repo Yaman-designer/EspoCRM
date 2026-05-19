@@ -10,7 +10,6 @@ import {
 } from 'react'
 import { getSession } from 'next-auth/react'
 import type { Session } from 'next-auth'
-import Cookies from 'js-cookie'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -41,14 +40,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const applySession = useCallback((s: Session | null) => {
     setSession(s)
     setStatus(s ? 'authenticated' : 'unauthenticated')
-
-    // Keep the EspoCRM API token in a cookie so axiosClient can read it
-    // synchronously on every request without touching React state.
-    if (s?.espoToken) {
-      Cookies.set('espo-token', s.espoToken, { expires: 7, sameSite: 'strict' })
-    } else {
-      Cookies.remove('espo-token')
-    }
   }, [])
 
   // Stable reference — safe to list as a useEffect dependency.

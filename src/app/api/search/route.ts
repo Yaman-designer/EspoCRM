@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 
-const ESPO_BASE = process.env.NEXT_PUBLIC_ESPO_API_URL!
+import { env } from '@/lib/env'
+const ESPO_BASE = env.espoApiUrl
 const ENTITIES = ['Contact', 'RealEstateRequest', 'Account', 'EblaContractParty'] as const
 
 export async function GET(req: NextRequest) {

@@ -9,7 +9,12 @@
       "Bash(Format-Table -AutoSize)",
       "Bash(node -e \"console.log\\(require\\('recharts/package.json'\\).version\\)\")",
       "Bash(node -e \"const t = require\\('recharts'\\); console.log\\(Object.keys\\(t\\).filter\\(k => k.includes\\('Tooltip'\\)\\)\\)\")",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(Get-ChildItem -Recurse -Path src -Name)",
+      "Bash(mkdir -p \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\src\\\\app\\\\api\\\\espo\\\\[...path]\" 2>/dev/null; echo \"done\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Win10\\Documents\\myespocrm\\ebla-crm-dashboard\\src\\app\\api\\espo"
     ]
   }
 }

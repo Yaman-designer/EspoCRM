@@ -1,3 +1,16 @@
+// ── Form values (contactsIds is a single string in the select, not an array) ──
+
+export interface PipelineFormValues {
+  id?: string
+  assignedUserId?: string
+  teamsIds?: string[]
+  contactsIds?: string
+  contactType?: string
+  status2?: string
+  dateStart?: string
+  description?: string
+}
+
 // ── EspoCRM pipeline entity (CPipeline) ───────────────────────────────────────
 
 export interface Pipeline {

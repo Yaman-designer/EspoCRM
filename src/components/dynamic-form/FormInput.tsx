@@ -1,8 +1,8 @@
 'use client'
 
 import type { ControllerRenderProps, FieldValues } from 'react-hook-form'
-import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
 import type { FieldConfig } from './types'
 
 interface FormInputProps {
@@ -27,7 +27,7 @@ export function FormInput({ field, config }: FormInputProps) {
           placeholder="0"
           disabled={disabled}
           readOnly={readOnly}
-          className="pl-7"
+          className="h-10 pl-7"
           {...field}
           value={field.value ?? ''}
           onChange={(e) => field.onChange(Math.max(0, Number(e.target.value)))}
@@ -49,7 +49,7 @@ export function FormInput({ field, config }: FormInputProps) {
             placeholder={placeholder ?? '0'}
             disabled={disabled}
             readOnly={readOnly}
-            className={suffix ? 'pr-8' : undefined}
+            className={cn('h-10', suffix ? 'pr-8' : undefined)}
             {...field}
             value={field.value ?? ''}
             onChange={(e) => {
@@ -108,7 +108,7 @@ export function FormInput({ field, config }: FormInputProps) {
         max={max}
         step={step}
         maxLength={maxLength}
-        className={suffix ? 'pr-8' : undefined}
+        className={cn('h-10', suffix ? 'pr-8' : undefined)}
         {...field}
         value={field.value ?? ''}
       />

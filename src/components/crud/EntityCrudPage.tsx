@@ -31,11 +31,14 @@ import type { EntityConfig } from '@/lib/entityConfigs'
 import { getEntityList, createEntity, updateEntity, deleteEntity } from '@/api/espocrm/entityService'
 
 type Row = Record<string, unknown>
-type FormValues = Record<string, string | number | undefined>
+
+// FormValues must match what ZodObject<Record<string, ZodTypeAny>> resolves to.
+// Using Record<string, unknown> satisfies the resolver and avoids unsafe casts.
+type FormValues = Record<string, unknown>
 
 const PAGE_SIZE = 20
 
-function buildSchema(config: EntityConfig) {
+function buildSchema(config: EntityConfig): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const shape: Record<string, z.ZodTypeAny> = {}
   for (const f of config.fields) {
     let s: z.ZodTypeAny = f.type === 'email'
@@ -61,7 +64,7 @@ export function EntityCrudPage({ config }: { config: EntityConfig }) {
   const [submitting, setSubmitting] = useState(false)
 
   const schema = buildSchema(config)
-  const emptyValues = Object.fromEntries(config.fields.map((f) => [f.name, ''])) as FormValues
+  const emptyValues: FormValues = Object.fromEntries(config.fields.map((f) => [f.name, '']))
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -95,7 +98,7 @@ export function EntityCrudPage({ config }: { config: EntityConfig }) {
 
   const openEdit = (row: Row) => {
     setEditRow(row)
-    form.reset(Object.fromEntries(config.fields.map((f) => [f.name, row[f.name] ?? ''])) as FormValues)
+    form.reset(Object.fromEntries(config.fields.map((f) => [f.name, row[f.name] ?? ''])))
     setModalOpen(true)
   }
 
@@ -228,54 +231,55 @@ export function EntityCrudPage({ config }: { config: EntityConfig }) {
                 <FormField
                   key={fieldCfg.name}
                   control={form.control}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  name={fieldCfg.name as any}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {fieldCfg.label}
-                        {fieldCfg.required && <span className="text-destructive ml-1">*</span>}
-                      </FormLabel>
-                      <FormControl>
-                        {fieldCfg.type === 'textarea' ? (
-                          <Textarea
-                            {...field}
-                            value={(field.value as string) ?? ''}
-                            placeholder={fieldCfg.placeholder}
-                            rows={fieldCfg.rows ?? 3}
-                          />
-                        ) : fieldCfg.type === 'select' ? (
-                          <Select
-                            value={(field.value as string) ?? ''}
-                            onValueChange={field.onChange}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder={`Select ${fieldCfg.label}`} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {fieldCfg.options?.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>
-                                  {opt.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <Input
-                            {...field}
-                            value={(field.value as string) ?? ''}
-                            type={
-                              fieldCfg.type === 'email'  ? 'email'  :
-                              fieldCfg.type === 'number' ? 'number' :
-                              fieldCfg.type === 'date'   ? 'date'   : 'text'
-                            }
-                            placeholder={fieldCfg.placeholder}
-                          />
-                        )}
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  name={fieldCfg.name}
+                  render={({ field }) => {
+                    const strValue = typeof field.value === 'string' || typeof field.value === 'number'
+                      ? String(field.value)
+                      : ''
+                    return (
+                      <FormItem>
+                        <FormLabel>
+                          {fieldCfg.label}
+                          {fieldCfg.required && <span className="text-destructive ml-1">*</span>}
+                        </FormLabel>
+                        <FormControl>
+                          {fieldCfg.type === 'textarea' ? (
+                            <Textarea
+                              {...field}
+                              value={strValue}
+                              placeholder={fieldCfg.placeholder}
+                              rows={fieldCfg.rows ?? 3}
+                            />
+                          ) : fieldCfg.type === 'select' ? (
+                            <Select value={strValue} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder={`Select ${fieldCfg.label}`} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {fieldCfg.options?.map((opt) => (
+                                  <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <Input
+                              {...field}
+                              value={strValue}
+                              type={
+                                fieldCfg.type === 'email'  ? 'email'  :
+                                fieldCfg.type === 'number' ? 'number' :
+                                fieldCfg.type === 'date'   ? 'date'   : 'text'
+                              }
+                              placeholder={fieldCfg.placeholder}
+                            />
+                          )}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )
+                  }}
                 />
               ))}
               <DialogFooter className="pt-2">

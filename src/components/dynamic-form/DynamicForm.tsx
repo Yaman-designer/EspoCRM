@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import axiosClient from '@/api/axiosClient'
 import { cn } from '@/lib/utils'
 import {
@@ -23,8 +24,6 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form'
-import { ScrollArea } from '@/components/ui/scroll-area'
-
 import type { DynamicFormProps, FieldConfig, FormSectionConfig } from './types'
 import { FormSection } from './FormSection'
 import { FormActions } from './FormActions'
@@ -132,7 +131,13 @@ export function DynamicForm<T = Record<string, unknown>>({
         ? axiosClient.patch(`${endpoint}/${id}`, payload)
         : axiosClient.post(endpoint, payload)
     },
-    onSuccess: () => onSuccess?.(),
+    onSuccess: () => {
+      toast.success(isEdit ? t('form.updateSuccess') : t('form.createSuccess'))
+      onSuccess?.()
+    },
+    onError: () => {
+      toast.error(isEdit ? t('form.updateError') : t('form.createError'))
+    },
   })
 
   const onSubmit = (data: Record<string, unknown>) => mutation.mutate(data)
@@ -145,23 +150,23 @@ export function DynamicForm<T = Record<string, unknown>>({
       <DialogContent
         showCloseButton={!mutation.isPending}
         className={cn(
-          'flex max-h-[90vh] w-full flex-col gap-0 overflow-hidden p-0',
+          'flex max-h-[90dvh] w-full flex-col gap-0 overflow-hidden p-0',
           MAX_WIDTH[maxWidth],
         )}
       >
         {/* ── Header ── */}
-        <DialogHeader className="shrink-0 border-b border-border/50 px-6 py-5">
-          <div className="flex items-center gap-3">
+        <DialogHeader className="shrink-0 border-b border-border/40 bg-muted/20 px-6 py-5">
+          <div className="flex items-center gap-3.5">
             {Icon && (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Icon className="h-4.5 w-4.5 text-primary" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/15">
+                <Icon className="h-5 w-5 text-primary" />
               </div>
             )}
             <div>
               <DialogTitle className="text-[15px] font-semibold text-foreground">
                 {title}
               </DialogTitle>
-              <DialogDescription className="mt-0.5 text-[12px]">
+              <DialogDescription className="mt-0.5 text-[12px] text-muted-foreground/70">
                 {description ?? '​'}
               </DialogDescription>
             </div>
@@ -174,8 +179,8 @@ export function DynamicForm<T = Record<string, unknown>>({
             onSubmit={isView ? undefined : form.handleSubmit(onSubmit)}
             className="flex min-h-0 flex-1 flex-col"
           >
-            <ScrollArea className="flex-1">
-              <div className="space-y-8 px-6 py-6">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <div className="space-y-5 px-6 py-6">
                 {sections.map((section) => {
                   const visibleFields = section.fields.filter(
                     (f) => !f.showWhen || f.showWhen(watchedValues),
@@ -235,7 +240,7 @@ export function DynamicForm<T = Record<string, unknown>>({
                   )
                 })}
               </div>
-            </ScrollArea>
+            </div>
 
             {/* ── Footer ── */}
             <FormActions

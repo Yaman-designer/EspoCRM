@@ -49,18 +49,18 @@ export function FormDatePicker({ field, config }: FormDatePickerProps) {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          disabled={config.disabled}
           className={cn(
-            'h-9 w-full justify-start border-border/60 text-left text-sm font-normal',
-            !date && 'text-muted-foreground',
+            'h-10 w-full justify-start border-border/60 bg-background text-left text-sm font-normal shadow-none transition-colors hover:border-border hover:bg-muted/30',
+            !date ? 'text-muted-foreground/70' : 'text-foreground',
             (config.disabled || config.readOnly) && 'pointer-events-none opacity-60',
           )}
-          disabled={config.disabled}
         >
-          <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+          <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
           {date ? formatDisplay(field.value) : (config.placeholder ?? 'Pick a date…')}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 shadow-lg" align="start">
         <Calendar
           mode="single"
           selected={date}

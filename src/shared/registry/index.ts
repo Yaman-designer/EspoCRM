@@ -6,6 +6,7 @@ export type ResourceKey =
   | 'users'
   | 'companies'
   | 'departments'
+  | 'contacts'
   | 'roles'
   | 'countries'
   | 'statuses'
@@ -56,42 +57,52 @@ export const resourceRegistry: Record<ResourceKey, ResourceDef> = {
       axiosClient
         .get<EspoListResponse>('/User', {
           params: {
-            maxSize: 10,
+            maxSize: 200,
             offset: 0,
-            orderBy: 'userNameOwnFirst',
+            orderBy: 'name',
             order: 'asc',
             'whereGroup[0][type]': 'primary',
             'whereGroup[0][value]': 'active',
-            attributeSelect:
-              'salutationName,firstName,lastName,middleName,name,userName,' +
-              'emailAddressIsOptedOut,emailAddressIsInvalid,emailAddress,emailAddressData',
+            attributeSelect: 'id,name',
           },
         })
         .then((r) => mapOptions(r.data.list, 'name', 'id')),
     staleTime: 5 * 60 * 1000,
   },
 
-companies: {
-  queryKey: ['resource', 'companies'] as const,
-  queryFn: () =>
-    axiosClient
-      .get<EspoListResponse>('/Account', {
-        params: { maxSize: 100, offset: 0, orderBy: 'name', order: 'asc', attributeSelect: 'id,name' },
-      })
-      .then((r) => mapOptions(r.data.list, 'name', 'id')),
-  staleTime: 5 * 60 * 1000,
-},
+  companies: {
+    queryKey: ['resource', 'companies'] as const,
+    queryFn: () =>
+      axiosClient
+        .get<EspoListResponse>('/Account', {
+          params: { maxSize: 200, offset: 0, orderBy: 'name', order: 'asc', attributeSelect: 'id,name' },
+        })
+        .then((r) => mapOptions(r.data.list, 'name', 'id')),
+    staleTime: 5 * 60 * 1000,
+  },
 
-departments: {
-  queryKey: ['resource', 'departments'] as const,
-  queryFn: () =>
-    axiosClient
-      .get<EspoListResponse>('/Team', {
-        params: { maxSize: 50, attributeSelect: 'id,name' },
-      })
-      .then((r) => mapOptions(r.data.list, 'name', 'id')),
-  staleTime: 10 * 60 * 1000,
-},
+  departments: {
+    queryKey: ['resource', 'departments'] as const,
+    queryFn: () =>
+      axiosClient
+        .get<EspoListResponse>('/Team', {
+          params: { maxSize: 200, attributeSelect: 'id,name' },
+        })
+        .then((r) => mapOptions(r.data.list, 'name', 'id')),
+    staleTime: 10 * 60 * 1000,
+  },
+
+  contacts: {
+    queryKey: ['resource', 'contacts'] as const,
+    queryFn: () =>
+      axiosClient
+        .get<EspoListResponse>('/Contact', {
+          params: { maxSize: 200, offset: 0, orderBy: 'name', order: 'asc', attributeSelect: 'id,name' },
+        })
+        .then((r) => mapOptions(r.data.list, 'name', 'id')),
+    staleTime: 5 * 60 * 1000,
+  },
+
   roles: {
     queryKey: ['resource', 'roles'] as const,
     queryFn: () =>
