@@ -144,7 +144,7 @@ export function PipelineForm({ open, onClose, onSuccess, initialData, mode }: Fo
       icon={TrendingUp}
       sections={sections}
       schema={pipelineSchema}
-      endpoint="/api/pipeline"
+      endpoint="/CPipeline"
       initialData={initialData}
       mode={mode}
       maxWidth="2xl"

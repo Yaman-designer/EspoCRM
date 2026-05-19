@@ -22,7 +22,7 @@ export function ContactForm({ open, onClose, onSuccess, initialData, mode }: For
       icon={Users}
       sections={contactSections}
       schema={contactSchema}
-      endpoint="/api/contacts"
+      endpoint="/Contact"
       initialData={initialData}
       mode={mode}
     />

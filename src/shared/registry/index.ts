@@ -71,24 +71,27 @@ export const resourceRegistry: Record<ResourceKey, ResourceDef> = {
     staleTime: 5 * 60 * 1000,
   },
 
-  companies: {
-    queryKey: ['resource', 'companies'] as const,
-    queryFn: () =>
-      axiosClient
-        .get<{ data: Record<string, unknown>[] }>('/api/companies')
-        .then((r) => mapOptions(r.data.data, 'name', 'name')),
-    staleTime: 5 * 60 * 1000,
-  },
+companies: {
+  queryKey: ['resource', 'companies'] as const,
+  queryFn: () =>
+    axiosClient
+      .get<EspoListResponse>('/Account', {
+        params: { maxSize: 100, offset: 0, orderBy: 'name', order: 'asc', attributeSelect: 'id,name' },
+      })
+      .then((r) => mapOptions(r.data.list, 'name', 'id')),
+  staleTime: 5 * 60 * 1000,
+},
 
-  departments: {
-    queryKey: ['resource', 'departments'] as const,
-    queryFn: () =>
-      axiosClient
-        .get<{ data: Record<string, unknown>[] }>('/api/departments')
-        .then((r) => mapOptions(r.data.data, 'name', 'id')),
-    staleTime: 10 * 60 * 1000,
-  },
-
+departments: {
+  queryKey: ['resource', 'departments'] as const,
+  queryFn: () =>
+    axiosClient
+      .get<EspoListResponse>('/Team', {
+        params: { maxSize: 50, attributeSelect: 'id,name' },
+      })
+      .then((r) => mapOptions(r.data.list, 'name', 'id')),
+  staleTime: 10 * 60 * 1000,
+},
   roles: {
     queryKey: ['resource', 'roles'] as const,
     queryFn: () =>
