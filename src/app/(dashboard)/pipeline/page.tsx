@@ -29,6 +29,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
+  AlertDialogMedia,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
@@ -342,8 +343,11 @@ export default function PipelinePage() {
 
       {/* ── Delete Confirm ── */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent size="sm">
           <AlertDialogHeader>
+            <AlertDialogMedia className="bg-destructive/10 text-destructive">
+              <Trash2 />
+            </AlertDialogMedia>
             <AlertDialogTitle>{t('pipeline.delete.title')}</AlertDialogTitle>
             <AlertDialogDescription>
               {t('pipeline.delete.description', {
@@ -358,9 +362,9 @@ export default function PipelinePage() {
               {t('pipeline.delete.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
+              variant="destructive"
               onClick={() => deleteRow && deleteMutation.mutate(deleteRow.id)}
               disabled={deleteMutation.isPending}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleteMutation.isPending ? t('pipeline.delete.deleting') : t('pipeline.delete.confirm')}
             </AlertDialogAction>

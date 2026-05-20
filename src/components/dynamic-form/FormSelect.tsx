@@ -69,7 +69,7 @@ function useAsyncOptions(config: FieldConfig, fetchEnabled: boolean) {
 // via Tailwind v4 important-suffix (!) so it wins over `no-scrollbar`.
 
 const SCROLL_CLS =
-  '[scrollbar-width:thin]! [&::-webkit-scrollbar]:block! [&::-webkit-scrollbar]:w-1! [&::-webkit-scrollbar-track]:bg-transparent! [&::-webkit-scrollbar-thumb]:rounded-full! [&::-webkit-scrollbar-thumb]:bg-border/50!'
+  'overscroll-contain! [scrollbar-width:thin]! [&::-webkit-scrollbar]:block! [&::-webkit-scrollbar]:w-1! [&::-webkit-scrollbar-track]:bg-transparent! [&::-webkit-scrollbar-thumb]:rounded-full! [&::-webkit-scrollbar-thumb]:bg-border/50!'
 
 // ── Shared props ───────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ export function FormSelect({ field, config }: SelectProps) {
 
   const selected = options.find((o) => o.value === field.value)
   const placeholder = config.placeholder ?? `Select ${config.label.toLowerCase()}…`
-  const scrollable = options.length > 9
+  const scrollable = options.length > 5
 
   function handleOpenChange(next: boolean) {
     if (next) setFetchEnabled(true)
@@ -125,8 +125,9 @@ export function FormSelect({ field, config }: SelectProps) {
       </PopoverTrigger>
 
       <PopoverContent
-        className="w-full min-w-(--radix-popover-trigger-width) p-0 shadow-lg"
+        className="w-(--radix-popover-trigger-width) p-0 shadow-lg"
         align="start"
+        onWheel={(e) => e.stopPropagation()}
       >
         <Command
           filter={(value, search) => {
@@ -160,9 +161,9 @@ export function FormSelect({ field, config }: SelectProps) {
                         field.onChange(opt.value)
                         setOpen(false)
                       }}
-                      className="flex items-center justify-between gap-2 text-[13px]"
+                      className="flex w-full items-center justify-between gap-2 text-[13px]"
                     >
-                      {opt.label}
+                      <span className="truncate">{opt.label}</span>
                       {field.value === opt.value && (
                         <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
                       )}
@@ -186,7 +187,7 @@ export function FormMultiSelect({ field, config }: SelectProps) {
 
   const { options, isLoading, isError } = useAsyncOptions(config, fetchEnabled)
   const selected: string[] = Array.isArray(field.value) ? field.value : []
-  const scrollable = options.length > 9
+  const scrollable = options.length > 5
 
   function toggle(value: string) {
     field.onChange(
@@ -226,8 +227,9 @@ export function FormMultiSelect({ field, config }: SelectProps) {
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-full min-w-(--radix-popover-trigger-width) p-0 shadow-lg"
+          className="w-(--radix-popover-trigger-width) p-0 shadow-lg"
           align="start"
+          onWheel={(e) => e.stopPropagation()}
         >
           <Command
             filter={(value, search) => {
@@ -258,9 +260,9 @@ export function FormMultiSelect({ field, config }: SelectProps) {
                         value={opt.value}
                         onSelect={() => toggle(opt.value)}
                         disabled={opt.disabled}
-                        className="flex items-center justify-between gap-2 text-[13px]"
+                        className="flex w-full items-center justify-between gap-2 text-[13px]"
                       >
-                        {opt.label}
+                        <span className="truncate">{opt.label}</span>
                         {selected.includes(opt.value) && (
                           <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
                         )}

@@ -53,6 +53,13 @@
       "delete": "Delete deal",
       "deleteSelected": "Delete selected"
     },
+    "delete": {
+      "title": "Delete Deal",
+      "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleting": "Deleting…"
+    },
     "form": {
       "addTitle": "Add New Deal",
       "editTitle": "Edit Deal",
