@@ -211,6 +211,7 @@ export function SearchDropdown({ inputRef, className, onClose }: SearchDropdownP
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => { if (query.trim() && results.length > 0) dispatch({ type: 'open' }) }}
+          aria-label={t('search')}
           placeholder={t('search')}
           className={cn(
             'h-10 w-full rounded-xl border border-border bg-muted/50',
@@ -233,7 +234,7 @@ export function SearchDropdown({ inputRef, className, onClose }: SearchDropdownP
       {open && (
         <div
           className={cn(
-            'absolute start-0 top-[calc(100%+6px)] z-50',
+            'absolute inset-s-0 top-[calc(100%+6px)] z-50',
             'w-full min-w-[320px] max-w-sm',
             'flex max-h-[380px] flex-col overflow-hidden',
             'rounded-2xl border border-border/60 bg-popover shadow-design-xl',

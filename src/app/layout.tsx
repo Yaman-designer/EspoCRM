@@ -45,7 +45,7 @@ export const metadata: Metadata = {
       "Professional CRM platform for real estate and sales teams. Manage customers, analytics, and workflows in one unified platform.",
     images: [
       {
-        url: "/imges/crm-hero.webp",
+        url: "/images/crm-hero.webp",
         width: 640,
         height: 700,
         alt: "Ebla CRM Dashboard",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     title: "Ebla CRM — Real Estate & Sales Management",
     description:
       "Professional CRM platform for real estate and sales teams.",
-    images: ["/imges/crm-hero.webp"],
+    images: ["/images/crm-hero.webp"],
   },
   // Dashboard pages are behind auth — don't index them by default.
   // Individual public pages (login) override this with robots: { index: true }.

@@ -369,7 +369,7 @@ export function NotifDropdown({ isOpen, onToggle }: Props) {
       const data = await fetchNotifications(PAGE_SIZE, 0)
       setNotifications(data.list)
       setHasMore(data.list.length === PAGE_SIZE)
- } catch (err) {
+    } catch (err) {
       console.error('[NotifDropdown] Failed to load notifications:', err)
       setError(t('loadFailed'))
     } finally {
@@ -390,10 +390,10 @@ export function NotifDropdown({ isOpen, onToggle }: Props) {
       const data = await fetchNotifications(PAGE_SIZE, notifications.length)
       setNotifications((prev) => [...prev, ...data.list])
       setHasMore(data.list.length === PAGE_SIZE)
-  } catch (err) {
+    } catch (err) {
       console.error('[NotifDropdown] Failed to load more notifications:', err)
     } finally {
-            setLoadingMore(false)
+      setLoadingMore(false)
     }
   }
 
@@ -401,7 +401,7 @@ export function NotifDropdown({ isOpen, onToggle }: Props) {
     try {
       await markAllRead()
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-      } catch (err) {
+    } catch (err) {
       console.error('[NotifDropdown] Failed to mark all as read:', err)
     }
   }

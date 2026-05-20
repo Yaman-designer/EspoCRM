@@ -15,7 +15,7 @@ export const metadata: Metadata = {
       'Sign in to Ebla CRM — manage leads, contacts, contracts, and real estate pipelines in one place.',
     images: [
       {
-        url: '/imges/crm-hero.webp',
+        url: '/images/crm-hero.webp',
         width: 640,
         height: 700,
         alt: 'Ebla CRM Dashboard',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Log in | Ebla CRM',
     description: 'Sign in to Ebla CRM — your all-in-one sales and real estate management platform.',
-    images: ['/imges/crm-hero.webp'],
+    images: ['/images/crm-hero.webp'],
   },
 }
 

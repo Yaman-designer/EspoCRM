@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
       },
       // Aggressive caching for static assets — Vercel honours these on edge.
       {
-        source: "/imges/(.*)",
+        source: "/images/(.*)",
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
@@ -71,7 +71,7 @@ const nextConfig: NextConfig = {
     ],
     // Partial Pre-rendering: static shell + dynamic islands.
     // Enables instant TTFB for the dashboard shell while async widgets stream in.
-   cacheComponents: true,
+    cacheComponents: true,
     // Inline small CSS files (< 10 kB) to eliminate a render-blocking request.
     inlineCss: true,
   },
