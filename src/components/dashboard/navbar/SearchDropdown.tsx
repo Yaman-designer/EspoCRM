@@ -65,6 +65,7 @@ function ResultItem({ result, onClose }: { result: SearchResult; onClose: () => 
   return (
     <Link
       href={href}
+      prefetch={false}
       onClick={onClose}
       className="flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors hover:bg-muted"
     >
