@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useReducer } from 'react'
+import { useState, useEffect, useRef, useCallback, useReducer, useDeferredValue } from 'react'
 import Link from 'next/link'
 import { Search, X, Loader2, UserRound, Headphones, Building2, Users, SearchX } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
@@ -151,21 +151,32 @@ export function SearchDropdown({ inputRef, className, onClose }: SearchDropdownP
   const containerRef = useRef<HTMLDivElement>(null)
   const localInputRef = useRef<HTMLInputElement>(null)
   const activeRef = inputRef ?? localInputRef
+
+  // Debounce first, then defer — input updates immediately while
+  // the network effect is deprioritized by React's scheduler.
   const debouncedQuery = useDebounce(query, 320)
+  const deferredQuery = useDeferredValue(debouncedQuery)
 
   useEffect(() => {
-    const q = debouncedQuery.trim()
+    const q = deferredQuery.trim()
     if (!q) {
       dispatch({ type: 'clear' })
       return
     }
+    // AbortController cancels the in-flight HTTP request when the query
+    // changes before the previous fetch resolves — saves bandwidth and
+    // prevents stale results from overwriting newer ones.
+    const controller = new AbortController()
     dispatch({ type: 'fetch_start' })
-    let cancelled = false
-    globalSearch(q).then((res) => {
-      if (!cancelled) dispatch({ type: 'fetch_done', results: res })
-    })
-    return () => { cancelled = true }
-  }, [debouncedQuery])
+    globalSearch(q, controller.signal)
+      .then((res) => dispatch({ type: 'fetch_done', results: res }))
+      .catch((err: unknown) => {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          dispatch({ type: 'fetch_done', results: [] })
+        }
+      })
+    return () => controller.abort()
+  }, [deferredQuery])
 
   // Close on outside click
   useEffect(() => {

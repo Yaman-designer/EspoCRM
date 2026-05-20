@@ -1,7 +1,6 @@
 import type { NextConfig } from "next";
 
-// All EspoCRM API calls are proxied through /api/espo (see src/app/api/espo/[...path]/route.ts).
-// connect-src therefore only needs 'self'.
+// All EspoCRM API calls are proxied through /api/espo — connect-src only needs 'self'.
 const ContentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
@@ -28,18 +27,53 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
+  reactStrictMode: true,
 
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      {
+        source: "/(.*)",
+        headers: securityHeaders,
+      },
+      // Aggressive caching for static assets — Vercel honours these on edge.
+      {
+        source: "/imges/(.*)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        source: "/_next/static/(.*)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+    ];
   },
 
   images: {
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 3600,
+    // 7-day CDN cache for optimised images (up from 1 h).
+    minimumCacheTTL: 604800,
+    // Prevent layout shift by enforcing known dimensions.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
   experimental: {
-    optimizePackageImports: ["lucide-react", "recharts"],
+    // Tree-shake large icon / chart packages at the module level so only
+    // the symbols actually imported end up in the bundle.
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "@radix-ui/react-icons",
+      "date-fns",
+    ],
+    // Partial Pre-rendering: static shell + dynamic islands.
+    // Enables instant TTFB for the dashboard shell while async widgets stream in.
+   cacheComponents: true,
+    // Inline small CSS files (< 10 kB) to eliminate a render-blocking request.
+    inlineCss: true,
   },
 };
 

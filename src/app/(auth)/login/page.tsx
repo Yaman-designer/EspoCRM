@@ -3,8 +3,31 @@ import Image from 'next/image'
 import { LoginForm } from '@/components/auth/LoginForm'
 
 export const metadata: Metadata = {
-  title: 'Log in | Ebla CRM',
-  description: 'Log in to Customer Relationship Management System',
+  title: 'Log in',
+  description:
+    'Sign in to Ebla CRM — your professional platform for managing leads, contacts, contracts, and real estate pipelines.',
+  // Override the root layout default so search engines can index the login page.
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: 'website',
+    title: 'Log in | Ebla CRM',
+    description:
+      'Sign in to Ebla CRM — manage leads, contacts, contracts, and real estate pipelines in one place.',
+    images: [
+      {
+        url: '/imges/crm-hero.webp',
+        width: 640,
+        height: 700,
+        alt: 'Ebla CRM Dashboard',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Log in | Ebla CRM',
+    description: 'Sign in to Ebla CRM — your all-in-one sales and real estate management platform.',
+    images: ['/imges/crm-hero.webp'],
+  },
 }
 
 export default function LoginPage() {
@@ -165,7 +188,7 @@ export default function LoginPage() {
             px-6 py-10
             sm:px-10 sm:py-12
             lg:px-12 xl:px-16
-            bg-gradient-to-br from-white via-white to-[#EFF7FF]/60
+            bg-linear-to-br from-white via-white to-[#EFF7FF]/60
             animate-[fade-in-up_0.7s_ease-out_0.12s_both]"
         >
           {/* Subtle depth shapes — give the panel visual richness */}

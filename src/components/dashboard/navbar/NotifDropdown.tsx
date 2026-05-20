@@ -193,7 +193,7 @@ function NotifHeader({ total, unread, onMarkAllRead, onViewAll }: HeaderProps) {
   return (
     <div className="sticky top-0 z-10 flex shrink-0 items-center justify-between gap-3 border-b border-border/50 bg-popover/95 px-4 py-3 backdrop-blur-sm">
       <div className="flex items-center gap-2.5">
-        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/12 to-primary/5">
+        <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary/12 to-primary/5">
           <Bell className="h-[16px] w-[16px] text-primary" />
           {unread > 0 && (
             <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white">

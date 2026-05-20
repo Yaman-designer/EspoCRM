@@ -13,12 +13,16 @@ export const ENTITY_ROUTE: Record<SearchEntityType, string> = {
   EblaContractParty: '/contracts',
 }
 
-export async function globalSearch(query: string): Promise<SearchResult[]> {
+export async function globalSearch(
+  query: string,
+  signal?: AbortSignal,
+): Promise<SearchResult[]> {
   const q = query.trim()
   if (!q) return []
 
   const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`, {
     cache: 'no-store',
+    signal,
   })
 
   if (!res.ok) return []

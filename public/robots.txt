@@ -1,2 +1,4 @@
+# Managed by Next.js App Router — see src/app/robots.ts
+# This file is intentionally minimal; the dynamic version takes precedence.
 User-agent: *
-Disallow: /
+Disallow:
