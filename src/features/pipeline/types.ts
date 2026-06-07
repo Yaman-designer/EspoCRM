@@ -32,7 +32,9 @@ export interface Pipeline {
   createdById: string
 }
 
-// ── Kanban API response ────────────────────────────────────────────────────────
+// ── Kanban API response (for future Kanban board view) ───────────────────────
+// EspoCRM /Kanban/{Entity} returns {total, groups[]} — NOT a top-level list.
+// For the flat DataTable view use /CPipeline which returns {total, list[]}.
 
 export interface KanbanGroup {
   name: string
@@ -45,5 +47,4 @@ export interface KanbanGroup {
 export interface KanbanResponse {
   total: number
   groups: KanbanGroup[]
-  list: Pipeline[]
 }

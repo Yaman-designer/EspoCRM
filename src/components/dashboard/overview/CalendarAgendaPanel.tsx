@@ -1,5 +1,6 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import { MapPin, Users, Phone, ChevronRight, Calendar } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
@@ -49,11 +50,19 @@ function ScheduleItem({ item, isLast }: { item: AgendaItem; isLast: boolean }) {
 export function CalendarAgendaPanel() {
   const { t, i18n } = useTranslation('dashboard')
 
-  const dateLabel = new Date().toLocaleDateString(i18n.language === 'el' ? 'el-GR' : 'en-US', {
-    weekday: 'long',
-    month:   'long',
-    day:     'numeric',
-  })
+  // useSyncExternalStore gives Turbopack a stable server/client split:
+  // the server snapshot returns '' (avoiding a hydration mismatch with new Date()),
+  // while the client snapshot computes the real locale string.
+  const lang = i18n.language
+  const dateLabel = useSyncExternalStore(
+    () => () => {},
+    () => new Date().toLocaleDateString(lang === 'el' ? 'el-GR' : 'en-US', {
+      weekday: 'long',
+      month:   'long',
+      day:     'numeric',
+    }),
+    () => '',
+  )
 
   const SUMMARY_CHIPS: { type: AgendaType; count: number }[] = [
     { type: 'visit',    count: 2 },

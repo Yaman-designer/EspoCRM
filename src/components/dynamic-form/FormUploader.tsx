@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react'
 import type { ControllerRenderProps, FieldValues } from 'react-hook-form'
 import { useDropzone } from 'react-dropzone'
-import { Upload, X, FileIcon, ImageIcon } from 'lucide-react'
+import { Upload, X, File as FileIcon, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import type { FieldConfig } from './types'

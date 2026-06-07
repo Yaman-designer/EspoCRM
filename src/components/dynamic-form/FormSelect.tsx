@@ -5,6 +5,7 @@ import type { ControllerRenderProps, FieldValues } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
 import { Check, ChevronsUpDown, Loader2, X } from 'lucide-react'
 import axiosClient from '@/api/axiosClient'
+import type { EspoListResponse } from '@/api/espocrm/entityService'
 import { resourceRegistry } from '@/shared/registry'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,12 +41,13 @@ function useAsyncOptions(config: FieldConfig, fetchEnabled: boolean) {
     queryFn: resourceDef
       // Registry already returns normalised {label, value}[] — nothing more to do.
       ? resourceDef.queryFn
-      // Custom api: path — caller must provide labelKey/valueKey for their raw rows.
+      // Custom api: path — uses EspoCRM list shape {total, list[]}.
+      // Caller may override labelKey/valueKey to match their entity fields.
       : async () => {
-          const res = await axiosClient.get<{ data: Record<string, unknown>[] }>(config.api!)
-          const lk = config.labelKey ?? 'label'
-          const vk = config.valueKey ?? 'value'
-          return res.data.data.map((item) => ({
+          const res = await axiosClient.get<EspoListResponse<Record<string, unknown>>>(config.api!)
+          const lk = config.labelKey ?? 'name'
+          const vk = config.valueKey ?? 'id'
+          return (res.data.list ?? []).map((item) => ({
             label: String(item[lk] ?? ''),
             value: String(item[vk] ?? ''),
           }))

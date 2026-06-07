@@ -1,13 +1,14 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { resourceRegistry, type ResourceOption } from '@/shared/registry'
+import type { ResourceOption } from '@/shared/registry'
 
+// Statuses are enum-based in this EspoCRM instance and not a REST entity.
+// Returns an empty list until a proper endpoint is configured.
 export function useStatuses() {
-  const def = resourceRegistry.statuses
   return useQuery<ResourceOption[]>({
-    queryKey: def.queryKey,
-    queryFn: def.queryFn,
-    staleTime: def.staleTime,
+    queryKey: ['resource', 'statuses'],
+    queryFn: () => Promise.resolve([]),
+    staleTime: Infinity,
   })
 }

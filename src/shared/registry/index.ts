@@ -8,8 +8,6 @@ export type ResourceKey =
   | 'departments'
   | 'contacts'
   | 'roles'
-  | 'countries'
-  | 'statuses'
 
 export interface ResourceOption {
   label: string
@@ -107,26 +105,10 @@ export const resourceRegistry: Record<ResourceKey, ResourceDef> = {
     queryKey: ['resource', 'roles'] as const,
     queryFn: () =>
       axiosClient
-        .get<{ data: Record<string, unknown>[] }>('/api/roles')
-        .then((r) => mapOptions(r.data.data, 'name', 'id')),
-    staleTime: 10 * 60 * 1000,
-  },
-
-  countries: {
-    queryKey: ['resource', 'countries'] as const,
-    queryFn: () =>
-      axiosClient
-        .get<{ data: Record<string, unknown>[] }>('/api/countries')
-        .then((r) => mapOptions(r.data.data, 'name', 'code')),
-    staleTime: 30 * 60 * 1000,
-  },
-
-  statuses: {
-    queryKey: ['resource', 'statuses'] as const,
-    queryFn: () =>
-      axiosClient
-        .get<{ data: Record<string, unknown>[] }>('/api/statuses')
-        .then((r) => mapOptions(r.data.data, 'label', 'value')),
+        .get<EspoListResponse>('/AclRole', {
+          params: { maxSize: 200, attributeSelect: 'id,name' },
+        })
+        .then((r) => mapOptions(r.data.list, 'name', 'id')),
     staleTime: 10 * 60 * 1000,
   },
 }

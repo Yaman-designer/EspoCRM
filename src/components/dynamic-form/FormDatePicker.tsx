@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { ControllerRenderProps, FieldValues } from 'react-hook-form'
-import { CalendarIcon } from 'lucide-react'
+import { Calendar as CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'

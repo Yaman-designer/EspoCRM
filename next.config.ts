@@ -60,18 +60,23 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
+  // Cache Components: static shell + dynamic islands for instant TTFB.
+  cacheComponents: true,
+
   experimental: {
-    // Tree-shake large icon / chart packages at the module level so only
-    // the symbols actually imported end up in the bundle.
+    // Tree-shake large icon/chart packages so only the symbols actually
+    // imported end up in the bundle. optimizePackageImports rewrites barrel
+    // imports to direct file paths, bypassing the barrel entirely — it does
+    // NOT re-introduce it. lucide-react must be here to prevent Turbopack from
+    // pulling every icon (including unused ones like car.mjs) into the dev
+    // module graph via the `import * as index from './icons/index.mjs'` in
+    // lucide-react.mjs, which causes "module factory is not available" errors.
     optimizePackageImports: [
       "lucide-react",
       "recharts",
       "@radix-ui/react-icons",
       "date-fns",
     ],
-    // Partial Pre-rendering: static shell + dynamic islands.
-    // Enables instant TTFB for the dashboard shell while async widgets stream in.
-    cacheComponents: true,
     // Inline small CSS files (< 10 kB) to eliminate a render-blocking request.
     inlineCss: true,
   },

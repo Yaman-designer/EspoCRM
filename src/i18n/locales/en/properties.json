@@ -1,0 +1,140 @@
+{
+  "page": {
+    "title": "Active Listing",
+    "subtitle": "Browse and manage all active property listings"
+  },
+  "results": "{{count}} properties",
+  "analytics": {
+    "totalProperties": "Total Properties",
+    "available": "Available",
+    "pending": "Pending",
+    "occupiedUnits": "Occupied Units",
+    "units": "units",
+    "occupancyRate": "Occupancy Rate",
+    "monthlyRevenue": "Monthly Revenue"
+  },
+  "actions": {
+    "export": "Export",
+    "addNew": "Add New Property",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "changeStatus": "Change Status"
+  },
+  "filters": {
+    "search": "Search properties…",
+    "filter": "Filter",
+    "status": "Status",
+    "type": "Property Type",
+    "active": "Active filters",
+    "clearAll": "Clear all",
+    "viewGrid": "Grid view",
+    "viewList": "List view"
+  },
+  "sort": {
+    "label": "Sort",
+    "newest": "Newest",
+    "oldest": "Oldest",
+    "priceHigh": "Price: High to Low",
+    "priceLow": "Price: Low to High",
+    "mostOccupied": "Most Occupied"
+  },
+  "status": {
+    "available": "Available",
+    "sold": "Sold",
+    "pending": "Pending",
+    "draft": "Draft",
+    "sold-out": "Sold Out",
+    "rented": "Rented",
+    "all": "All"
+  },
+  "type": {
+    "house": "House",
+    "villa": "Villa",
+    "apartment": "Apartment",
+    "townhouse": "Town House",
+    "office": "Office",
+    "land": "Land",
+    "all": "All"
+  },
+  "empty": {
+    "title": "No properties found",
+    "subtitle": "Try adjusting your search or clearing the active filters.",
+    "clearFilters": "Clear Filters"
+  },
+  "form": {
+    "addTitle": "Add New Property",
+    "editTitle": "Edit Property",
+    "save": "Save Property",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "sections": {
+      "basic": "Basic Information",
+      "details": "Property Details",
+      "media": "Media & Tags"
+    },
+    "fields": {
+      "title": "Property Name",
+      "address": "Address",
+      "price": "Price (USD)",
+      "type": "Property Type",
+      "status": "Status",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "parking": "Parking",
+      "floor": "Floor",
+      "area": "Area (sqft)",
+      "description": "Description",
+      "tag": "Tag",
+      "image": "Image URL"
+    },
+    "placeholders": {
+      "title": "e.g. Maison Sterling",
+      "address": "e.g. New York, NY",
+      "price": "e.g. 1500000",
+      "description": "Describe the property…",
+      "tag": "e.g. New, Featured, Luxury"
+    }
+  },
+  "delete": {
+    "title": "Delete Property",
+    "description": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+    "confirm": "Delete",
+    "deleting": "Deleting…",
+    "cancel": "Cancel"
+  },
+  "details": {
+    "tabs": {
+      "overview": "Overview",
+      "gallery": "Gallery",
+      "activity": "Activity"
+    },
+    "about": "About",
+    "specs": "Property Details",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "parking": "Parking",
+    "floor": "Floor",
+    "area": "Area",
+    "listed": "Listed",
+    "amenities": "Amenities",
+    "agent": "Assigned Agent",
+    "occupancy": "Occupancy",
+    "editProperty": "Edit Property",
+    "contactAgent": "Contact Agent",
+    "noDescription": "No description available for this property.",
+    "noActivity": "No recent activity recorded.",
+    "units": {
+      "occupied": "Occupied",
+      "available": "Available",
+      "rate": "Occupancy Rate"
+    },
+    "activity": {
+      "listed": "Property listed",
+      "priceReduced": "Price adjusted",
+      "viewingScheduled": "Viewing scheduled",
+      "offerReceived": "Offer received",
+      "leaseRenewed": "Lease renewed"
+    }
+  }
+}

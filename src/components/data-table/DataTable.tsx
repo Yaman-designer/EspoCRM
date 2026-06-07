@@ -17,7 +17,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import {
   ArrowUp, ArrowDown, ArrowUpDown,
-  AlertCircle, ImageIcon,
+  AlertCircle, Image as ImageIcon,
   LayoutGrid, List,
 } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -438,6 +438,7 @@ export function DataTable<T extends object>({
   }, [columnConfigs, bulkActions.length, rowActions, showRowNumbers])
 
   // ── TanStack Table instance ────────────────────────────────────────────────
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable<T>({
     data: tableData,
     columns: tanstackCols,

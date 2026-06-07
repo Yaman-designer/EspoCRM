@@ -1,0 +1,43 @@
+// RealEstateProperty — field names verified against the live EspoCRM entity.
+// Do not rename fields here without confirming against the API response first.
+
+export type SortOption = 'newest' | 'oldest' | 'price-high' | 'price-low'
+export type ViewMode   = 'grid' | 'list'
+
+export interface RealEstateProperty {
+  id: string
+  name: string                        // EspoCRM internal name (often auto-generated)
+  title?: string                      // Marketing / display title — primary display field
+  propertyCode?: string               // Short reference code e.g. "REF-001"
+
+  status: string                      // Available | Sold | Pending | Rented | Draft | Under Approval
+  type?: string                       // House | Villa | Apartment | Townhouse | Office | Land
+
+  price?: number
+
+  square?: number                     // Area in m²
+  bedroomCount?: number
+  bathroomCount?: number
+
+  addressCity?: string                // City
+  locationName?: string               // District / area name
+  subRegionLocationName?: string      // Sub-region
+
+  mainImageId?: string | null         // Primary image — /api/espo/Attachment/file/{id}
+  imagesIds?: string[]                // Gallery image IDs
+
+  assignedUserId?: string
+  assignedUserName?: string
+  description?: string | null
+  createdAt?: string
+  modifiedAt?: string
+}
+
+export interface PropertyFilters {
+  search: string
+  status: string
+  type: string
+  sortBy: SortOption
+}
+
+export type Property = RealEstateProperty

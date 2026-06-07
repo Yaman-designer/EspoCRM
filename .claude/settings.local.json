@@ -15,7 +15,23 @@
       "Bash(npm run *)",
       "Bash(npx eslint *)",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:v for k,v in d.items\\(\\) if 'pipeline' in k.lower\\(\\)}, indent=2, ensure_ascii=False\\)\\)\")",
-      "Bash(python -c \"import json; d=json.load\\(open\\('src/i18n/locales/en/dashboard.json', encoding='utf-8'\\)\\); print\\(json.dumps\\(d.get\\('pipeline', {}\\), indent=2, ensure_ascii=False\\)\\)\")"
+      "Bash(python -c \"import json; d=json.load\\(open\\('src/i18n/locales/en/dashboard.json', encoding='utf-8'\\)\\); print\\(json.dumps\\(d.get\\('pipeline', {}\\), indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(curl -s -L -c /tmp/cookies.txt http://localhost:3001/login)",
+      "Bash(curl -s -I http://localhost:3001/login)",
+      "Bash(curl -s \"http://localhost:3001/login\")",
+      "Bash(grep -n \"paths\\\\|baseUrl\\\\|@/\\\\*\" \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\tsconfig.json\")",
+      "Bash(xargs grep -l \"} from '@/lib/icons'\")",
+      "Bash(grep -v \"^--$\")",
+      "Bash(grep -v \"^$\\\\|as\\\\|Calendar\")",
+      "PowerShell(\\(Get-ChildItem \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\node_modules\" -ErrorAction SilentlyContinue\\).Count)",
+      "Bash(node node_modules/typescript/bin/tsc --noEmit)",
+      "Bash(xargs grep -l \"module_factory_is_not_available\\\\|factory.*available\\\\|optimizeBarrel\\\\|barrel.*lucide\")",
+      "Bash(grep -v \"^//\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d[k] for k in ['main','module','exports'] if k in d}, indent=2\\)\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(xargs sed -i \"s|from '@/lib/icons'|from 'lucide-react'|g; s|from \\\\\"@/lib/icons\\\\\"|from 'lucide-react'|g\")",
+      "Bash(node \"c:/Users/Win10/Documents/myespocrm/ebla-crm-dashboard/scripts/patch-lucide-use-client.js\")",
+      "Bash(xargs grep -l \"from 'lucide-react'\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\Win10\\Documents\\myespocrm\\ebla-crm-dashboard\\src\\app\\api\\espo"

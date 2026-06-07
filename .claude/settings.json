@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\" -Force)",
+      "Bash(Select-Object Name, FullName, Mode)",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\public\" -Recurse)",
+      "Bash(Select-Object FullName, Name)",
+      "Bash(find \"c:/Users/Win10\" -maxdepth 3 -name \"*.webp\" -o -name \"*.jpg\" -o -name \"*.jpeg\" 2>/dev/null | grep -i \"download\\\\|desktop\\\\|picture\\\\|temp\\\\|tmp\" | head -20)",
+      "Read(//c/Users/Win10/**)",
+      "Bash(find \"/mnt/c/Users/Win10\" -name \"*.jpg\" -newer \"/mnt/c/Users/Win10/Downloads/a981e7bc626d4f2f9cdea1f1aefc441f.jpg\" 2>/dev/null | head -10)",
+      "Read(//mnt/c/Users/**)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\" -Filter \"tailwind.config.*\")",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(JSON.stringify\\(Object.keys\\({...p.dependencies,...p.devDependencies}\\), null, 2\\)\\)\")",
+      "Bash(node -e \"const p = require\\('./package.json'\\); console.log\\(p.dependencies.next, p.dependencies.react, p.dependencies['react-dom']\\)\")",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/next/package.json'\\).version\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('framer-motion:', p.dependencies['framer-motion'] || p.devDependencies?.['framer-motion'] || 'NOT INSTALLED'\\)\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\\" -Force | Select-Object Name)",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\src\" -Recurse -Force | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\\", \"\"\\) } | Sort-Object)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "PowerShell(tree /F \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\src\" -L 3 2>$null)",
+      "PowerShell(head -200)",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\" -Filter \"*.env*\" -File)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\src\\\\features\\\\properties\\\\components\" -File)",
+      "Bash(Remove-Item -Recurse -Force \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\src\\\\components\\\\properties\")",
+      "Bash(node -e \"const pkg = require\\('./node_modules/lucide-react/package.json'\\); console.log\\('version:', pkg.version\\)\")",
+      "PowerShell(cd \"C:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\"; Get-ChildItem -Path src -Recurse -Force | Where-Object { $_.PSIsContainer -eq $false } | Sort-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\\", \"\"\\) })",
+      "PowerShell(cd \"C:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\"; Get-ChildItem -Path public -Recurse -Force | Where-Object { $_.PSIsContainer -eq $false } | Sort-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"C:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\\", \"\"\\) })",
+      "Bash(node_modules/.bin/next lint *)",
+      "Bash(node_modules/.bin/eslint src *)",
+      "Bash(node_modules/.bin/tsc --noEmit)"
+    ]
+  }
+}

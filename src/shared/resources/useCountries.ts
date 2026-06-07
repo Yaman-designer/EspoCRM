@@ -1,13 +1,14 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { resourceRegistry, type ResourceOption } from '@/shared/registry'
+import type { ResourceOption } from '@/shared/registry'
 
+// Countries are not available as a REST entity in this EspoCRM instance.
+// Returns an empty list until a proper endpoint is configured.
 export function useCountries() {
-  const def = resourceRegistry.countries
   return useQuery<ResourceOption[]>({
-    queryKey: def.queryKey,
-    queryFn: def.queryFn,
-    staleTime: def.staleTime,
+    queryKey: ['resource', 'countries'],
+    queryFn: () => Promise.resolve([]),
+    staleTime: Infinity,
   })
 }

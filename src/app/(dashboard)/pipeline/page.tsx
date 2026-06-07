@@ -6,13 +6,14 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Eye, Pencil, Trash2, Users } from 'lucide-react'
 import axiosClient from '@/api/axiosClient'
+import type { EspoListResponse } from '@/api/espocrm/entityService'
 import { DataTable } from '@/components/data-table'
 import { StatusBadge } from '@/components/data-table/StatusBadge'
 import { PageHeader } from '@/components/dashboard/PageHeader'
 import { pipelineColumns } from '@/features/pipeline/columns'
 import { PipelineForm } from '@/features/pipeline/PipelineForm'
 import { STAGE_LABEL_MAP, STATUS_BADGE_MAP, CONTACT_TYPE_BADGE_MAP } from '@/features/pipeline/fields'
-import type { Pipeline, KanbanResponse, PipelineFormValues } from '@/features/pipeline/types'
+import type { Pipeline, PipelineFormValues } from '@/features/pipeline/types'
 import type { QuickFilter, BadgeVariant, FormProps } from '@/components/data-table'
 import type { ComponentType } from 'react'
 import {
@@ -120,11 +121,11 @@ export default function PipelinePage() {
   const { t } = useTranslation('dashboard')
 
   // ── Data fetch ──────────────────────────────────────────────────────────────
-  const { data, isFetching, isError, refetch } = useQuery<KanbanResponse>({
+  const { data, isFetching, isError, refetch } = useQuery<EspoListResponse<Pipeline>>({
     queryKey: ['pipeline'],
     queryFn: () =>
       axiosClient
-        .get<KanbanResponse>('/Kanban/CPipeline', {
+        .get<EspoListResponse<Pipeline>>('/CPipeline', {
           params: {
             maxSize: 200,
             offset: 0,

@@ -203,7 +203,7 @@ export default function LoginPage() {
           </div>
 
           <p className="relative z-10 select-none text-center text-[11px] text-muted-foreground/50">
-            &copy; {new Date().getFullYear()} Ebla CRM &mdash; All rights reserved
+            &copy; 2026 Ebla CRM &mdash; All rights reserved
           </p>
         </div>
 

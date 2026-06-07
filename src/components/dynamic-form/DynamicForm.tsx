@@ -115,6 +115,7 @@ export function DynamicForm<T = Record<string, unknown>>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, JSON.stringify(initialData)])
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const watchedValues = form.watch()
 
   // ── All form field names (used to strip non-form keys before submit) ──────────
