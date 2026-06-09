@@ -64,15 +64,19 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
 
   experimental: {
-    // Tree-shake large icon/chart packages so only the symbols actually
-    // imported end up in the bundle. optimizePackageImports rewrites barrel
-    // imports to direct file paths, bypassing the barrel entirely — it does
-    // NOT re-introduce it. lucide-react must be here to prevent Turbopack from
-    // pulling every icon (including unused ones like car.mjs) into the dev
-    // module graph via the `import * as index from './icons/index.mjs'` in
-    // lucide-react.mjs, which causes "module factory is not available" errors.
+    // Tree-shake large icon/chart packages: only imported symbols are bundled.
+    // NOTE: lucide-react is hardcoded by Next.js 16 in this list regardless of
+    // user config (node_modules/next/dist/server/config.js:988). The listing
+    // here for recharts/date-fns is intentional. Turbopack + lucide-react has a
+    // known HMR factory-ordering race condition:
+    //   check.mjs[no directive] → createLucideIcon.mjs[no directive] → Icon.mjs["use client"]
+    // Turbopack registers Icon.mjs in a separate async chunk (node_modules client
+    // boundary). check.mjs calls createLucideIcon() at module-eval time, before
+    // Icon.mjs's factory is registered → "Module factory is not available".
+    // No app-side fix exists: adding "use client" to createLucideIcon.mjs breaks
+    // SSR (factory called on server). dev is therefore pinned to --webpack.
+    // Re-test with `npm run dev:turbo` after lucide-react or Next.js updates.
     optimizePackageImports: [
-      "lucide-react",
       "recharts",
       "@radix-ui/react-icons",
       "date-fns",

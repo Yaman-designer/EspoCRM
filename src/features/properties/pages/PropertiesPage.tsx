@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import {
   AlertDialog,
@@ -22,6 +22,10 @@ import { PropertyPagination } from '../components/PropertyPagination'
 import type { RealEstateProperty } from '../types/property.types'
 
 export function PropertiesPage() {
+  // React Query in-memory cache causes isLoading=false on SPA re-navigation; defer to after mount so hydration sees the skeleton on both server and client.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   // ── All data / filter / pagination logic lives in the hook ──────────
   const {
     properties, isLoading, isFetching,
@@ -79,7 +83,7 @@ export function PropertiesPage() {
       <PropertyGrid
         properties={properties}
         viewMode={viewMode}
-        isLoading={isLoading}
+        isLoading={!mounted || isLoading}
         hasActiveFilters={hasFilters}
         onView={handleView}
         onEdit={handleEdit}

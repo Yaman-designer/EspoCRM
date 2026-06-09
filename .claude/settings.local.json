@@ -31,7 +31,9 @@
       "Bash(node -e ' *)",
       "Bash(xargs sed -i \"s|from '@/lib/icons'|from 'lucide-react'|g; s|from \\\\\"@/lib/icons\\\\\"|from 'lucide-react'|g\")",
       "Bash(node \"c:/Users/Win10/Documents/myespocrm/ebla-crm-dashboard/scripts/patch-lucide-use-client.js\")",
-      "Bash(xargs grep -l \"from 'lucide-react'\")"
+      "Bash(xargs grep -l \"from 'lucide-react'\")",
+      "PowerShell(head -30)",
+      "PowerShell($pkg = Get-Content \"c:\\\\Users\\\\Win10\\\\Documents\\\\myespocrm\\\\ebla-crm-dashboard\\\\node_modules\\\\lucide-react\\\\package.json\" | ConvertFrom-Json; $pkg.exports | ConvertTo-Json -Depth 5 | Select-Object -First 80)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Win10\\Documents\\myespocrm\\ebla-crm-dashboard\\src\\app\\api\\espo"

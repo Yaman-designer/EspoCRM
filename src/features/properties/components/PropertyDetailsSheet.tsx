@@ -18,10 +18,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { RealEstateProperty } from '../types/property.types'
 
-const FALLBACK = '/images/image.webp'
-
-const toImageUrl = (imageId?: string | null) =>
-  imageId ? `/api/espo/Attachment/file/${imageId}` : FALLBACK
+import { getWebAssetUrl, resolvePropertyImageId, FALLBACK_IMAGE } from '@/lib/image-url'
 
 const fmt = (price: number) =>
   new Intl.NumberFormat('en-US', {
@@ -74,8 +71,8 @@ export const PropertyDetailsSheet = memo(function PropertyDetailsSheet({
   const displayName     = title || name
   const displayLocation = locationName || addressCity
 
-  const heroSrc = toImageUrl(property.mainImageId)
-  const displaySrc = imgFailed ? FALLBACK : heroSrc
+  const heroSrc    = getWebAssetUrl(resolvePropertyImageId(property.mainImageId, property.imagesIds), 'large')
+  const displaySrc = imgFailed ? FALLBACK_IMAGE : heroSrc
 
   return (
     <Sheet open={!!property} onOpenChange={open => { if (!open) onClose() }}>
@@ -88,12 +85,16 @@ export const PropertyDetailsSheet = memo(function PropertyDetailsSheet({
         <SheetTitle className="sr-only">{displayName || 'Property Details'}</SheetTitle>
 
         {/* ── Hero image ──────────────────────────────────── */}
-        <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-muted">
+        <div
+          className="relative w-full shrink-0 overflow-hidden bg-muted"
+          style={{ aspectRatio: '16/9' }}
+        >
           <Image
             key={heroSrc}
             src={displaySrc}
             alt={displayName || 'Property'}
             fill
+            unoptimized
             className="object-cover"
             sizes="600px"
             priority

@@ -1,54 +1,63 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
-// ── Grid card skeleton — mirrors PropertyCard layout exactly ──────────────────
+// ── Grid card skeleton ────────────────────────────────────────────────────────
+// Must mirror PropertyCard exactly so layout shift on load → content is zero.
+// Changes here must stay in sync with PropertyCard.tsx:
+//   • rounded-2xl overflow-hidden (no outer padding — image is edge-to-edge)
+//   • aspect-8/5 image (16:10)
+//   • p-3 content section with the same 5-row hierarchy
+//   • price stacked vertically (price then badge below, mb-2 wrapper)
 
 export function PropertyCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        // p-3 + gap-3 + rounded-3xl match PropertyCard's padded layout
-        'flex flex-col gap-3 rounded-3xl bg-card p-3',
+        'flex flex-col overflow-hidden rounded-2xl bg-card',
         'border border-border/40 shadow-design-sm',
         className,
       )}
     >
-      {/* Image — inside padding, own rounded corners */}
-      <Skeleton className="aspect-4/3 w-full shrink-0 rounded-xl" />
+      {/* Image — 16:10, edge-to-edge, rounded-none so parent clips it */}
+      <Skeleton className="w-full shrink-0 rounded-none" style={{ aspectRatio: '8/5' }} />
 
-      {/* Content */}
-      <div className="flex flex-col">
+      {/* Content — matches PropertyCard's p-3 content section */}
+      <div className="flex flex-col p-3">
 
-        {/* Name (2-line) + type chip */}
-        <div className="mb-1.5 flex items-start justify-between gap-2">
-          <div className="flex flex-1 flex-col gap-1.5">
-            <Skeleton className="h-3.5 w-4/5 rounded-md" />
-            <Skeleton className="h-3.5 w-2/3 rounded-md" />
-          </div>
-          <Skeleton className="mt-0.5 h-5 w-14 shrink-0 rounded-full" />
+        {/* Row 1: type badge + property code */}
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <Skeleton className="h-4 w-14 rounded-md" />
+          <Skeleton className="h-3 w-10 rounded-md" />
         </div>
 
-        {/* Price */}
-        <div className="mb-1.5">
-          <Skeleton className="h-6 w-36 rounded-md" />
+        {/* Row 2: title (2-line) */}
+        <div className="mb-2 flex flex-col gap-1.5">
+          <Skeleton className="h-3.5 w-4/5 rounded-md" />
+          <Skeleton className="h-3.5 w-3/5 rounded-md" />
         </div>
 
-        {/* Location */}
+        {/* Row 3: price then context badge below (mirrors PropertyCard stacked layout) */}
+        <div className="mb-2 min-w-0">
+          <Skeleton className="h-5 w-28 rounded-md" />
+          <Skeleton className="mt-1.5 h-4 w-14 rounded-full" />
+        </div>
+
+        {/* Row 4: location */}
         <div className="flex items-center gap-1.5">
           <Skeleton className="size-3 shrink-0 rounded-full" />
           <Skeleton className="h-3 w-2/5 rounded-md" />
         </div>
 
         {/* Divider */}
-        <div className="my-3 h-px bg-border/40" />
+        <div className="my-2.5 h-px bg-border/40" />
 
-        {/* Spec row — icon + value pairs */}
-        <div className="flex items-center gap-3.5">
-          <Skeleton className="h-3 w-8 rounded-md" />
+        {/* Row 5: specs */}
+        <div className="flex items-center gap-2">
           <Skeleton className="h-3 w-8 rounded-md" />
           <Skeleton className="h-3 w-8 rounded-md" />
           <Skeleton className="h-3 w-16 rounded-md" />
         </div>
+
       </div>
     </div>
   )
@@ -92,13 +101,16 @@ export function PropertyListRowSkeleton({ className }: { className?: string }) {
 }
 
 // ── Grid + List skeleton containers ───────────────────────────────────────────
+// Grid classes must stay in sync with PropertyGrid.tsx.
 
-export function PropertySkeletonGrid({ count = 8 }: { count?: number }) {
+export function PropertySkeletonGrid({ count = 10 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
-      {Array.from({ length: count }, (_, i) => (
-        <PropertyCardSkeleton key={i} />
-      ))}
+    <div className="@container w-full">
+      <div className="grid grid-cols-2 gap-3 @[872px]:grid-cols-3 @[872px]:gap-4 @[1168px]:grid-cols-4 @[1168px]:gap-5 @[1464px]:grid-cols-5 @[1464px]:gap-6">
+        {Array.from({ length: count }, (_, i) => (
+          <PropertyCardSkeleton key={i} />
+        ))}
+      </div>
     </div>
   )
 }

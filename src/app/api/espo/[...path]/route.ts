@@ -51,12 +51,17 @@ async function proxyRequest(req: NextRequest, method: string, ctx: RouteContext)
     }
 
     const contentType = espoRes.headers.get('content-type') ?? ''
+    const text = await espoRes.text()
+
+    if (!text.trim()) {
+      return new NextResponse(null, { status: espoRes.status })
+    }
+
     if (contentType.includes('application/json')) {
-      const data: unknown = await espoRes.json()
+      const data: unknown = JSON.parse(text)
       return NextResponse.json(data, { status: espoRes.status })
     }
 
-    const text = await espoRes.text()
     return new NextResponse(text, {
       status: espoRes.status,
       headers: { 'Content-Type': contentType },

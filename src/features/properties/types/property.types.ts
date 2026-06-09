@@ -23,8 +23,8 @@ export interface RealEstateProperty {
   locationName?: string               // District / area name
   subRegionLocationName?: string      // Sub-region
 
-  mainImageId?: string | null         // Primary image — /api/espo/Attachment/file/{id}
-  imagesIds?: string[]                // Gallery image IDs
+  mainImageId?: string | null         // Primary image ID — served via /api/espo-image?id={id}
+  imagesIds?: string[]                // Gallery image IDs — same endpoint
 
   assignedUserId?: string
   assignedUserName?: string
