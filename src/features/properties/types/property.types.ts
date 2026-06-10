@@ -1,8 +1,11 @@
 // RealEstateProperty — field names verified against the live EspoCRM entity.
 // Do not rename fields here without confirming against the API response first.
 
-export type SortOption = 'newest' | 'oldest' | 'price-high' | 'price-low'
-export type ViewMode   = 'grid' | 'list'
+export type SortOption  = 'newest' | 'oldest' | 'price-high' | 'price-low'
+export type ViewMode    = 'grid' | 'list'
+export type PriceRange  = 'all' | 'under500k' | '500k-1m' | '1m-2m' | 'over2m'
+export type AreaRange   = 'all' | 'under100'  | '100-500' | 'over500'
+export type SavedView   = 'all' | 'mine' | 'favorites' | 'recent' | 'pending' | 'sold'
 
 export interface RealEstateProperty {
   id: string
@@ -31,13 +34,24 @@ export interface RealEstateProperty {
   description?: string | null
   createdAt?: string
   modifiedAt?: string
+
+  // Listing quality indicators — rendered as subtle chips on the card when true
+  isFeatured?:   boolean
+  isVerified?:   boolean
+  isPremium?:    boolean
+  isNewListing?: boolean
+
+  // EspoCRM follow state — true when the current user has favorited this property
+  isFollowed?: boolean
 }
 
 export interface PropertyFilters {
-  search: string
-  status: string
-  type: string
-  sortBy: SortOption
+  search:     string
+  status:     string
+  type:       string
+  sortBy:     SortOption
+  priceRange: PriceRange
+  areaRange:  AreaRange
 }
 
 export type Property = RealEstateProperty

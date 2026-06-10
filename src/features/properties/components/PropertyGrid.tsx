@@ -14,6 +14,7 @@ interface PropertyGridProps {
   onView: (property: Property) => void
   onEdit: (property: Property) => void
   onDelete: (property: Property) => void
+  onDuplicate?: (property: Property) => void
   onClearFilters: () => void
   onAddProperty: () => void
 }
@@ -26,6 +27,7 @@ export const PropertyGrid = memo(function PropertyGrid({
   onView,
   onEdit,
   onDelete,
+  onDuplicate,
   onClearFilters,
   onAddProperty,
 }: PropertyGridProps) {
@@ -55,6 +57,7 @@ export const PropertyGrid = memo(function PropertyGrid({
             onView={onView}
             onEdit={onEdit}
             onDelete={onDelete}
+            onDuplicate={onDuplicate}
           />
         ))}
       </div>
@@ -63,14 +66,19 @@ export const PropertyGrid = memo(function PropertyGrid({
 
   // Grid view — container queries so column count tracks actual content-area width,
   // not viewport width (sidebar width eats into available space on desktop).
-  // Thresholds guarantee ≥280px card width at every multi-column breakpoint:
-  //   default         → 2 cols, 12px gap  (mobile / narrow containers)
-  //   container≥872px → 3 cols, 16px gap  (3×280 + 2×16 = 872px)
-  //   container≥1168px→ 4 cols, 20px gap  (4×280 + 3×16 = 1168px)
-  //   container≥1464px→ 5 cols, 24px gap  (5×280 + 4×16 = 1464px)
+  //
+  // Each threshold = N×280 + (N-1)×16, capping cards at ≤280px before each step-up:
+  //   default          → 2 cols  (≤575px  container — mobile / very narrow)
+  //   container≥576px  → 3 cols  (3×280 + 2×16 = 872px  before step-up)
+  //   container≥872px  → 4 cols  (4×280 + 3×16 = 1168px before step-up)
+  //   container≥1168px → 5 cols  (5×280 + 4×16 = 1464px before step-up)
+  //   container≥1464px → 6 cols  (enterprise large-screen density)
+  //
+  // Gap is constant gap-4 (16px) to prevent visual jumps during resize.
+  // Do NOT switch to auto-fit/minmax — it stretches cards when rows are sparse.
   return (
     <div className="@container w-full">
-      <div className="grid grid-cols-2 gap-3 @[872px]:grid-cols-3 @[872px]:gap-4 @[1168px]:grid-cols-4 @[1168px]:gap-5 @[1464px]:grid-cols-5 @[1464px]:gap-6">
+      <div className="grid grid-cols-2 gap-4 @[576px]:grid-cols-3 @[872px]:grid-cols-4 @[1168px]:grid-cols-5 @[1464px]:grid-cols-6">
         {properties.map(p => (
           <PropertyCard
             key={p.id}
@@ -78,6 +86,7 @@ export const PropertyGrid = memo(function PropertyGrid({
             onView={onView}
             onEdit={onEdit}
             onDelete={onDelete}
+            onDuplicate={onDuplicate}
           />
         ))}
       </div>

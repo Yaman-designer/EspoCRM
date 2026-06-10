@@ -32,7 +32,8 @@ export function PropertiesPage() {
     page, pageSize, totalCount, totalPages,
     filters, viewMode, hasFilters,
     onSearchChange, onStatusChange, onTypeChange,
-    onSortChange, onClearFilters, onViewModeChange,
+    onSortChange, onPriceRangeChange, onAreaRangeChange,
+    onClearFilters, onViewModeChange,
     onPageChange, onPageSizeChange,
     refetch, deleteMutation,
   } = useProperties()
@@ -44,9 +45,10 @@ export function PropertiesPage() {
   const [deleteTarget, setDeleteTarget] = useState<RealEstateProperty | null>(null)
   const [deleteOpen, setDeleteOpen]     = useState(false)
 
-  const handleView   = (p: RealEstateProperty) => setViewTarget(p)
-  const handleEdit   = (p: RealEstateProperty) => setEditTarget(p)
-  const handleDelete = (p: RealEstateProperty) => { setDeleteTarget(p); setDeleteOpen(true) }
+  const handleView      = (p: RealEstateProperty) => setViewTarget(p)
+  const handleEdit      = (p: RealEstateProperty) => setEditTarget(p)
+  const handleDelete    = (p: RealEstateProperty) => { setDeleteTarget(p); setDeleteOpen(true) }
+  const handleDuplicate = (p: RealEstateProperty) => { setEditTarget({ ...p, id: '' }) }
 
   const handleConfirmDelete = () => {
     if (!deleteTarget) return
@@ -63,44 +65,57 @@ export function PropertiesPage() {
   // ── Render ──────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6">
+    <div className="flex flex-col">
 
-      <PropertyToolbar
-        search={filters.search}
-        onSearchChange={onSearchChange}
-        statusFilter={filters.status}
-        onStatusChange={onStatusChange}
-        typeFilter={filters.type}
-        onTypeChange={onTypeChange}
-        sortBy={filters.sortBy}
-        onSortChange={onSortChange}
-        viewMode={viewMode}
-        onViewModeChange={onViewModeChange}
-        totalCount={totalCount}
-        onAddProperty={() => setCreateOpen(true)}
-      />
+      {/* Sticky toolbar — blurs page content scrolling beneath it */}
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/30 px-4 sm:px-6 pt-4 sm:pt-6 pb-4">
+        <PropertyToolbar
+          search={filters.search}
+          onSearchChange={onSearchChange}
+          statusFilter={filters.status}
+          onStatusChange={onStatusChange}
+          typeFilter={filters.type}
+          onTypeChange={onTypeChange}
+          sortBy={filters.sortBy}
+          onSortChange={onSortChange}
+          priceRange={filters.priceRange}
+          onPriceRangeChange={onPriceRangeChange}
+          areaRange={filters.areaRange}
+          onAreaRangeChange={onAreaRangeChange}
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          totalCount={totalCount}
+          onAddProperty={() => setCreateOpen(true)}
+          hasActiveFilters={hasFilters}
+          onClearFilters={onClearFilters}
+        />
+      </div>
 
-      <PropertyGrid
-        properties={properties}
-        viewMode={viewMode}
-        isLoading={!mounted || isLoading}
-        hasActiveFilters={hasFilters}
-        onView={handleView}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onClearFilters={onClearFilters}
-        onAddProperty={() => setCreateOpen(true)}
-      />
+      {/* Scrollable content area */}
+      <div className="flex flex-col gap-4 px-4 sm:px-6 py-4 sm:py-5">
+        <PropertyGrid
+          properties={properties}
+          viewMode={viewMode}
+          isLoading={!mounted || isLoading}
+          hasActiveFilters={hasFilters}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onDuplicate={handleDuplicate}
+          onClearFilters={onClearFilters}
+          onAddProperty={() => setCreateOpen(true)}
+        />
 
-      <PropertyPagination
-        page={page}
-        pageSize={pageSize}
-        totalCount={totalCount}
-        totalPages={totalPages}
-        isFetching={isFetching}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-      />
+        <PropertyPagination
+          page={page}
+          pageSize={pageSize}
+          totalCount={totalCount}
+          totalPages={totalPages}
+          isFetching={isFetching}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+        />
+      </div>
 
       <PropertyDetailsSheet
         property={viewTarget}

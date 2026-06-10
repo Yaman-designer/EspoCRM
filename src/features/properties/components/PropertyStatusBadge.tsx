@@ -5,15 +5,15 @@ import { cn } from '@/lib/utils'
 // ── Color maps — extend when EspoCRM entity adds new status values ─────────────
 
 const DOT: Record<string, string> = {
-  Available:      'bg-emerald-500',
-  Pending:        'bg-amber-400',
+  Available:        'bg-emerald-500',
+  Pending:          'bg-amber-400',
   'Under Approval': 'bg-orange-400',
-  Rented:         'bg-brand-teal',
-  Sold:           'bg-brand-crimson',
-  Draft:          'bg-slate-400',
+  Rented:           'bg-teal-500',
+  Sold:             'bg-rose-500',
+  Draft:            'bg-slate-400',
 }
 
-// chip = default badge (content area)
+// chip = default badge (content area) — deliberately soft, supporting role only
 const CHIP: Record<string, string> = {
   Available:        'bg-brand-emerald-soft text-brand-emerald  border-brand-emerald/20',
   Pending:          'bg-amber-50           text-amber-700      border-amber-200',
@@ -44,9 +44,9 @@ export function PropertyStatusBadge({
     return (
       <span
         className={cn(
-          'inline-flex h-5.5 items-center gap-1.5 rounded-full px-2.5',
-          'text-[11px] font-semibold tracking-wide text-white',
-          'bg-black/35 backdrop-blur-sm border border-white/10',
+          'inline-flex h-5 items-center gap-1.5 rounded-full px-2',
+          'text-[9.5px] font-medium text-white/90',
+          'bg-black/40 backdrop-blur-sm shadow-sm',
           'whitespace-nowrap',
           className,
         )}
@@ -60,8 +60,8 @@ export function PropertyStatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex h-5.5 items-center gap-1.5 rounded-full border px-2.5',
-        'text-[11px] font-semibold leading-none tracking-wide',
+        'inline-flex h-5 items-center gap-1 rounded-full border px-2',
+        'text-[10px] font-medium leading-none tracking-wide',
         'whitespace-nowrap',
         chip,
         className,

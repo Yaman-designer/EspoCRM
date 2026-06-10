@@ -30,6 +30,15 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 
   async headers() {
+    // In production, Next.js already appends content hashes to /_next/static/ chunk
+    // URLs (e.g. page-ab12cd34.js). Immutable caching is safe because a changed file
+    // gets a new URL. In development, chunk URLs have NO hash — the same URL is
+    // reused after every recompile. Applying immutable here in dev causes the browser
+    // to permanently cache the first version it downloads and ignore all subsequent
+    // recompiles, producing server/client hydration mismatches on every code change.
+    // Next.js sets the correct immutable headers for its own hashed assets internally;
+    // this rule is only needed for /images/ which uses stable (non-hashed) paths.
+    const isProd = process.env.NODE_ENV === "production";
     return [
       {
         source: "/(.*)",
@@ -42,12 +51,13 @@ const nextConfig: NextConfig = {
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
-      {
+      // Only applied in production where content-hashed URLs make immutable safe.
+      ...(isProd ? [{
         source: "/_next/static/(.*)",
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
-      },
+      }] : []),
     ];
   },
 
