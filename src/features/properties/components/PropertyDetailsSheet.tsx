@@ -19,21 +19,7 @@ import { cn } from '@/lib/utils'
 import type { RealEstateProperty } from '../types/property.types'
 
 import { getWebAssetUrl, resolvePropertyImageId, FALLBACK_IMAGE } from '@/lib/image-url'
-
-const fmt = (price: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    notation: price >= 1_000_000 ? 'compact' : 'standard',
-    maximumFractionDigits: price >= 1_000_000 ? 2 : 0,
-  }).format(price)
-
-const fmtDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+import { fmtPrice, fmtDate, getDisplayName, getDisplayLocation } from '../lib/display'
 
 
 interface PropertyDetailsSheetProps {
@@ -61,15 +47,14 @@ export const PropertyDetailsSheet = memo(function PropertyDetailsSheet({
   if (!property) return null
 
   const {
-    name, title, price, type, status,
+    price, type, status,
     square, bedroomCount, bathroomCount,
-    locationName, addressCity,
     propertyCode,
     description, assignedUserName, createdAt,
   } = property
 
-  const displayName     = title || name
-  const displayLocation = locationName || addressCity
+  const displayName     = getDisplayName(property)
+  const displayLocation = getDisplayLocation(property)
 
   const heroSrc    = getWebAssetUrl(resolvePropertyImageId(property.mainImageId, property.imagesIds), 'large')
   const displaySrc = imgFailed ? FALLBACK_IMAGE : heroSrc
@@ -133,7 +118,7 @@ export const PropertyDetailsSheet = memo(function PropertyDetailsSheet({
         <div className="shrink-0 px-5 pb-3 pt-4">
           {price !== undefined && (
             <p className="text-[26px] font-bold leading-none tracking-tight text-foreground">
-              {fmt(price)}
+              {fmtPrice(price, true)}
             </p>
           )}
           <h2
@@ -169,6 +154,7 @@ export const PropertyDetailsSheet = memo(function PropertyDetailsSheet({
                 Listed {fmtDate(createdAt)}
               </span>
             )}
+
           </div>
         </div>
 

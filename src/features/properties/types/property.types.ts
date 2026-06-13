@@ -7,14 +7,35 @@ export type PriceRange  = 'all' | 'under500k' | '500k-1m' | '1m-2m' | 'over2m'
 export type AreaRange   = 'all' | 'under100'  | '100-500' | 'over500'
 export type SavedView   = 'all' | 'mine' | 'favorites' | 'recent' | 'pending' | 'sold'
 
+/** Known EspoCRM status values. `string &amp; {}` keeps the union open so unexpected
+ *  API responses don't crash the type system while still enabling autocomplete. */
+export type PropertyStatus =
+  | 'Available'
+  | 'Reserved'
+  | 'Pending'
+  | 'Under Approval'
+  | 'Rented'
+  | 'Sold'
+  | 'Draft'
+  | (string & {})
+
+export type PropertyType =
+  | 'House'
+  | 'Villa'
+  | 'Apartment'
+  | 'Townhouse'
+  | 'Office'
+  | 'Land'
+  | (string & {})
+
 export interface RealEstateProperty {
   id: string
   name: string                        // EspoCRM internal name (often auto-generated)
   title?: string                      // Marketing / display title — primary display field
   propertyCode?: string               // Short reference code e.g. "REF-001"
 
-  status: string                      // Available | Sold | Pending | Rented | Draft | Under Approval
-  type?: string                       // House | Villa | Apartment | Townhouse | Office | Land
+  status: PropertyStatus
+  type?: PropertyType
 
   price?: number
 

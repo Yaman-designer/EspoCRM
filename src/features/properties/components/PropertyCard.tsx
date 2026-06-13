@@ -4,26 +4,69 @@ import { useState, memo, type ComponentType } from 'react'
 import Image from 'next/image'
 import {
   BedDouble, Bath, MapPin, Maximize2,
-  Eye, Pencil, Trash2, Copy, Heart,
-  MoreHorizontal, Star, BadgeCheck, Gem, Sparkles,
+  Eye, Pencil, Trash2, Heart,
 } from 'lucide-react'
-import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import { getWebAssetUrl, resolvePropertyImageId, FALLBACK_IMAGE } from '@/lib/image-url'
+import { fmtPrice, getDisplayName, getDisplayLocation } from '../lib/display'
 import { PropertyStatusBadge } from './PropertyStatusBadge'
+import { PropertyIndicatorPills } from './PropertyIndicators'
 import type { RealEstateProperty } from '../types/property.types'
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── StatChip ──────────────────────────────────────────────────────────────────
+// Shared metric chip used in both grid and list views.
+//
+// grid — compact, auto-height, always-labeled, full-width flex-1
+// list — 40px desktop, 90px+ min-width, label visible only on sm+
 
-const fmtPrice = (price: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price)
+function StatChip({
+  Icon,
+  value,
+  label,
+  variant = 'grid',
+}: {
+  Icon: ComponentType<{ className?: string }>
+  value: React.ReactNode
+  label: string
+  variant?: 'grid' | 'list'
+}) {
+  if (variant === 'list') {
+    return (
+      <div className={cn(
+        'flex h-11 min-w-0 flex-1 items-center justify-center overflow-hidden',
+        'rounded-[12px] border border-border/45 bg-muted/40',
+        // tight default; relax gap + padding when the center column has more room
+        'gap-1 px-1.5 @[240px]:gap-1.5 @[240px]:px-2',
+      )}>
+        <Icon className="size-4 shrink-0 text-muted-foreground/55" />
+        <span className="shrink-0 text-[13px] font-semibold leading-none tabular-nums text-foreground">{value}</span>
+        {label && (
+          // label is the first thing to disappear — hide below 320px center column
+          <span className="hidden shrink-0 text-[13px] font-medium leading-none text-muted-foreground/55 @[320px]:block">
+            {label}
+          </span>
+        )}
+      </div>
+    )
+  }
 
-// ── Desktop quick-action icon button ─────────────────────────────────────────
+  return (
+    <div className={cn(
+      'flex items-center justify-center',
+      'min-w-0 flex-1 overflow-hidden',
+      'rounded-md border border-border/30 bg-muted/50 gap-1 px-2 py-2 text-[11px]',
+    )}>
+      <Icon className="size-3 shrink-0 text-muted-foreground/60" />
+      <span className="shrink-0 font-bold tabular-nums text-foreground">{value}</span>
+      {label && (
+        <span className="hidden sm:inline shrink-0 font-medium text-muted-foreground/60">{label}</span>
+      )}
+    </div>
+  )
+}
+
+// ── QuickAction ───────────────────────────────────────────────────────────────
+// Icon-only action button — grid card footer and list right panel.
 
 function QuickAction({
   onClick,
@@ -42,10 +85,11 @@ function QuickAction({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        'flex h-7 w-7 items-center justify-center rounded-lg transition-all duration-150',
+        'flex h-9 w-9 items-center justify-center rounded-full transition-all duration-150',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
         destructive
-          ? 'text-muted-foreground/30 hover:bg-destructive/10 hover:text-destructive'
-          : 'text-muted-foreground/50 hover:bg-muted hover:text-foreground',
+          ? 'text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive'
+          : 'text-muted-foreground/45 hover:bg-muted hover:text-foreground',
       )}
     >
       <Icon className="size-3.5" />
@@ -53,81 +97,12 @@ function QuickAction({
   )
 }
 
-// ── Mobile bottom-sheet action row ────────────────────────────────────────────
-
-function SheetAction({
-  onClick,
-  label,
-  Icon,
-  destructive,
-}: {
-  onClick: () => void
-  label: string
-  Icon: ComponentType<{ className?: string }>
-  destructive?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'flex min-h-13 w-full items-center gap-4 px-5 text-[15px] font-medium',
-        'transition-colors duration-100 active:bg-muted/70',
-        destructive ? 'text-destructive' : 'text-foreground',
-      )}
-    >
-      <Icon
-        className={cn(
-          'size-4.5 shrink-0',
-          destructive ? 'text-destructive/70' : 'text-muted-foreground',
-        )}
-      />
-      {label}
-    </button>
-  )
-}
-
-// ── Listing quality indicator chip ────────────────────────────────────────────
-// Rendered only when the property has a quality flag (Featured/Verified/etc.).
-// Intentionally tiny — must never compete with Price or Title.
-
-function IndicatorPill({
-  icon: Icon,
-  label,
-  colorClass,
-}: {
-  icon: ComponentType<{ className?: string }>
-  label: string
-  colorClass: string
-}) {
-  return (
-    <span
-      className={cn(
-        'inline-flex h-4.5 items-center gap-1 rounded-md border px-1.5',
-        'text-[9.5px] font-semibold leading-none whitespace-nowrap',
-        colorClass,
-      )}
-    >
-      <Icon className="size-2.5 shrink-0" />
-      {label}
-    </span>
-  )
-}
-
 // ── PropertyCard (grid view) ──────────────────────────────────────────────────
 //
-// Visual hierarchy (Price → Image → Title → Location → Details → Ref → Status):
-//   1. Price — 22px font-black on image overlay, dominant
-//   2. Image — 16:10 aspect, full-bleed
-//   3. Title — 14px font-semibold, first in card body
-//   4. Indicators — Featured/Verified/Premium/New (9.5px chips, never dominant)
-//   5. Location — 11.5px muted
-//   6. Property details — specs row
-//   7. Ref code — 10px faint, in type+ref row
-//   8. Status — neutral glass pill on image (non-competing)
+// Scan order: Image → Price → Status → Ref → Location → Type → Stats → CTA → Actions
 //
-// Mobile: 3-dot → bottom sheet. Actions: View / Edit / Delete only (no Duplicate).
-// Desktop: hover action bar includes View / Edit / Duplicate / Delete.
+// Mobile:  2-col grid. Card tap = view. Fav on image. Edit + Delete in footer.
+// Desktop: CTA [flex-1, h-44px, radius-14px] + Edit + Delete side-by-side in footer.
 
 interface PropertyCardProps {
   property:     RealEstateProperty
@@ -142,281 +117,185 @@ export const PropertyCard = memo(function PropertyCard({
   onView,
   onEdit,
   onDelete,
-  onDuplicate,
 }: PropertyCardProps) {
   const {
-    name, title, price, type, status,
+    price, type, status,
     square, bedroomCount, bathroomCount,
-    locationName, addressCity, propertyCode,
+    propertyCode,
     mainImageId, imagesIds,
     isFeatured, isVerified, isPremium, isNewListing,
+    isFollowed,
   } = property
 
-  const displayName     = title || name
-  const displayLocation = locationName || addressCity
+  const displayName     = getDisplayName(property)
+  const displayLocation = getDisplayLocation(property)
 
   const resolvedId = resolvePropertyImageId(mainImageId, imagesIds)
-  const [imgSrc, setImgSrc]           = useState(() => getWebAssetUrl(resolvedId))
-  const [favorited, setFavorited]     = useState(false)
-  const [mobileSheet, setMobileSheet] = useState(false)
+  const [imgSrc, setImgSrc]       = useState(() => getWebAssetUrl(resolvedId))
+  const [favorited, setFavorited] = useState(() => !!isFollowed)
+
   const hasSpecs      = bedroomCount !== undefined || bathroomCount !== undefined || square !== undefined
   const hasIndicators = !!(isFeatured || isVerified || isPremium || isNewListing)
+  const heading       = propertyCode || displayName || '—'
 
   return (
     <article
       tabIndex={0}
       role="button"
-      aria-label={displayName || 'Property'}
+      aria-label={heading}
       className={cn(
-        'group flex h-full w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl bg-card',
-        'border border-border/40',
-        'shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]',
+        'group flex h-full w-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl bg-card',
+        'border border-border/30',
+        'shadow-[0_2px_8px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.07)]',
         'transition-all duration-300 ease-out',
-        'hover:-translate-y-1 hover:border-border/70',
-        'hover:shadow-[0_12px_32px_rgba(0,0,0,0.13),0_4px_12px_rgba(0,0,0,0.07)]',
+        'hover:-translate-y-1 hover:border-border/50',
+        'hover:shadow-[0_12px_32px_rgba(0,0,0,0.11),0_4px_12px_rgba(0,0,0,0.06)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
       )}
       onClick={() => onView(property)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(property) } }}
     >
 
-      {/* ── Image — 16:10 aspect ratio, full-bleed ────────────────────── */}
-      <div className="relative aspect-8/5 w-full shrink-0 overflow-hidden bg-muted">
+      {/* ── Image ─────────────────────────────────────────────────────────────── */}
+      <div className="relative h-48 w-full shrink-0 overflow-hidden rounded-t-xl bg-muted sm:h-auto sm:aspect-video">
         <Image
           src={imgSrc}
-          alt={displayName || 'Property'}
+          alt={heading}
           fill
           unoptimized
           draggable={false}
-          className="select-none object-cover transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.05]"
+          className="select-none object-cover brightness-[1.02] contrast-[1.06] saturate-[1.08] transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.04]"
           sizes="(max-width: 639px) 50vw, (max-width: 871px) 33vw, (max-width: 1167px) 25vw, 20vw"
           loading="lazy"
           onError={() => setImgSrc(FALLBACK_IMAGE)}
         />
+        {/* Gradient: subtle at top, atmospheric at bottom */}
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/60 via-black/5 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.12)_100%)]" />
 
-        {/* Deepened gradient — price must read against any image */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/85 via-black/45 to-transparent" />
-
-        {/* Status badge — neutral glass pill so it never competes with price */}
+        {/* Status badge — top-left */}
         <div className="absolute left-3 top-3 z-10">
           <PropertyStatusBadge status={status} variant="overlay" />
         </div>
 
-        {/* Top-right controls: [⋮ mobile-only] [❤ always] */}
-        <div
-          className="absolute right-3 top-3 z-10 flex items-center gap-1.5"
-          onClick={e => e.stopPropagation()}
-        >
-          <button
-            type="button"
-            aria-label="More actions"
-            onClick={() => setMobileSheet(true)}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 text-white/85 backdrop-blur-sm transition-colors duration-150 active:bg-black/55 sm:hidden"
-          >
-            <MoreHorizontal className="size-4" />
-          </button>
-
+        {/* Favourite — top-right */}
+        <div className="absolute right-3 top-3 z-10" onClick={e => e.stopPropagation()}>
           <button
             type="button"
             aria-label={favorited ? 'Remove from favourites' : 'Add to favourites'}
             onClick={() => setFavorited(f => !f)}
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-all duration-200',
+              'flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-sm transition-all duration-200',
               favorited
-                ? 'bg-rose-500 text-white shadow-[0_2px_10px_rgba(239,68,68,0.5)]'
-                : 'bg-black/30 text-white/85 hover:bg-black/50 hover:text-white',
+                ? 'bg-rose-500 text-white shadow-[0_4px_14px_rgba(239,68,68,0.50)]'
+                : 'bg-black/35 text-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.25)] hover:scale-[1.05] hover:bg-black/50 hover:text-white',
             )}
           >
             <Heart className={cn('size-3.5 transition-transform duration-150', favorited && 'fill-current scale-110')} />
           </button>
         </div>
 
-        {/* Price — dominant element, anchored to bottom */}
-        <div className="absolute inset-x-0 bottom-0 z-10 px-3.5 pb-3">
+        {/* Price — glassmorphism badge, bottom-left */}
+        <div className="absolute inset-x-0 bottom-0 z-10 px-3 pb-3">
           {price !== undefined ? (
-            <p className="truncate text-[22px] font-black leading-none tracking-tight text-white tabular-nums [text-shadow:0_2px_8px_rgba(0,0,0,0.5)]">
-              {fmtPrice(price)}
-            </p>
+            <div className="inline-flex items-center rounded-lg border border-white/18 bg-white/10 px-3.5 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.11)] backdrop-blur-[14px]">
+              <p className="truncate text-[16px] font-bold leading-none tracking-tight text-white tabular-nums [text-shadow:0_1px_3px_rgba(0,0,0,0.16)] sm:text-[20px]">
+                {fmtPrice(price)}
+              </p>
+            </div>
           ) : (
-            <p className="text-[11px] font-medium italic text-white/55">
-              Price on request
-            </p>
+            <div className="inline-flex items-center rounded-[15px] border border-white/15 bg-white/[0.07] px-3 py-1.5 backdrop-blur-md">
+              <p className="text-[11px] font-medium italic text-white/60">Price on request</p>
+            </div>
           )}
         </div>
       </div>
 
-      {/* ── Content ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col px-3.5 pt-2.5 pb-2.5">
+      {/* ── Content ───────────────────────────────────────────────────────────── */}
+      <div className="flex flex-1 flex-col px-3.5 pb-3 pt-3">
 
-        {/* 1. Title */}
-        <h3 className="mb-0.5 line-clamp-1 min-w-0 text-sm font-semibold leading-snug text-foreground">
-          {displayName || '—'}
-        </h3>
+        {/* Reference */}
+        <p className="mb-2 min-w-0 truncate text-[14px] font-extrabold tracking-tight text-foreground tabular-nums sm:text-[20px]">
+          {heading}
+        </p>
 
-        {/* 2. Listing quality indicators — subtle chips, never dominant */}
+        {/* Location */}
+        {displayLocation && (
+          <p className="mb-2 flex min-w-0 items-center gap-1 text-[11px] font-medium text-muted-foreground/75">
+            <MapPin className="size-3 shrink-0 text-muted-foreground/50" />
+            <span className="truncate">{displayLocation}</span>
+          </p>
+        )}
+
+        {/* Property type chip — rounded-full pill, 12px below location */}
+        {type ? (
+          <div className="mb-3">
+            <span className="inline-flex items-center rounded-full border border-primary/15 bg-primary/8 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-primary">
+              {type}
+            </span>
+          </div>
+        ) : displayLocation ? (
+          <div aria-hidden className="mb-2" />
+        ) : (
+          <div aria-hidden className="mb-3 h-4" />
+        )}
+
+        {/* Quality indicators */}
         {hasIndicators && (
-          <div className="mb-1.5 flex flex-wrap items-center gap-1">
-            {isFeatured && (
-              <IndicatorPill icon={Star} label="Featured" colorClass="border-amber-200/70 bg-amber-50 text-amber-600" />
-            )}
-            {isVerified && (
-              <IndicatorPill icon={BadgeCheck} label="Verified" colorClass="border-emerald-200/70 bg-emerald-50 text-emerald-600" />
-            )}
-            {isPremium && (
-              <IndicatorPill icon={Gem} label="Premium" colorClass="border-violet-200/70 bg-violet-50 text-violet-600" />
-            )}
-            {isNewListing && (
-              <IndicatorPill icon={Sparkles} label="New" colorClass="border-primary/15 bg-primary/8 text-primary" />
-            )}
+          <div className="mb-2 flex flex-wrap items-center gap-1">
+            <PropertyIndicatorPills
+              isFeatured={isFeatured} isVerified={isVerified}
+              isPremium={isPremium} isNewListing={isNewListing}
+            />
           </div>
         )}
 
-        {/* 3. Type chip + Ref code (reference is metadata, not primary heading) */}
-        <div className="mb-2 flex min-w-0 items-center gap-1.5">
-          {type && (
-            <span className="inline-flex shrink-0 items-center rounded-md bg-muted/80 px-1.5 py-px text-[10px] font-medium text-muted-foreground/70">
-              {type}
-            </span>
-          )}
-          {propertyCode && (
-            <span className="min-w-0 truncate text-[10px] text-muted-foreground/40">
-              Ref #{propertyCode}
-            </span>
-          )}
-          {!type && !propertyCode && <div className="h-4" aria-hidden />}
-        </div>
-
-        {/* 4. Location */}
-        {displayLocation ? (
-          <p className="mb-2.5 flex min-w-0 items-center gap-1 text-[11.5px] text-muted-foreground">
-            <MapPin className="size-3 shrink-0 text-brand-crimson/60" />
-            <span className="truncate">{displayLocation}</span>
-          </p>
-        ) : (
-          <div aria-hidden className="mb-2.5 h-4" />
-        )}
-
-        {/* 5. Specs — Beds / Baths / m² */}
+        {/* Stats chips — equal-width, auto-height, always labeled */}
         {hasSpecs && (
           <>
-            <div className="mb-2 h-px bg-border/30" />
-            <div className="flex min-w-0 items-center gap-3">
+            <div className="mb-2 h-px bg-border/15" />
+            <div className="mb-2 flex gap-1.5">
               {bedroomCount !== undefined && (
-                <span className="flex items-center gap-1 text-[10.5px]">
-                  <BedDouble className="size-3 shrink-0 text-muted-foreground/50" />
-                  <span className="font-semibold tabular-nums text-foreground/80">{bedroomCount}</span>
-                  <span className="text-muted-foreground/50">Beds</span>
-                </span>
+                <StatChip Icon={BedDouble} value={bedroomCount}            label="Beds"  variant="grid" />
               )}
               {bathroomCount !== undefined && (
-                <span className="flex items-center gap-1 text-[10.5px]">
-                  <Bath className="size-3 shrink-0 text-muted-foreground/50" />
-                  <span className="font-semibold tabular-nums text-foreground/80">{bathroomCount}</span>
-                  <span className="text-muted-foreground/50">Baths</span>
-                </span>
+                <StatChip Icon={Bath}      value={bathroomCount}           label="Baths" variant="grid" />
               )}
               {square !== undefined && (
-                <span className="flex items-center gap-1 text-[10.5px]">
-                  <Maximize2 className="size-3 shrink-0 text-muted-foreground/50" />
-                  <span className="font-semibold tabular-nums text-foreground/80">{square.toLocaleString()}</span>
-                  <span className="text-muted-foreground/50">m²</span>
-                </span>
+                <StatChip Icon={Maximize2} value={square.toLocaleString()} label="m²"   variant="grid" />
               )}
             </div>
           </>
         )}
 
-        {/* 6. Desktop hover actions — View / Edit / [Duplicate] / Delete */}
+        {/* Footer: desktop CTA + Edit + Delete (always visible) */}
+        {/* Mobile: card tap = view. Footer shows Edit + Delete right-aligned. */}
         <div
-          className="mt-auto hidden items-center justify-between border-t border-border/30 pt-2 sm:flex"
+          className="mt-3 flex items-center justify-end gap-1.5 border-t border-border/15 pt-2.5"
           onClick={e => e.stopPropagation()}
         >
-          <div className="flex items-center gap-0.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-            <QuickAction onClick={() => onView(property)}   label="View"      Icon={Eye} />
-            <QuickAction onClick={() => onEdit(property)}   label="Edit"      Icon={Pencil} />
-            {onDuplicate && (
-              <QuickAction onClick={() => onDuplicate(property)} label="Duplicate" Icon={Copy} />
+          <button
+            type="button"
+            onClick={() => onView(property)}
+            className={cn(
+              'hidden sm:flex h-9.5 flex-1 items-center justify-center gap-2',
+              'rounded-lg bg-primary px-3',
+              'text-[14px] font-semibold tracking-[0.01em] text-primary-foreground',
+              'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.06)]',
+              'transition-all duration-200 ease-out',
+              'hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-[0_4px_14px_rgba(0,0,0,0.10)]',
+              'active:translate-y-0 active:scale-[0.99]',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             )}
-          </div>
-          <div className="opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-            <QuickAction onClick={() => onDelete(property)} label="Delete" Icon={Trash2} destructive />
-          </div>
+          >
+            Details
+            <span className="text-[13px] font-normal text-primary-foreground/60">→</span>
+          </button>
+          <QuickAction onClick={() => onEdit(property)}   label="Edit property"   Icon={Pencil} />
+          <QuickAction onClick={() => onDelete(property)} label="Delete property" Icon={Trash2} destructive />
         </div>
 
       </div>
-
-      {/* ── Mobile action sheet (Radix portal — renders outside article DOM) ─ */}
-      <Sheet open={mobileSheet} onOpenChange={setMobileSheet}>
-        <SheetContent
-          side="bottom"
-          className="gap-0 overflow-hidden rounded-t-2xl p-0"
-          showCloseButton={false}
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Drag handle */}
-          <div className="mx-auto mb-3 mt-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/20" />
-
-          {/* Property preview — thumbnail + title + price + status + ref */}
-          <div className="flex items-center gap-3.5 px-5 pb-4">
-            <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-muted">
-              <Image
-                src={imgSrc}
-                alt={displayName || 'Property'}
-                fill
-                unoptimized
-                className="object-cover"
-                sizes="80px"
-                onError={() => setImgSrc(FALLBACK_IMAGE)}
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <SheetTitle className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">
-                {displayName || 'Property'}
-              </SheetTitle>
-              {price !== undefined && (
-                <p className="mt-0.5 truncate text-lg font-black tabular-nums tracking-tight text-primary">
-                  {fmtPrice(price)}
-                </p>
-              )}
-              <div className="mt-1.5">
-                <PropertyStatusBadge status={status} />
-              </div>
-              {propertyCode && (
-                <p className="mt-1 text-[10.5px] tabular-nums text-muted-foreground/50">
-                  Ref #{propertyCode}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="h-px bg-border/40" />
-
-          {/* Actions — View / Edit / [separator] / Delete (no Duplicate on mobile) */}
-          <div className="flex flex-col">
-            <SheetAction
-              label="View Property"
-              Icon={Eye}
-              onClick={() => { setMobileSheet(false); onView(property) }}
-            />
-            <SheetAction
-              label="Edit Property"
-              Icon={Pencil}
-              onClick={() => { setMobileSheet(false); onEdit(property) }}
-            />
-            <div className="mx-5 h-px bg-border/40" />
-            <SheetAction
-              label="Delete Property"
-              Icon={Trash2}
-              destructive
-              onClick={() => { setMobileSheet(false); onDelete(property) }}
-            />
-          </div>
-
-          {/* iOS safe-area bottom spacing */}
-          <div className="h-6" />
-        </SheetContent>
-      </Sheet>
 
     </article>
   )
@@ -425,11 +304,16 @@ export const PropertyCard = memo(function PropertyCard({
 
 // ── PropertyListRow (list-view variant) ──────────────────────────────────────
 //
-// Layout: [Thumbnail 80×120] [Info: title, ref, location] [Specs: sm+] [Price + Status] [Actions]
+// 3-zone layout (desktop) / 2-zone (mobile):
 //
-// Mobile: 3-dot → bottom sheet.
-// Sheet header: thumbnail + title + price + status + ref (same structure as grid card sheet).
-// Actions: View / Edit / Delete only (no Duplicate on mobile).
+//   LEFT   — Image (w-36 mobile / w-52 desktop). Status badge bottom-left.
+//             Favourite button top-right. Always flex-shrink: 0.
+//   CENTER — Info column (flex-1).
+//             Price → REF → Location → Type[12px] → Stats + CTA[16px].
+//             Mobile-only Edit+Delete inline in price row (sm:hidden).
+//   RIGHT  — Delete + Edit panel (desktop only, sm:w-20). Delete on top.
+//
+// Spacing grid: 8px base. Location→Type=12px, Type→Stats=16px.
 
 interface PropertyListRowProps {
   property:     RealEstateProperty
@@ -444,235 +328,220 @@ export const PropertyListRow = memo(function PropertyListRow({
   onView,
   onEdit,
   onDelete,
-  onDuplicate,
 }: PropertyListRowProps) {
   const {
-    name, title, price, type, status,
+    price, type, status,
     square, bedroomCount, bathroomCount,
-    locationName, addressCity, propertyCode,
+    propertyCode,
     mainImageId, imagesIds,
     isFeatured, isVerified, isPremium, isNewListing,
+    isFollowed,
   } = property
 
-  const displayName     = title || name
-  const displayLocation = locationName || addressCity
-  const hasSpecs        = bedroomCount !== undefined || bathroomCount !== undefined || square !== undefined
-  const hasIndicators   = !!(isFeatured || isVerified || isPremium || isNewListing)
+  const displayName     = getDisplayName(property)
+  const displayLocation = getDisplayLocation(property)
 
-  const [imgSrc, setImgSrc]           = useState(() => getWebAssetUrl(resolvePropertyImageId(mainImageId, imagesIds)))
-  const [mobileSheet, setMobileSheet] = useState(false)
+  const hasIndicators = !!(isFeatured || isVerified || isPremium || isNewListing)
+  const heading       = propertyCode || displayName || '—'
+
+  const [imgSrc, setImgSrc]       = useState(() => getWebAssetUrl(resolvePropertyImageId(mainImageId, imagesIds)))
+  const [favorited, setFavorited] = useState(() => !!isFollowed)
 
   return (
-    <>
-      <div
-        tabIndex={0}
-        role="button"
-        aria-label={displayName || 'Property'}
-        onClick={() => onView(property)}
-        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(property) } }}
-        className={cn(
-          'group flex cursor-pointer items-center gap-3 rounded-2xl bg-card p-3',
-          'border border-border/40',
-          'shadow-[0_2px_8px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03)]',
-          'transition-all duration-200 ease-out',
-          'hover:-translate-y-px hover:border-border/70',
-          'hover:shadow-[0_6px_20px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.06)]',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
-        )}
-      >
-        {/* Thumbnail */}
-        <div className="relative h-20 w-30 shrink-0 overflow-hidden rounded-xl bg-muted">
-          <Image
-            src={imgSrc}
-            alt={displayName || 'Property'}
-            fill
-            unoptimized
-            draggable={false}
-            className="select-none object-cover transition-transform duration-300 will-change-transform group-hover:scale-[1.05]"
-            sizes="120px"
-            loading="lazy"
-            onError={() => setImgSrc(FALLBACK_IMAGE)}
-          />
-          {type && (
-            <>
-              <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/55 to-transparent" />
-              <div className="absolute bottom-1.5 left-1.5">
-                <span className="rounded-md border border-white/10 bg-black/60 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
-                  {type}
-                </span>
-              </div>
-            </>
-          )}
+    <div
+      tabIndex={0}
+      role="button"
+      aria-label={heading}
+      onClick={() => onView(property)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(property) } }}
+      className={cn(
+        'group flex min-w-[320px] cursor-pointer overflow-hidden rounded-xl bg-card',
+        'border border-border/25',
+        'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]',
+        'transition-all duration-300 ease-out',
+        'hover:-translate-y-0.5 hover:border-border/45',
+        'hover:shadow-[0_8px_28px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.06)]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+      )}
+    >
+
+      {/* ── LEFT: Image ─────────────────────────────────────────────────────── */}
+      {/* w-36 (144px) mobile — never shrinks below 140px spec.                 */}
+      {/* w-52 (208px) desktop — substantial visual hero.                       */}
+      <div className="relative w-36 shrink-0 self-stretch overflow-hidden rounded-l-xl sm:w-52">
+        <Image
+          src={imgSrc}
+          alt={heading}
+          fill
+          unoptimized
+          draggable={false}
+          className="select-none object-cover brightness-[1.02] contrast-[1.05] saturate-[1.08] transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.04]"
+          sizes="(max-width: 639px) 144px, 208px"
+          loading="lazy"
+          onError={() => setImgSrc(FALLBACK_IMAGE)}
+        />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-black/55" />
+        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.12)_100%)]" />
+
+        {/* Status — bottom-left */}
+        <div className="absolute bottom-3 left-3 z-10">
+          <PropertyStatusBadge status={status} variant="overlay" />
         </div>
 
-        {/* Property info */}
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <p className="truncate text-sm font-semibold leading-tight text-foreground">
-            {displayName || '—'}
-          </p>
-          {propertyCode && (
-            <p className="text-[10px] tabular-nums text-muted-foreground/40">
-              Ref #{propertyCode}
-            </p>
-          )}
-          {displayLocation && (
-            <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-              <MapPin className="size-2.5 shrink-0 text-brand-crimson/50" />
-              <span className="truncate">{displayLocation}</span>
-            </p>
-          )}
-          {hasIndicators && (
-            <div className="mt-1 flex flex-wrap items-center gap-1">
-              {isFeatured && (
-                <IndicatorPill icon={Star} label="Featured" colorClass="border-amber-200/70 bg-amber-50 text-amber-600" />
-              )}
-              {isVerified && (
-                <IndicatorPill icon={BadgeCheck} label="Verified" colorClass="border-emerald-200/70 bg-emerald-50 text-emerald-600" />
-              )}
-              {isPremium && (
-                <IndicatorPill icon={Gem} label="Premium" colorClass="border-violet-200/70 bg-violet-50 text-violet-600" />
-              )}
-              {isNewListing && (
-                <IndicatorPill icon={Sparkles} label="New" colorClass="border-primary/15 bg-primary/8 text-primary" />
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Specs — visible on sm+ */}
-        {hasSpecs && (
-          <div className="hidden shrink-0 items-center gap-2.5 sm:flex">
-            {bedroomCount !== undefined && (
-              <span className="flex items-center gap-1 text-[11px]">
-                <BedDouble className="size-3 text-muted-foreground/50" />
-                <span className="font-semibold tabular-nums text-foreground/75">{bedroomCount}</span>
-                <span className="text-muted-foreground/50">Beds</span>
-              </span>
-            )}
-            {bathroomCount !== undefined && (
-              <span className="flex items-center gap-1 text-[11px]">
-                <Bath className="size-3 text-muted-foreground/50" />
-                <span className="font-semibold tabular-nums text-foreground/75">{bathroomCount}</span>
-                <span className="text-muted-foreground/50">Baths</span>
-              </span>
-            )}
-            {square !== undefined && (
-              <span className="flex items-center gap-1 text-[11px]">
-                <Maximize2 className="size-3 text-muted-foreground/50" />
-                <span className="font-semibold tabular-nums text-foreground/75">{square.toLocaleString()}</span>
-                <span className="text-muted-foreground/50">m²</span>
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Price + Status */}
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
-          {price !== undefined ? (
-            <span className="whitespace-nowrap text-[15px] font-black tabular-nums tracking-tight text-foreground">
-              {fmtPrice(price)}
-            </span>
-          ) : (
-            <span className="text-[11px] italic text-muted-foreground/50">POA</span>
-          )}
-          <PropertyStatusBadge status={status} />
-        </div>
-
-        {/* Desktop quick actions — View / Edit / [Duplicate] / Delete */}
-        <div
-          className="hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 sm:flex"
-          onClick={e => e.stopPropagation()}
-        >
-          <QuickAction onClick={() => onView(property)}   label="View"      Icon={Eye} />
-          <QuickAction onClick={() => onEdit(property)}   label="Edit"      Icon={Pencil} />
-          {onDuplicate && (
-            <QuickAction onClick={() => onDuplicate(property)} label="Duplicate" Icon={Copy} />
-          )}
-          <QuickAction onClick={() => onDelete(property)} label="Delete" Icon={Trash2} destructive />
-        </div>
-
-        {/* Mobile: 3-dot → Sheet */}
-        <div className="shrink-0 sm:hidden" onClick={e => e.stopPropagation()}>
+        {/* Favourite — top-right */}
+        <div className="absolute right-2.5 top-2.5 z-10" onClick={e => e.stopPropagation()}>
           <button
             type="button"
-            aria-label="Property actions"
-            onClick={() => setMobileSheet(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/70 text-muted-foreground/60 transition-all duration-150 active:bg-muted"
+            aria-label={favorited ? 'Remove from favourites' : 'Add to favourites'}
+            onClick={() => setFavorited(f => !f)}
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md',
+              'transition-all duration-200 ease-out active:scale-95',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50',
+              favorited
+                ? 'bg-rose-500 text-white shadow-[0_4px_14px_rgba(239,68,68,0.55)]'
+                : 'bg-black/30 text-white/75 hover:bg-rose-500 hover:text-white hover:shadow-[0_4px_14px_rgba(239,68,68,0.40)]',
+            )}
           >
-            <MoreHorizontal className="size-4" />
+            <Heart className={cn('size-3.5 transition-all duration-200', favorited && 'fill-current scale-110')} />
           </button>
         </div>
       </div>
 
-      {/* Mobile action sheet */}
-      <Sheet open={mobileSheet} onOpenChange={setMobileSheet}>
-        <SheetContent
-          side="bottom"
-          className="gap-0 overflow-hidden rounded-t-2xl p-0"
-          showCloseButton={false}
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="mx-auto mb-3 mt-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/20" />
+      {/* ── CENTER: Info ─────────────────────────────────────────────────────── */}
+      <div className="@container flex min-w-0 flex-1 flex-col px-3 py-3 sm:px-4 sm:py-4">
 
-          {/* Property preview — thumbnail + title + price + status + ref */}
-          <div className="flex items-center gap-3.5 px-5 pb-4">
-            <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-xl bg-muted">
-              <Image
-                src={imgSrc}
-                alt={displayName || 'Property'}
-                fill
-                unoptimized
-                className="object-cover"
-                sizes="80px"
-                onError={() => setImgSrc(FALLBACK_IMAGE)}
+        {/* 1 — Price + mobile-only Edit/Delete */}
+        <div className="flex items-start justify-between gap-2">
+          {price !== undefined ? (
+            <p className="min-w-0 truncate text-[18px] font-extrabold leading-none tracking-tight text-foreground tabular-nums sm:text-[24px]">
+              {fmtPrice(price)}
+            </p>
+          ) : (
+            <p className="self-center text-[11px] italic text-muted-foreground/50">Price on request</p>
+          )}
+          <div className="flex shrink-0 items-center gap-1.5 sm:hidden" onClick={e => e.stopPropagation()}>
+            <button
+              type="button"
+              aria-label="Edit property"
+              onClick={() => onEdit(property)}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-full',
+                'border border-border/40 bg-muted/40 text-muted-foreground/55',
+                'transition-all duration-150 active:scale-95',
+                'hover:border-primary/20 hover:bg-primary/8 hover:text-primary',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+              )}
+            >
+              <Pencil className="size-3.5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Delete property"
+              onClick={() => onDelete(property)}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-full',
+                'border border-border/40 bg-muted/40 text-muted-foreground/55',
+                'transition-all duration-150 active:scale-95',
+                'hover:border-rose-200/70 hover:bg-rose-50 hover:text-rose-500',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+              )}
+            >
+              <Trash2 className="size-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 2 — Reference + quality signals */}
+        <div className="mt-2 flex min-w-0 items-center gap-2">
+          <p className="min-w-0 truncate text-[12px] font-semibold tracking-wide text-muted-foreground">
+            {heading}
+          </p>
+          {hasIndicators && (
+            <div className="flex shrink-0 items-center gap-1">
+              <PropertyIndicatorPills
+                isFeatured={isFeatured} isVerified={isVerified}
+                isPremium={isPremium} isNewListing={isNewListing}
               />
             </div>
-            <div className="min-w-0 flex-1">
-              <SheetTitle className="line-clamp-2 text-sm font-semibold leading-tight text-foreground">
-                {displayName || 'Property'}
-              </SheetTitle>
-              {price !== undefined && (
-                <p className="mt-0.5 text-lg font-black tabular-nums tracking-tight text-primary">
-                  {fmtPrice(price)}
-                </p>
-              )}
-              <div className="mt-1.5">
-                <PropertyStatusBadge status={status} />
-              </div>
-              {propertyCode && (
-                <p className="mt-1 text-[10.5px] tabular-nums text-muted-foreground/50">
-                  Ref #{propertyCode}
-                </p>
-              )}
-            </div>
+          )}
+        </div>
+
+        {/* 3 — Location */}
+        {displayLocation && (
+          <div className="mt-2 flex min-w-0 items-center gap-1.5">
+            <MapPin className="size-3 shrink-0 text-muted-foreground/40" />
+            <span className="min-w-0 truncate text-[12px] font-medium text-muted-foreground/75">
+              {displayLocation}
+            </span>
           </div>
+        )}
 
-          <div className="h-px bg-border/40" />
-
-          {/* Actions — View / Edit / [separator] / Delete (no Duplicate on mobile) */}
-          <div className="flex flex-col">
-            <SheetAction
-              label="View Property"
-              Icon={Eye}
-              onClick={() => { setMobileSheet(false); onView(property) }}
-            />
-            <SheetAction
-              label="Edit Property"
-              Icon={Pencil}
-              onClick={() => { setMobileSheet(false); onEdit(property) }}
-            />
-            <div className="mx-5 h-px bg-border/40" />
-            <SheetAction
-              label="Delete Property"
-              Icon={Trash2}
-              destructive
-              onClick={() => { setMobileSheet(false); onDelete(property) }}
-            />
+        {/* 4 — Property type — compact pill, 10px below location */}
+        {type && (
+          <div className="mt-2.5">
+            <span className="inline-flex h-7 items-center whitespace-nowrap rounded-full border border-primary/15 bg-primary/8 px-3 text-[12px] font-semibold tracking-wide text-primary">
+              {type}
+            </span>
           </div>
+        )}
 
-          <div className="h-6" />
-        </SheetContent>
-      </Sheet>
-    </>
+        {/* 5 — Unified action row: [Beds] [Baths] [Area] [View]                   */}
+        {/* Chips are flex-1 (equal, compressible). View is shrink-0 (never         */}
+        {/* pushed out). Both respond to @container center-column width:             */}
+        {/*   <210px  → View icon-only (44px square)                                */}
+        {/*   ≥210px  → View shows "View" text (auto-width, min 84px)               */}
+        {/*   <320px  → chip labels hidden                                           */}
+        {/*   ≥320px  → chip labels visible                                          */}
+        <div
+          className="mt-3 flex items-center gap-2 @[260px]:gap-3"
+          onClick={e => e.stopPropagation()}
+        >
+          {bedroomCount !== undefined && (
+            <StatChip Icon={BedDouble} value={bedroomCount}            label="Beds"  variant="list" />
+          )}
+          {bathroomCount !== undefined && (
+            <StatChip Icon={Bath}      value={bathroomCount}           label="Baths" variant="list" />
+          )}
+          {square !== undefined && (
+            <StatChip Icon={Maximize2} value={square.toLocaleString()} label="m²"   variant="list" />
+          )}
+
+          <button
+            type="button"
+            onClick={() => onView(property)}
+            className={cn(
+              'hidden sm:flex shrink-0 items-center justify-center',
+              // narrow: icon-only square; wide: auto with "View" text
+              'h-11 w-11 rounded-[12px] bg-primary',
+              '@[210px]:w-auto @[210px]:min-w-21 @[210px]:gap-2 @[210px]:px-3.5',
+              'text-[13px] font-semibold text-primary-foreground',
+              'shadow-[0_1px_3px_rgba(0,0,0,0.06),0_3px_10px_rgba(0,0,0,0.10)]',
+              'transition-all duration-200 ease-out',
+              'hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-[0_4px_14px_rgba(0,0,0,0.14)]',
+              'active:translate-y-0 active:scale-[0.98]',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+            )}
+          >
+            <Eye className="size-4 shrink-0" />
+            <span className="hidden @[210px]:block">View</span>
+          </button>
+        </div>
+
+      </div>
+
+      {/* ── RIGHT: Actions panel — Delete / Edit only */}
+      <div
+        className={cn(
+          'hidden sm:flex sm:w-9 sm:shrink-0 sm:flex-col sm:items-center sm:justify-start sm:gap-1',
+          'sm:border-l sm:border-border/10 sm:py-4',
+        )}
+        onClick={e => e.stopPropagation()}
+      >
+        <QuickAction onClick={() => onDelete(property)} label="Delete property" Icon={Trash2} destructive />
+        <QuickAction onClick={() => onEdit(property)}   label="Edit property"   Icon={Pencil} />
+      </div>
+
+    </div>
   )
 })

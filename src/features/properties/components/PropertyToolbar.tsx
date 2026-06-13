@@ -35,13 +35,14 @@ interface DropdownOption {
 
 // Colored dots follow the same semantic color map used by PropertyStatusBadge
 const STATUS_OPTIONS: DropdownOption[] = [
-  { value: 'all',              label: 'All Statuses'                    },
-  { value: 'Available',        label: 'Available',      dot: 'bg-emerald-500' },
-  { value: 'Pending',          label: 'Pending',        dot: 'bg-amber-400'   },
-  { value: 'Under Approval',   label: 'Under Approval', dot: 'bg-orange-400'  },
-  { value: 'Rented',           label: 'Rented',         dot: 'bg-teal-500'    },
-  { value: 'Sold',             label: 'Sold',           dot: 'bg-rose-500'    },
-  { value: 'Draft',            label: 'Draft',          dot: 'bg-slate-400'   },
+  { value: 'all',              label: 'All Statuses'                       },
+  { value: 'Available',        label: 'Available',        dot: 'bg-emerald-500' },
+  { value: 'Reserved',         label: 'Reserved',         dot: 'bg-amber-400'   },
+  { value: 'Pending',          label: 'Pending',          dot: 'bg-violet-500'  },
+  { value: 'Under Approval',   label: 'Under Approval',   dot: 'bg-orange-400'  },
+  { value: 'Rented',           label: 'Rented',           dot: 'bg-teal-500'    },
+  { value: 'Sold',             label: 'Sold',             dot: 'bg-rose-500'    },
+  { value: 'Draft',            label: 'Draft',            dot: 'bg-slate-400'   },
 ]
 
 const TYPE_OPTIONS: DropdownOption[] = [

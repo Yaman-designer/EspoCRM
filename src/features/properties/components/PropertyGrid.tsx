@@ -47,38 +47,46 @@ export const PropertyGrid = memo(function PropertyGrid({
     )
   }
 
+  // List view — @container grid so column count tracks content-area width.
+  //
+  // Priority is readability over density: each card needs enough width for the
+  // horizontal image + content layout to breathe. Breakpoints:
+  //   default        → 1 col  (mobile / tablet, full-width card)
+  //   @[920px]       → 2 cols (desktop sidebar open ≈ 1160px → each card ≈ 570px)
+  //   @[1500px]      → 3 cols (ultra-wide / 1920p screens)
   if (viewMode === 'list') {
     return (
-      <div className="flex flex-col gap-2.5">
-        {properties.map(p => (
-          <PropertyListRow
-            key={p.id}
-            property={p}
-            onView={onView}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onDuplicate={onDuplicate}
-          />
-        ))}
+      <div className="@container w-full">
+        <div className="grid grid-cols-1 gap-4 @[920px]:grid-cols-2 @[1500px]:grid-cols-3">
+          {properties.map(p => (
+            <PropertyListRow
+              key={p.id}
+              property={p}
+              onView={onView}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onDuplicate={onDuplicate}
+            />
+          ))}
+        </div>
       </div>
     )
   }
 
-  // Grid view — container queries so column count tracks actual content-area width,
-  // not viewport width (sidebar width eats into available space on desktop).
+  // Grid view — column count locked to actual content-area width via @container.
   //
-  // Each threshold = N×280 + (N-1)×16, capping cards at ≤280px before each step-up:
-  //   default          → 2 cols  (≤575px  container — mobile / very narrow)
-  //   container≥576px  → 3 cols  (3×280 + 2×16 = 872px  before step-up)
-  //   container≥872px  → 4 cols  (4×280 + 3×16 = 1168px before step-up)
-  //   container≥1168px → 5 cols  (5×280 + 4×16 = 1464px before step-up)
-  //   container≥1464px → 6 cols  (enterprise large-screen density)
+  // Layout math (1440px screen, md:p-6 = 24px each side, sidebar inset = sidebar + 12px):
+  //   Sidebar open  (220+12+48 = 280px overhead): content ≈ 1160px → 4 cols
+  //   Sidebar closed (64+12+48 = 124px overhead): content ≈ 1316px → 5 cols
   //
-  // Gap is constant gap-4 (16px) to prevent visual jumps during resize.
-  // Do NOT switch to auto-fit/minmax — it stretches cards when rows are sparse.
+  // Breakpoints derived from content widths — NOT viewport widths.
+  // @[600px]  → tablet: 3 cols (card ≈ 192px)
+  // @[1100px] → desktop sidebar open: 4 cols  (card ≈ 278px at 1160px)
+  // @[1280px] → desktop sidebar closed: 5 cols (card ≈ 250px at 1316px)
+  // @[1560px] → large screen: 6 cols
   return (
     <div className="@container w-full">
-      <div className="grid grid-cols-2 gap-4 @[576px]:grid-cols-3 @[872px]:grid-cols-4 @[1168px]:grid-cols-5 @[1464px]:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 @[600px]:grid-cols-3 @[1100px]:grid-cols-4 @[1280px]:grid-cols-5 @[1560px]:grid-cols-6">
         {properties.map(p => (
           <PropertyCard
             key={p.id}

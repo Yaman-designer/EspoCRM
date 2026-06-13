@@ -5,51 +5,16 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowLeft, MapPin, BedDouble, Bath, Maximize2,
   Pencil, Trash2, Heart, Calendar, FileText, User, Clock,
-  Star, BadgeCheck, Gem, Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { PropertyStatusBadge } from './PropertyStatusBadge'
 import { PropertyGallery } from './PropertyGallery'
+import { PropertyIndicatorPills } from './PropertyIndicators'
 import axiosClient from '@/api/axiosClient'
 import { cn } from '@/lib/utils'
+import { fmtPrice, fmtDate, getDisplayName, getDisplayLocation, hasSpecs, hasIndicators } from '../lib/display'
 import type { RealEstateProperty } from '../types/property.types'
-
-const fmtPrice = (price: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(price)
-
-const fmtDate = (iso?: string) =>
-  iso
-    ? new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    : undefined
-
-// ── Listing quality indicator chip — mirrors PropertyCard.IndicatorPill ───────
-
-function IndicatorChip({
-  icon: Icon,
-  label,
-  colorClass,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  label: string
-  colorClass: string
-}) {
-  return (
-    <span className={cn(
-      'inline-flex h-5 items-center gap-1 rounded-md border px-2',
-      'text-[10px] font-semibold leading-none whitespace-nowrap',
-      colorClass,
-    )}>
-      <Icon className="size-3 shrink-0" />
-      {label}
-    </span>
-  )
-}
 
 // ── Persistent favorite toggle (EspoCRM follow API) ────────────────────────────
 
@@ -146,7 +111,7 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
   const router = useRouter()
 
   const {
-    title, name, price, status, type,
+    price, status, type,
     propertyCode, locationName, addressCity,
     description, square, bedroomCount, bathroomCount,
     assignedUserName, createdAt, modifiedAt,
@@ -154,10 +119,10 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
     isFeatured, isVerified, isPremium, isNewListing,
   } = property
 
-  const displayName     = title || name
+  const displayName     = getDisplayName(property)
   const displayLocation = [locationName, addressCity].filter(Boolean).join(', ')
-  const hasSpecs        = bedroomCount !== undefined || bathroomCount !== undefined || square !== undefined
-  const hasIndicators   = !!(isFeatured || isVerified || isPremium || isNewListing)
+  const propertyHasSpecs      = hasSpecs(property)
+  const propertyHasIndicators = hasIndicators(property)
 
   const detailRows = [
     { label: 'Reference',      value: propertyCode ? `Ref #${propertyCode}` : undefined },
@@ -169,8 +134,8 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
     { label: 'City',           value: addressCity },
     { label: 'District',       value: locationName },
     { label: 'Assigned Agent', value: assignedUserName },
-    { label: 'Date Listed',    value: fmtDate(createdAt) },
-    { label: 'Last Updated',   value: fmtDate(modifiedAt) },
+    { label: 'Date Listed',    value: fmtDate(createdAt, 'long') },
+    { label: 'Last Updated',   value: fmtDate(modifiedAt, 'long') },
   ].filter((row): row is { label: string; value: string } => !!row.value)
 
   return (
@@ -225,12 +190,13 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
             </div>
 
             {/* Listing quality indicators */}
-            {hasIndicators && (
+            {propertyHasIndicators && (
               <div className="flex flex-wrap items-center gap-1.5">
-                {isFeatured  && <IndicatorChip icon={Star}       label="Featured" colorClass="border-amber-200/70 bg-amber-50 text-amber-600" />}
-                {isVerified  && <IndicatorChip icon={BadgeCheck} label="Verified" colorClass="border-emerald-200/70 bg-emerald-50 text-emerald-600" />}
-                {isPremium   && <IndicatorChip icon={Gem}        label="Premium"  colorClass="border-violet-200/70 bg-violet-50 text-violet-600" />}
-                {isNewListing && <IndicatorChip icon={Sparkles}  label="New"      colorClass="border-primary/15 bg-primary/8 text-primary" />}
+                <PropertyIndicatorPills
+                  isFeatured={isFeatured} isVerified={isVerified}
+                  isPremium={isPremium} isNewListing={isNewListing}
+                  size="md"
+                />
               </div>
             )}
 
@@ -251,10 +217,10 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
               </div>
             )}
 
-            {hasSpecs && <div className="h-px bg-border/40" />}
+            {propertyHasSpecs && <div className="h-px bg-border/40" />}
 
             {/* Specs tiles */}
-            {hasSpecs && (
+            {propertyHasSpecs && (
               <div className="grid grid-cols-3 gap-2">
                 {bedroomCount !== undefined && (
                   <div className="flex flex-col items-center gap-1 rounded-xl bg-muted/40 py-3">

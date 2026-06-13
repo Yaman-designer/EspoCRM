@@ -2,29 +2,43 @@
 
 import { cn } from '@/lib/utils'
 
-// ── Color maps — extend when EspoCRM entity adds new status values ─────────────
+// ── Color maps ────────────────────────────────────────────────────────────────
 
 const DOT: Record<string, string> = {
   Available:        'bg-emerald-500',
-  Pending:          'bg-amber-400',
+  Reserved:         'bg-amber-400',
+  Pending:          'bg-violet-500',
   'Under Approval': 'bg-orange-400',
   Rented:           'bg-teal-500',
   Sold:             'bg-rose-500',
   Draft:            'bg-slate-400',
 }
 
-// chip = default badge (content area) — deliberately soft, supporting role only
+// Tinted glassmorphic background for overlay (image) variant
+const OVERLAY_TINT: Record<string, string> = {
+  Available:        'border-emerald-400/35 bg-emerald-500/20',
+  Reserved:         'border-amber-400/35   bg-amber-500/20',
+  Pending:          'border-violet-400/35  bg-violet-500/20',
+  'Under Approval': 'border-orange-400/35  bg-orange-500/20',
+  Rented:           'border-teal-400/35    bg-teal-500/20',
+  Sold:             'border-rose-400/35    bg-rose-500/20',
+  Draft:            'border-slate-400/25   bg-slate-500/15',
+}
+
+// Soft chip for content area — supporting role only
 const CHIP: Record<string, string> = {
   Available:        'bg-brand-emerald-soft text-brand-emerald  border-brand-emerald/20',
-  Pending:          'bg-amber-50           text-amber-700      border-amber-200',
+  Reserved:         'bg-amber-50           text-amber-700      border-amber-200',
+  Pending:          'bg-violet-50          text-violet-700     border-violet-200',
   'Under Approval': 'bg-orange-50          text-orange-700     border-orange-200',
   Rented:           'bg-brand-teal-soft    text-brand-teal     border-brand-teal/20',
   Sold:             'bg-brand-crimson-soft text-brand-crimson  border-brand-crimson/20',
   Draft:            'bg-secondary          text-muted-foreground border-border/60',
 }
 
-const FALLBACK_DOT  = 'bg-muted-foreground/40'
-const FALLBACK_CHIP = 'bg-secondary text-muted-foreground border-border/60'
+const FALLBACK_DOT          = 'bg-muted-foreground/40'
+const FALLBACK_OVERLAY_TINT = 'border-white/10 bg-black/40'
+const FALLBACK_CHIP         = 'bg-secondary text-muted-foreground border-border/60'
 
 interface PropertyStatusBadgeProps {
   status: string
@@ -37,21 +51,22 @@ export function PropertyStatusBadge({
   className,
   variant = 'default',
 }: PropertyStatusBadgeProps) {
-  const dot  = DOT[status]  ?? FALLBACK_DOT
-  const chip = CHIP[status] ?? FALLBACK_CHIP
+  const dot  = DOT[status]          ?? FALLBACK_DOT
+  const chip = CHIP[status]         ?? FALLBACK_CHIP
+  const tint = OVERLAY_TINT[status] ?? FALLBACK_OVERLAY_TINT
 
   if (variant === 'overlay') {
     return (
       <span
         className={cn(
-          'inline-flex h-5 items-center gap-1.5 rounded-full px-2',
-          'text-[9.5px] font-medium text-white/90',
-          'bg-black/40 backdrop-blur-sm shadow-sm',
-          'whitespace-nowrap',
+          'inline-flex h-6 items-center gap-1.5 rounded-full border px-3',
+          'text-[10px] font-semibold tracking-wide text-white',
+          'backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.25)] whitespace-nowrap',
+          tint,
           className,
         )}
       >
-        <span className={cn('size-1.5 shrink-0 rounded-full', dot)} />
+        <span className={cn('size-1.5 shrink-0 rounded-full shadow-sm', dot)} />
         {status}
       </span>
     )
@@ -60,9 +75,9 @@ export function PropertyStatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex h-5 items-center gap-1 rounded-full border px-2',
-        'text-[10px] font-medium leading-none tracking-wide',
-        'whitespace-nowrap',
+        'inline-flex h-5.5 items-center gap-1 rounded-full border px-2.5',
+        'text-[10px] font-semibold leading-none tracking-wide whitespace-nowrap',
+        'shadow-[0_1px_4px_rgba(0,0,0,0.08)]',
         chip,
         className,
       )}

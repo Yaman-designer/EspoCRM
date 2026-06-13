@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useQuery, useMutation, keepPreviousData } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import axiosClient from '@/api/axiosClient'
 import type { EspoListResponse } from '@/api/espocrm/entityService'
@@ -115,6 +115,7 @@ function buildWhereParams(
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useProperties() {
+  const queryClient = useQueryClient()
   const [filters, setFilters] = useState<PropertyFilters>(DEFAULT_FILTERS)
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
   const [page, setPage] = useState(1)
@@ -190,6 +191,7 @@ export function useProperties() {
     onSuccess: () => {
       toast.success('Property deleted')
       refetch()
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, 'kpi'] })
     },
     onError: () => {
       toast.error('Failed to delete property')
