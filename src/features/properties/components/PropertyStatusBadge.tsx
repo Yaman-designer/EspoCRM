@@ -1,18 +1,9 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { STATUS_DOT_COLORS, STATUS_DOT_FALLBACK } from '../domain/constants'
 
 // ── Color maps ────────────────────────────────────────────────────────────────
-
-const DOT: Record<string, string> = {
-  Available:        'bg-emerald-500',
-  Reserved:         'bg-amber-400',
-  Pending:          'bg-violet-500',
-  'Under Approval': 'bg-orange-400',
-  Rented:           'bg-teal-500',
-  Sold:             'bg-rose-500',
-  Draft:            'bg-slate-400',
-}
 
 // Tinted glassmorphic background for overlay (image) variant
 const OVERLAY_TINT: Record<string, string> = {
@@ -36,7 +27,6 @@ const CHIP: Record<string, string> = {
   Draft:            'bg-secondary          text-muted-foreground border-border/60',
 }
 
-const FALLBACK_DOT          = 'bg-muted-foreground/40'
 const FALLBACK_OVERLAY_TINT = 'border-white/10 bg-black/40'
 const FALLBACK_CHIP         = 'bg-secondary text-muted-foreground border-border/60'
 
@@ -51,7 +41,7 @@ export function PropertyStatusBadge({
   className,
   variant = 'default',
 }: PropertyStatusBadgeProps) {
-  const dot  = DOT[status]          ?? FALLBACK_DOT
+  const dot  = STATUS_DOT_COLORS[status] ?? STATUS_DOT_FALLBACK
   const chip = CHIP[status]         ?? FALLBACK_CHIP
   const tint = OVERLAY_TINT[status] ?? FALLBACK_OVERLAY_TINT
 

@@ -1,19 +1,16 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
 import { Eye, Pencil, Trash2, Users } from 'lucide-react'
-import axiosClient from '@/api/axiosClient'
-import type { EspoListResponse } from '@/api/espocrm/entityService'
 import { DataTable } from '@/components/data-table'
 import { StatusBadge } from '@/components/data-table/StatusBadge'
 import { PageHeader } from '@/components/dashboard/PageHeader'
 import { pipelineColumns } from '@/features/pipeline/columns'
 import { PipelineForm } from '@/features/pipeline/PipelineForm'
 import { STAGE_LABEL_MAP, STATUS_BADGE_MAP, CONTACT_TYPE_BADGE_MAP } from '@/features/pipeline/fields'
-import type { Pipeline, PipelineFormValues } from '@/features/pipeline/types'
+import { usePipeline } from '@/features/pipeline/hooks/usePipeline'
+import type { Pipeline } from '@/features/pipeline/types'
 import type { QuickFilter, BadgeVariant, FormProps } from '@/components/data-table'
 import type { ComponentType } from 'react'
 import {
@@ -33,16 +30,6 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-
-// ── EspoCRM attribute select ───────────────────────────────────────────────────
-
-const ATTRIBUTE_SELECT = [
-  'contactsIds', 'contactsNames',
-  'realEstatePropertiesIds', 'realEstatePropertiesNames',
-  'contactType', 'status', 'status2', 'description',
-  'assignedUserId', 'assignedUserName',
-  'teamsIds', 'teamsNames',
-].join(',')
 
 // ── View panel helpers ─────────────────────────────────────────────────────────
 
@@ -119,105 +106,28 @@ function PipelineViewPanel({ row }: { row: Pipeline }) {
 
 export default function PipelinePage() {
   const { t } = useTranslation('dashboard')
+  const {
+    data,
+    isFetching,
+    isError,
+    refetch,
+    editOpen,
+    editInitialData,
+    handleEdit,
+    handleEditClose,
+    viewOpen,
+    viewRow,
+    setViewOpen,
+    handleView,
+    deleteOpen,
+    deleteRow,
+    setDeleteOpen,
+    setDeleteRow,
+    handleDelete,
+    deleteMutation,
+    bulkDeleteMutation,
+  } = usePipeline()
 
-  // ── Data fetch ──────────────────────────────────────────────────────────────
-  const { data, isFetching, isError, refetch } = useQuery<EspoListResponse<Pipeline>>({
-    queryKey: ['pipeline'],
-    queryFn: () =>
-      axiosClient
-        .get<EspoListResponse<Pipeline>>('/CPipeline', {
-          params: {
-            maxSize: 200,
-            offset: 0,
-            orderBy: 'dateStart',
-            order: 'desc',
-            attributeSelect: ATTRIBUTE_SELECT,
-          },
-        })
-        .then((res) => res.data),
-    staleTime: 30_000,
-  })
-
-  // ── Edit state ──────────────────────────────────────────────────────────────
-  const [editOpen, setEditOpen] = useState(false)
-  const [editRow, setEditRow] = useState<Pipeline | undefined>()
-
-  const handleEdit = useCallback((row: Pipeline) => {
-    setEditRow(row)
-    setEditOpen(true)
-  }, [])
-
-  const handleEditClose = useCallback(() => {
-    setEditOpen(false)
-    setEditRow(undefined)
-  }, [])
-
-  // Build form-compatible initialData from the row — contactsIds is a string[]
-  // in Pipeline but the form select works with a single string value.
-  const editInitialData = useMemo((): PipelineFormValues | undefined => {
-    if (!editRow) return undefined
-    return {
-      id: editRow.id,
-      assignedUserId: editRow.assignedUserId || undefined,
-      teamsIds: editRow.teamsIds ?? [],
-      contactsIds: editRow.contactsIds?.[0] ?? '',
-      contactType: editRow.contactType || '',
-      status2: editRow.status2 && editRow.status2 !== 'none' ? editRow.status2 : '',
-      dateStart: editRow.dateStart?.substring(0, 10) ?? '',
-      description: editRow.description ?? '',
-    }
-  }, [editRow])
-
-  // ── View state ──────────────────────────────────────────────────────────────
-  const [viewOpen, setViewOpen] = useState(false)
-  const [viewRow, setViewRow] = useState<Pipeline | undefined>()
-
-  const handleView = useCallback((row: Pipeline) => {
-    setViewRow(row)
-    setViewOpen(true)
-  }, [])
-
-  // ── Single delete ───────────────────────────────────────────────────────────
-  const [deleteRow, setDeleteRow] = useState<Pipeline | undefined>()
-  const [deleteOpen, setDeleteOpen] = useState(false)
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => axiosClient.delete(`/CPipeline/${id}`),
-    onSuccess: () => {
-      toast.success(t('pipeline.actions.deleteSuccess'))
-      setDeleteOpen(false)
-      setDeleteRow(undefined)
-      refetch()
-    },
-    onError: () => {
-      toast.error(t('pipeline.actions.deleteError'))
-    },
-  })
-
-  const handleDelete = useCallback((row: Pipeline) => {
-    setDeleteRow(row)
-    setDeleteOpen(true)
-  }, [])
-
-  // ── Bulk delete ─────────────────────────────────────────────────────────────
-  const bulkDeleteMutation = useMutation({
-    mutationFn: (rows: Pipeline[]) =>
-      Promise.all(rows.map((row) => axiosClient.delete(`/CPipeline/${row.id}`))),
-    onSuccess: (_, rows) => {
-      toast.success(
-        rows.length === 1
-          ? t('pipeline.actions.deleteSuccess')
-          : t('pipeline.actions.bulkDeleteSuccess', { count: rows.length }),
-      )
-      refetch()
-    },
-    onError: () => {
-      toast.error(t('pipeline.actions.deleteError'))
-      refetch()
-    },
-  })
-
-  // ── Row actions ─────────────────────────────────────────────────────────────
   const rowActions = useMemo(() => [
     {
       label: t('pipeline.actions.view'),

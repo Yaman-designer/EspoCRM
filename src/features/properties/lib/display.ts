@@ -1,20 +1,13 @@
 /**
  * Shared display utilities for the properties feature.
- * All Intl formatters are module-level constants — creating them once avoids
- * the overhead of constructor calls on every render.
  */
 
 import type { RealEstateProperty } from '../types/property.types'
+import { formatCurrency, formatDate as baseFmtDate } from '@/lib/format'
 
 // ── Price formatting ──────────────────────────────────────────────────────────
 
-const PRICE_FMT = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 0,
-})
-
+// Currency-compact Intl formatter — no equivalent in lib/format (different notation and decimals)
 const PRICE_FMT_COMPACT = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
@@ -29,27 +22,17 @@ const PRICE_FMT_COMPACT = new Intl.NumberFormat('en-US', {
  */
 export function fmtPrice(price: number, compact = false): string {
   if (compact && price >= 1_000_000) return PRICE_FMT_COMPACT.format(price)
-  return PRICE_FMT.format(price)
+  return formatCurrency(price)
 }
 
 // ── Date formatting ───────────────────────────────────────────────────────────
 
-const DATE_FMT_SHORT = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-})
-
-const DATE_FMT_LONG = new Intl.DateTimeFormat('en-US', {
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
-})
+const SHORT_DATE_OPTS: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }
+const LONG_DATE_OPTS:  Intl.DateTimeFormatOptions = { month: 'long',  day: 'numeric', year: 'numeric' }
 
 export function fmtDate(iso: string | undefined, style: 'short' | 'long' = 'short'): string {
   if (!iso) return ''
-  const d = new Date(iso)
-  return style === 'long' ? DATE_FMT_LONG.format(d) : DATE_FMT_SHORT.format(d)
+  return baseFmtDate(iso, style === 'long' ? LONG_DATE_OPTS : SHORT_DATE_OPTS)
 }
 
 // ── Property display helpers ──────────────────────────────────────────────────

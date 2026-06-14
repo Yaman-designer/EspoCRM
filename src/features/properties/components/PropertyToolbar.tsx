@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
 import type { SortOption, ViewMode, PriceRange, AreaRange } from '../types/property.types'
+import { PROPERTY_STATUSES, STATUS_DOT_COLORS } from '../domain/constants'
 
 // Deterministic locale — avoids hydration mismatch between Node.js (ar) and browser (en-US)
 const COUNT_FMT = new Intl.NumberFormat('en-US')
@@ -33,16 +34,10 @@ interface DropdownOption {
   dot?:  string  // e.g. 'bg-emerald-500' — shown as a 8px circle in both dropdown and mobile sheet
 }
 
-// Colored dots follow the same semantic color map used by PropertyStatusBadge
+// Colored dots sourced from the canonical STATUS_DOT_COLORS map in domain/constants
 const STATUS_OPTIONS: DropdownOption[] = [
-  { value: 'all',              label: 'All Statuses'                       },
-  { value: 'Available',        label: 'Available',        dot: 'bg-emerald-500' },
-  { value: 'Reserved',         label: 'Reserved',         dot: 'bg-amber-400'   },
-  { value: 'Pending',          label: 'Pending',          dot: 'bg-violet-500'  },
-  { value: 'Under Approval',   label: 'Under Approval',   dot: 'bg-orange-400'  },
-  { value: 'Rented',           label: 'Rented',           dot: 'bg-teal-500'    },
-  { value: 'Sold',             label: 'Sold',             dot: 'bg-rose-500'    },
-  { value: 'Draft',            label: 'Draft',            dot: 'bg-slate-400'   },
+  { value: 'all', label: 'All Statuses' },
+  ...PROPERTY_STATUSES.map(s => ({ value: s, label: s, dot: STATUS_DOT_COLORS[s] })),
 ]
 
 const TYPE_OPTIONS: DropdownOption[] = [
