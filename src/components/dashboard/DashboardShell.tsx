@@ -1,6 +1,6 @@
 'use client'
 
-import { useLayoutEffect, useEffect } from 'react'
+import { useLayoutEffect, useEffect, Suspense } from 'react'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { AppSidebar } from '@/components/dashboard/AppSidebar'
 import { TopNavbar } from '@/components/dashboard/navbar'
@@ -29,7 +29,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppSidebar />
+      <Suspense fallback={<div style={{ width: 'var(--sidebar-w, 220px)' }} className="shrink-0" />}>
+        <AppSidebar />
+      </Suspense>
 
       {/* Mobile backdrop — shown only when sidebar is open on mobile */}
       {mobileOpen && (
