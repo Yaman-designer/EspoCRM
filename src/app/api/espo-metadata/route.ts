@@ -5,7 +5,6 @@ import { env } from '@/lib/env'
 // Fetches RealEstateProperty field metadata from EspoCRM so the frontend
 // can render dynamic filter options without hardcoding statuses or types.
 // Cached for 5 minutes via Next.js route segment config.
-export const revalidate = 300
 
 export async function GET(): Promise<NextResponse> {
   const session = await auth()
