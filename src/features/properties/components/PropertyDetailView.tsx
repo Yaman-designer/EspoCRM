@@ -7,11 +7,12 @@ import {
   Pencil, Trash2, Heart, Calendar, FileText, User, Clock,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useMutation } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { PropertyStatusBadge } from './PropertyStatusBadge'
 import { PropertyGallery } from './PropertyGallery'
 import { PropertyIndicatorPills } from './PropertyIndicators'
-import axiosClient from '@/api/axiosClient'
+import { followProperty, unfollowProperty } from '../repositories/property.repository'
 import { cn } from '@/lib/utils'
 import { fmtPrice, fmtDate, getDisplayName, getDisplayLocation, hasSpecs, hasIndicators } from '../lib/display'
 import type { RealEstateProperty } from '../types/property.types'
@@ -20,35 +21,29 @@ import type { RealEstateProperty } from '../types/property.types'
 
 function FavoriteButton({ property }: { property: RealEstateProperty }) {
   const [favorited, setFavorited] = useState(!!property.isFollowed)
-  const [loading, setLoading]     = useState(false)
 
-  const toggle = async () => {
-    if (loading) return
-    setLoading(true)
-    const next = !favorited
-    setFavorited(next)
-    try {
-      if (next) {
-        await axiosClient.post(`/RealEstateProperty/${property.id}/follow`)
-        toast.success('Added to favorites')
-      } else {
-        await axiosClient.delete(`/RealEstateProperty/${property.id}/follow`)
-        toast.success('Removed from favorites')
-      }
-    } catch {
-      setFavorited(!next)
-      toast.error('Failed to update favorites')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const followMutation = useMutation({
+    mutationFn: () => followProperty(property.id),
+    onMutate:   () => setFavorited(true),
+    onSuccess:  () => toast.success('Added to favorites'),
+    onError:    () => { setFavorited(false); toast.error('Failed to update favorites') },
+  })
+
+  const unfollowMutation = useMutation({
+    mutationFn: () => unfollowProperty(property.id),
+    onMutate:   () => setFavorited(false),
+    onSuccess:  () => toast.success('Removed from favorites'),
+    onError:    () => { setFavorited(true); toast.error('Failed to update favorites') },
+  })
+
+  const loading = followMutation.isPending || unfollowMutation.isPending
 
   return (
     <Button
       variant="outline"
       size="sm"
       disabled={loading}
-      onClick={toggle}
+      onClick={() => favorited ? unfollowMutation.mutate() : followMutation.mutate()}
       className={cn(
         'gap-1.5 transition-colors',
         favorited && 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100',

@@ -6,7 +6,9 @@ import type { QuickFilter, BadgeVariant } from './types'
 interface QuickFilterBarProps {
   filters: QuickFilter[]
   activeFilter: QuickFilter | null
-  counts: Record<string, number>
+  // Optional: absent keys mean no badge is rendered for that chip.
+  // "All" key ('__all__') is always expected when provided.
+  counts?: Record<string, number>
   onChange: (filter: QuickFilter | null) => void
 }
 
@@ -23,10 +25,10 @@ export function QuickFilterBar({
         '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
       )}
     >
-      {/* "All" chip */}
+      {/* "All" chip — count sourced from EspoCRM total, always accurate */}
       <FilterChip
         label="All"
-        count={counts['__all__'] ?? 0}
+        count={counts?.['__all__']}
         active={activeFilter === null}
         onClick={() => onChange(null)}
       />
@@ -38,7 +40,9 @@ export function QuickFilterBar({
           filter.value !== null && filter.column
             ? `${filter.column}:${filter.value}`
             : '__all__'
-        const count = counts[countKey] ?? 0
+        // undefined when the key is absent (truncated dataset) — FilterChip
+        // omits the badge entirely rather than showing an inaccurate number.
+        const count = counts?.[countKey]
         const isActive =
           activeFilter !== null &&
           activeFilter.column === filter.column &&
@@ -75,7 +79,7 @@ function FilterChip({
   onClick,
 }: {
   label: string
-  count: number
+  count?: number
   active: boolean
   badgeVariant?: BadgeVariant
   onClick: () => void
@@ -96,15 +100,17 @@ function FilterChip({
       )}
     >
       {label}
-      <span
-        className={cn(
-          'flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1',
-          'text-[10px] font-semibold tabular-nums leading-none',
-          badgeClass,
-        )}
-      >
-        {count}
-      </span>
+      {count !== undefined && (
+        <span
+          className={cn(
+            'flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1',
+            'text-[10px] font-semibold tabular-nums leading-none',
+            badgeClass,
+          )}
+        >
+          {count}
+        </span>
+      )}
     </button>
   )
 }

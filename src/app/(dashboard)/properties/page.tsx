@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import { PropertiesPage } from '@/features/properties/pages/PropertiesPage'
+import { PropertiesClient } from './PropertiesClient'
 
 export const metadata: Metadata = { title: 'Properties' }
 
-export default function Page() {
-  return <PropertiesPage />
+export default function PropertiesPageRoute() {
+  return <PropertiesClient />
 }

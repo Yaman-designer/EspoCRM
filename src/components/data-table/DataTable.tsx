@@ -245,6 +245,9 @@ export function DataTable<T extends object>({
 }: DataTableProps<T>) {
   const { t } = useTranslation('common')
   const serverMode = !!endpoint
+  // In client mode, true when EspoCRM returned more records than were fetched.
+  // Drives conditional count display in QuickFilterBar.
+  const isTruncated = !serverMode && staticTotal !== undefined && staticTotal > (staticData?.length ?? 0)
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [page, setPage] = useState(1)
@@ -291,22 +294,28 @@ export function DataTable<T extends object>({
     })
   }, [staticData, activeQuickFilter])
 
-  // ── Filter counts for chips (computed from original data) ────────────────
+  // ── Filter counts for chips ───────────────────────────────────────────────
+  // "All" always uses the EspoCRM total (staticTotal) so it reflects the real
+  // dataset size even when the fetch was capped. Individual counts are only
+  // computed when the dataset is complete — when truncated they would reflect
+  // only the fetched slice, not the full dataset, which would be misleading.
   const filterCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     if (!staticData) return counts
-    counts['__all__'] = staticData.length
-    for (const f of quickFilters ?? []) {
-      if (f.value !== null && f.column) {
-        const key = `${f.column}:${f.value}`
-        counts[key] = staticData.filter((row) => {
-          const r = row as Record<string, unknown>
-          return String(r[f.column!]) === f.value
-        }).length
+    counts['__all__'] = staticTotal ?? staticData.length
+    if (!isTruncated) {
+      for (const f of quickFilters ?? []) {
+        if (f.value !== null && f.column) {
+          const key = `${f.column}:${f.value}`
+          counts[key] = staticData.filter((row) => {
+            const r = row as Record<string, unknown>
+            return String(r[f.column!]) === f.value
+          }).length
+        }
       }
     }
     return counts
-  }, [staticData, quickFilters])
+  }, [staticData, quickFilters, staticTotal, isTruncated])
 
   // ── React Query (server-side) ───────────────────────────────────────────────
   const qParams = useMemo(

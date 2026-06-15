@@ -23,6 +23,14 @@ export async function deleteProperty(id: string): Promise<void> {
   await axiosClient.delete(`/RealEstateProperty/${id}`)
 }
 
+export async function followProperty(id: string): Promise<void> {
+  await axiosClient.post(`/RealEstateProperty/${id}/follow`)
+}
+
+export async function unfollowProperty(id: string): Promise<void> {
+  await axiosClient.delete(`/RealEstateProperty/${id}/follow`)
+}
+
 export async function fetchPropertyCount(attribute: string, value: string): Promise<number> {
   try {
     const res = await axiosClient.get<EspoListResponse<RealEstateProperty>>('/RealEstateProperty', {

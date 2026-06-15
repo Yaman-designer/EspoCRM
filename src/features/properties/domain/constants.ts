@@ -1,3 +1,14 @@
+// ── Query key ─────────────────────────────────────────────────────────────────
+
+export const PROPERTIES_QUERY_KEY = 'realEstateProperties'
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+
+export const PAGE_SIZE_OPTIONS = [12, 24, 48] as const
+export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number]
+
+// ── Status display ────────────────────────────────────────────────────────────
+
 export const PROPERTY_STATUSES = [
   'Available', 'Reserved', 'Pending', 'Under Approval', 'Rented', 'Sold', 'Draft',
 ] as const

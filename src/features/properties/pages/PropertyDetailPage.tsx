@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import axiosClient from '@/api/axiosClient'
+import { deleteProperty } from '../repositories/property.repository'
 import { PropertyDetailView } from '../components/PropertyDetailView'
 import { PropertyForm } from '../components/PropertyForm'
 import { getWebAssetUrl, resolvePropertyImageId } from '@/lib/image-url'
@@ -37,7 +37,7 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => axiosClient.delete(`/RealEstateProperty/${id}`),
+    mutationFn: (id: string) => deleteProperty(id),
     onSuccess: () => {
       toast.success('Property deleted')
       router.push('/properties')

@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import { PAGE_SIZE_OPTIONS, type PageSizeOption } from '../hooks/useProperties'
+import { PAGE_SIZE_OPTIONS, type PageSizeOption } from '../domain/constants'
 
 // Returns the list of page numbers (and 'ellipsis' sentinels) to render.
 // Always yields at most 7 items so the row never wraps on mobile.
