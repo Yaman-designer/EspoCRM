@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/dashboard/PageHeader'
 import { EntityViewSheet } from './EntityViewSheet'
 import { EntityDeleteDialog } from './EntityDeleteDialog'
 import { ConfiguredViewPanel } from './ConfiguredViewPanel'
+import { ErrorBoundary } from '@/components/ui/error-boundary'
 import type { ComponentType } from 'react'
 import type { EspoListResponse } from '@/api/espocrm/entityService'
 import type { FormProps } from '@/components/data-table'
@@ -119,20 +120,39 @@ export function CRMResourcePage<T extends { id: string }>({
     onError: () => toast.error('Failed to delete record'),
   })
 
-  const bulkDeleteMutation = useMutation<void, Error, T[]>({
-    mutationFn: (rows) =>
-      Promise.all(rows.map((r) => axiosClient.delete(`${config.endpoint}/${r.id}`))).then(() => void 0),
-    onSuccess: (_, rows) => {
-      toast.success(
-        rows.length === 1
-          ? `${config.getEntityName(rows[0])} deleted`
-          : `${rows.length} records deleted`,
+  const bulkDeleteMutation = useMutation<{ succeeded: number; failed: number }, Error, T[]>({
+    // allSettled waits for every request regardless of individual failures.
+    // This gives exact success/failure counts instead of Promise.all's
+    // fast-fail behaviour (which left some records deleted with no feedback).
+    mutationFn: async (rows) => {
+      const results = await Promise.allSettled(
+        rows.map((r) => axiosClient.delete(`${config.endpoint}/${r.id}`)),
       )
-      queryClient.invalidateQueries({ queryKey: [config.queryKey] })
+      const succeeded = results.filter((r) => r.status === 'fulfilled').length
+      const failed    = results.filter((r) => r.status === 'rejected').length
+      return { succeeded, failed }
     },
-    onError: () => {
-      toast.error('Failed to delete records')
+    onSuccess: ({ succeeded, failed }, rows) => {
       queryClient.invalidateQueries({ queryKey: [config.queryKey] })
+
+      if (failed === 0) {
+        // All succeeded — original success message unchanged.
+        toast.success(
+          rows.length === 1
+            ? `${config.getEntityName(rows[0])} deleted`
+            : `${rows.length} records deleted`,
+        )
+      } else if (succeeded === 0) {
+        // All failed.
+        toast.error(
+          rows.length === 1
+            ? `Failed to delete ${config.getEntityName(rows[0])}`
+            : `Failed to delete ${rows.length} records`,
+        )
+      } else {
+        // Partial — tell the user exactly what happened.
+        toast.warning(`${succeeded} of ${rows.length} records deleted. ${failed} could not be removed.`)
+      }
     },
   })
 
@@ -223,79 +243,87 @@ export function CRMResourcePage<T extends { id: string }>({
 
       {/* Standard DataTable — omitted when listRenderer supplies the list UI */}
       {!hasListRenderer && (
-        <DataTable<T>
-          data={data?.list ?? []}
-          totalRows={data?.total ?? 0}
-          columns={config.columns}
-          rowActions={rowActions}
-          bulkActions={bulkActions}
-          form={ResourceForm}
-          isLoading={isFetching && !data}
-          isError={isError}
-          onRefetch={refetch}
-          quickFilters={config.quickFilters}
-          showRowNumbers={config.showRowNumbers ?? true}
-          showViewToggle={config.showViewToggle ?? true}
-          searchable
-          searchPlaceholder={config.searchPlaceholder ?? `Search ${config.title.toLowerCase()}...`}
-          addable
-          addLabel={config.addLabel ?? `Add ${singular}`}
-          pageSize={config.pageSize ?? 10}
-          pageSizeOptions={config.pageSizeOptions ?? [10, 20, 50]}
-          emptyTitle={config.emptyTitle ?? `No ${config.title.toLowerCase()} found`}
-          emptyDescription={config.emptyDescription ?? `Add a new ${singular.toLowerCase()} to get started.`}
-        />
+        <ErrorBoundary>
+          <DataTable<T>
+            data={data?.list ?? []}
+            totalRows={data?.total ?? 0}
+            columns={config.columns}
+            rowActions={rowActions}
+            bulkActions={bulkActions}
+            form={ResourceForm}
+            isLoading={isFetching && !data}
+            isError={isError}
+            onRefetch={refetch}
+            quickFilters={config.quickFilters}
+            showRowNumbers={config.showRowNumbers ?? true}
+            showViewToggle={config.showViewToggle ?? true}
+            searchable
+            searchPlaceholder={config.searchPlaceholder ?? `Search ${config.title.toLowerCase()}...`}
+            addable
+            addLabel={config.addLabel ?? `Add ${singular}`}
+            pageSize={config.pageSize ?? 10}
+            pageSizeOptions={config.pageSizeOptions ?? [10, 20, 50]}
+            emptyTitle={config.emptyTitle ?? `No ${config.title.toLowerCase()} found`}
+            emptyDescription={config.emptyDescription ?? `Add a new ${singular.toLowerCase()} to get started.`}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Extension: custom list renderer */}
       {hasListRenderer && ListRenderer && (
-        <ListRenderer
-          onView={handleView}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onAdd={() => setAddOpen(true)}
-        />
+        <ErrorBoundary>
+          <ListRenderer
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onAdd={() => setAddOpen(true)}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Edit form — always present; rendered outside DataTable so editRow can be injected */}
-      <DynamicForm
-        open={editOpen}
-        onClose={handleEditClose}
-        onSuccess={() => {
-          handleEditClose()
-          queryClient.invalidateQueries({ queryKey: [config.queryKey] })
-        }}
-        title={`Edit ${singular}`}
-        icon={config.formIcon}
-        sections={config.formSections}
-        schema={config.schema}
-        endpoint={config.endpoint}
-        initialData={
-          editRow
-            ? (config.editDataTransform ? config.editDataTransform(editRow) : (editRow as Partial<Record<string, unknown>>))
-            : undefined
-        }
-        mode="edit"
-        transformSubmit={config.formTransformSubmit}
-      />
-
-      {/* Add form — listRenderer mode only; DataTable handles add in standard mode */}
-      {hasListRenderer && (
+      <ErrorBoundary>
         <DynamicForm
-          open={addOpen}
-          onClose={handleAddClose}
+          open={editOpen}
+          onClose={handleEditClose}
           onSuccess={() => {
-            handleAddClose()
+            handleEditClose()
             queryClient.invalidateQueries({ queryKey: [config.queryKey] })
           }}
-          title={config.addLabel ?? `Add ${singular}`}
+          title={`Edit ${singular}`}
           icon={config.formIcon}
           sections={config.formSections}
           schema={config.schema}
           endpoint={config.endpoint}
-          mode="create"
+          initialData={
+            editRow
+              ? (config.editDataTransform ? config.editDataTransform(editRow) : (editRow as Partial<Record<string, unknown>>))
+              : undefined
+          }
+          mode="edit"
           transformSubmit={config.formTransformSubmit}
         />
+      </ErrorBoundary>
+
+      {/* Add form — listRenderer mode only; DataTable handles add in standard mode */}
+      {hasListRenderer && (
+        <ErrorBoundary>
+          <DynamicForm
+            open={addOpen}
+            onClose={handleAddClose}
+            onSuccess={() => {
+              handleAddClose()
+              queryClient.invalidateQueries({ queryKey: [config.queryKey] })
+            }}
+            title={config.addLabel ?? `Add ${singular}`}
+            icon={config.formIcon}
+            sections={config.formSections}
+            schema={config.schema}
+            endpoint={config.endpoint}
+            mode="create"
+            transformSubmit={config.formTransformSubmit}
+          />
+        </ErrorBoundary>
       )}
 
       {/* Standard view sheet — omitted when viewRenderer supplies its own sheet */}
@@ -315,12 +343,14 @@ export function CRMResourcePage<T extends { id: string }>({
 
       {/* Extension: custom view renderer (manages its own <Sheet> open state) */}
       {hasViewRenderer && ViewRenderer && (
-        <ViewRenderer
-          row={viewRow}
-          onClose={() => { setViewOpen(false); setViewRow(undefined) }}
-          onEdit={(row) => { setViewRow(undefined); setViewOpen(false); handleEdit(row) }}
-          onDelete={(row) => { setViewRow(undefined); setViewOpen(false); handleDelete(row) }}
-        />
+        <ErrorBoundary>
+          <ViewRenderer
+            row={viewRow}
+            onClose={() => { setViewOpen(false); setViewRow(undefined) }}
+            onEdit={(row) => { setViewRow(undefined); setViewOpen(false); handleEdit(row) }}
+            onDelete={(row) => { setViewRow(undefined); setViewOpen(false); handleDelete(row) }}
+          />
+        </ErrorBoundary>
       )}
 
       <EntityDeleteDialog

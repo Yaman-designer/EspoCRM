@@ -32,17 +32,13 @@ export async function unfollowProperty(id: string): Promise<void> {
 }
 
 export async function fetchPropertyCount(attribute: string, value: string): Promise<number> {
-  try {
-    const res = await axiosClient.get<EspoListResponse<RealEstateProperty>>('/RealEstateProperty', {
-      params: {
-        maxSize: 1,
-        'where[0][type]':      'equals',
-        'where[0][attribute]': attribute,
-        'where[0][value]':     value,
-      },
-    })
-    return res.data.total
-  } catch {
-    return 0
-  }
+  const res = await axiosClient.get<EspoListResponse<RealEstateProperty>>('/RealEstateProperty', {
+    params: {
+      maxSize: 1,
+      'where[0][type]':      'equals',
+      'where[0][attribute]': attribute,
+      'where[0][value]':     value,
+    },
+  })
+  return res.data.total
 }

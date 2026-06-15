@@ -105,14 +105,16 @@ export async function fetchPropertyKPIs(): Promise<KPIStats> {
 export interface StatusOption {
   value: string
   label: string
-  count: number
+  // null means the count API failed — the option is still shown so users
+  // can filter by it; the display layer renders a dash instead of a number.
+  count: number | null
   dot:   string
 }
 
 export interface TypeOption {
   value: string
   label: string
-  count: number
+  count: number | null
 }
 
 export interface PropertyOptions {
@@ -138,13 +140,24 @@ export async function fetchPropertyOptions(): Promise<PropertyOptions> {
   if (statusValues.length === 0) statusValues = [...PROPERTY_STATUSES]
   if (typeValues.length === 0)   typeValues   = [...DEFAULT_TYPE_VALUES]
 
+  // Use allSettled so a single slow/failing count request does not prevent the
+  // other options from loading. Rejected counts become null; the UI shows a
+  // dash rather than hiding the option (which would be incorrect if the entity
+  // actually exists but the count API was temporarily unavailable).
+  const settle = async (attribute: string, value: string): Promise<number | null> => {
+    const result = await Promise.allSettled([fetchPropertyCount(attribute, value)])
+    return result[0].status === 'fulfilled' ? result[0].value : null
+  }
+
   const [statusCounts, typeCounts] = await Promise.all([
-    Promise.all(statusValues.map(async s => ({ value: s, count: await fetchPropertyCount('status', s) }))),
-    Promise.all(typeValues.map(async t => ({ value: t, count: await fetchPropertyCount('type', t) }))),
+    Promise.all(statusValues.map(async s => ({ value: s, count: await settle('status', s) }))),
+    Promise.all(typeValues.map(async t => ({ value: t, count: await settle('type', t) }))),
   ])
 
   const statuses: StatusOption[] = statusCounts
-    .filter(({ count }) => count > 0)
+    // Keep options whose count is known-positive or unknown (null).
+    // Filter only confirmed-zero counts — those are genuinely empty.
+    .filter(({ count }) => count === null || count > 0)
     .map(({ value, count }) => ({
       value,
       label: value,
@@ -153,7 +166,7 @@ export async function fetchPropertyOptions(): Promise<PropertyOptions> {
     }))
 
   const types: TypeOption[] = typeCounts
-    .filter(({ count }) => count > 0)
+    .filter(({ count }) => count === null || count > 0)
     .map(({ value, count }) => ({ value, label: value, count }))
 
   return { statuses, types }
