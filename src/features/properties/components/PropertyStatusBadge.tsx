@@ -49,9 +49,9 @@ export function PropertyStatusBadge({
     return (
       <span
         className={cn(
-          'inline-flex h-6 items-center gap-1.5 rounded-full border px-3',
-          'text-[10px] font-semibold tracking-wide text-white',
-          'backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.25)] whitespace-nowrap',
+          'inline-flex h-5.5 items-center gap-1 rounded-full border px-2.5',
+          'text-[9.5px] font-semibold tracking-wide text-white',
+          'backdrop-blur-[10px] shadow-[0_1px_8px_rgba(0,0,0,0.20)] whitespace-nowrap',
           tint,
           className,
         )}

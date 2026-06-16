@@ -63,7 +63,8 @@ function StatChip({
     <div className={cn(
       'flex items-center justify-center',
       'min-w-0 flex-1 overflow-hidden',
-      'rounded-lg border border-border/50 bg-muted/50 gap-1 px-2 py-2 text-[11px]',
+      'rounded-md border border-border/40 bg-muted/40 gap-1 px-1.5 py-1.5 text-[10px]',
+      'sm:rounded-lg sm:border-border/50 sm:bg-muted/50 sm:gap-1 sm:px-2 sm:py-2 sm:text-[11px]',
     )}>
       <Icon className="size-3 shrink-0 text-muted-foreground/80" />
       <span className="shrink-0 font-bold tabular-nums text-foreground">{value}</span>
@@ -151,11 +152,11 @@ export const PropertyCard = memo(function PropertyCard({
       aria-label={heading}
       className={cn(
         'group flex h-full w-full min-w-0 cursor-default flex-col overflow-hidden rounded-[20px] bg-card',
-        'border border-border/30',
-        'shadow-[0_2px_8px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.07)]',
-        'transition-all duration-300 ease-out',
-        'hover:-translate-y-1 hover:border-border/55 hover:ring-1 hover:ring-primary/10',
-        'hover:shadow-[0_16px_40px_rgba(0,0,0,0.13),0_4px_12px_rgba(0,0,0,0.06)]',
+        'border border-border/25',
+        'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05),0_12px_32px_rgba(0,0,0,0.07)]',
+        'transition-all duration-200 ease-out',
+        'hover:-translate-y-1 hover:border-border/60 hover:ring-1 hover:ring-primary/12',
+        'hover:shadow-[0_4px_16px_rgba(0,0,0,0.08),0_12px_32px_rgba(0,0,0,0.10),0_24px_48px_rgba(0,0,0,0.08)]',
       )}
     >
 
@@ -164,7 +165,7 @@ export const PropertyCard = memo(function PropertyCard({
           Moving it here ensures the overflow-hidden + border-radius clip
           lives on the same GPU compositing layer as its children, so the
           image scale animation cannot bleed past the rounded corners. */}
-      <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden rounded-t-[20px] bg-muted will-change-transform">
+      <div className="relative aspect-square sm:aspect-4/3 w-full shrink-0 overflow-hidden rounded-t-[20px] bg-muted will-change-transform">
         <Image
           src={imgSrc}
           alt={heading}
@@ -177,8 +178,8 @@ export const PropertyCard = memo(function PropertyCard({
           onError={() => setImgSrc(FALLBACK_IMAGE)}
         />
         {/* Gradient: subtle at top, atmospheric at bottom */}
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/60 via-black/5 to-transparent" />
-        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.12)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/72 via-black/12 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.15)_100%)]" />
 
         {/* Status badge — top-left */}
         <div className="absolute left-3 top-3 z-10">
@@ -192,10 +193,10 @@ export const PropertyCard = memo(function PropertyCard({
             aria-label={favorited ? 'Remove from favourites' : 'Add to favourites'}
             onClick={() => setFavorited(f => !f)}
             className={cn(
-              'flex h-9 w-9 items-center justify-center rounded-full backdrop-blur-sm transition-all duration-200',
+              'flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-all duration-200',
               favorited
                 ? 'bg-rose-500 text-white shadow-[0_4px_14px_rgba(239,68,68,0.50)]'
-                : 'bg-black/35 text-white/90 shadow-[0_2px_8px_rgba(0,0,0,0.25)] hover:scale-[1.05] hover:bg-black/50 hover:text-white',
+                : 'bg-black/30 text-white/80 shadow-[0_2px_8px_rgba(0,0,0,0.20)] hover:scale-[1.05] hover:bg-black/45 hover:text-white',
             )}
           >
             <Heart className={cn('size-3.5 transition-transform duration-150', favorited && 'fill-current scale-110')} />
@@ -205,8 +206,8 @@ export const PropertyCard = memo(function PropertyCard({
         {/* Price — glassmorphism badge, bottom-left */}
         <div className="absolute inset-x-0 bottom-0 z-10 px-3 pb-3">
           {price != null ? (
-            <div className="inline-flex items-center rounded-lg border border-white/18 bg-white/10 px-3.5 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.11)] backdrop-blur-[14px]">
-              <p className="truncate text-[18px] font-bold leading-none tracking-tight text-white tabular-nums [text-shadow:0_1px_3px_rgba(0,0,0,0.16)] sm:text-[22px]">
+            <div className="inline-flex items-center rounded-lg border border-white/28 bg-white/14 px-3.5 py-2 shadow-[0_2px_14px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-lg">
+              <p className="truncate text-[18px] font-bold leading-none tracking-tight text-white tabular-nums [text-shadow:0_1px_4px_rgba(0,0,0,0.22)] sm:text-[22px]">
                 {fmtPrice(price)}
               </p>
             </div>
@@ -219,37 +220,37 @@ export const PropertyCard = memo(function PropertyCard({
       </div>
 
       {/* ── Content ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col px-3.5 pb-2 pt-2.5">
+      <div className="flex flex-1 flex-col px-3 pb-2 pt-2.5">
 
         {/* Reference */}
-        <p className="mb-1.5 min-w-0 truncate text-[14px] font-extrabold tracking-tight text-foreground tabular-nums sm:text-[20px]">
+        <p className="mb-1 min-w-0 truncate text-[13px] font-extrabold tracking-tight text-foreground tabular-nums sm:text-[20px]">
           {heading}
         </p>
 
         {/* Location */}
         {displayLocation && (
-          <p className="mb-1.5 flex min-w-0 items-center gap-1 text-[11px] font-medium text-muted-foreground/75">
-            <MapPin className="size-3 shrink-0 text-muted-foreground/50" />
+          <p className="mb-1 flex min-w-0 items-center gap-1 text-[10px] font-medium text-muted-foreground/65">
+            <MapPin className="size-2.5 shrink-0 text-muted-foreground/45" />
             <span className="truncate">{displayLocation}</span>
           </p>
         )}
 
         {/* Property type chip — fit-content pill, left-aligned */}
         {type ? (
-          <div className="mb-2.5">
-            <span className="inline-flex cursor-default select-none items-center rounded-full border border-accent/60 bg-accent px-2.5 py-1 text-[11px] font-medium tracking-wide text-accent-foreground">
+          <div className="mb-1.5">
+            <span className="inline-flex cursor-default select-none items-center rounded-full border border-accent/50 bg-accent/80 px-2.5 py-1 text-[9.5px] font-semibold tracking-wider uppercase text-accent-foreground shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
               {toTitleCase(type)}
             </span>
           </div>
         ) : displayLocation ? (
-          <div aria-hidden className="mb-1.5" />
+          <div aria-hidden className="mb-1" />
         ) : (
-          <div aria-hidden className="mb-2.5 h-4" />
+          <div aria-hidden className="mb-1.5 h-3" />
         )}
 
         {/* Quality indicators */}
         {hasIndicators && (
-          <div className="mb-2 flex flex-wrap items-center gap-1">
+          <div className="mb-1.5 flex flex-wrap items-center gap-1">
             <PropertyIndicatorPills
               isFeatured={isFeatured} isVerified={isVerified}
               isPremium={isPremium} isNewListing={isNewListing}
@@ -259,7 +260,7 @@ export const PropertyCard = memo(function PropertyCard({
 
         {/* Stats chips — 3 chips on every card regardless of property type.
             "—" stands in for any unavailable value so layout never shifts. */}
-        <div className="mb-1.5 h-px bg-border/20" />
+        <div className="mb-1.5 h-px bg-border/25" />
         <div className="flex gap-1.5">
           <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                        label="Beds"  variant="grid" />
           <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                        label="Baths" variant="grid" />
@@ -269,47 +270,47 @@ export const PropertyCard = memo(function PropertyCard({
       </div>
 
       {/* ── Footer action bar ─────────────────────────────────────────────────── */}
-      <div className="border-t border-border/15 bg-muted/25 px-2.5 py-2">
-        <div className="grid grid-cols-[1fr_32px_32px] gap-1.5">
+      <div className="border-t border-border/20 bg-muted/30 px-2.5 py-1.5 sm:py-2">
+        <div className="flex items-center gap-1 sm:gap-1.5">
 
-          {/* Details — primary CTA, always text + arrow at all breakpoints */}
+          {/* Details — primary CTA; flex-1 absorbs remaining space at any card width */}
           <button
             type="button"
             aria-label="View property details"
             onClick={() => onView(property)}
             className={cn(
-              'group/det flex items-center justify-center gap-1.5 rounded-full transition-all duration-200',
-              'h-8 border border-primary/35 bg-primary/10 px-3 text-primary',
-              'hover:-translate-y-px hover:border-primary/50 hover:bg-primary/16 hover:shadow-[0_2px_8px_rgba(0,0,0,0.10)]',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+              'group/det flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full transition-all duration-200',
+              'h-11 border border-primary/30 bg-primary/8 px-2 text-primary sm:h-7',
+              'hover:-translate-y-px hover:border-primary/45 hover:bg-primary/14 hover:shadow-[0_3px_10px_rgba(0,0,0,0.10)]',
+              'active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             )}
           >
-            <span className="text-[11px] font-semibold tracking-wide">Details</span>
-            <ArrowRight className="size-3.5 shrink-0 transition-transform duration-200 ease-out group-hover/det:translate-x-1.5" />
+            <span className="text-[10.5px] font-semibold tracking-wide">Details</span>
+            <ArrowRight className="size-3 shrink-0 transition-transform duration-200 ease-out group-hover/det:translate-x-1" />
           </button>
 
-          {/* Edit */}
+          {/* Edit — shrink-0 ensures it never gets squeezed out of view */}
           <button
             type="button"
             aria-label="Edit property"
             onClick={() => onEdit(property)}
             className={cn(
-              'flex h-8 items-center justify-center rounded-full transition-all duration-150',
-              'text-muted-foreground/45 hover:bg-muted hover:text-foreground',
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-150 sm:h-8 sm:w-8',
+              'text-muted-foreground/55 hover:bg-muted hover:text-foreground',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             )}
           >
             <Pencil className="size-3.5" />
           </button>
 
-          {/* Delete */}
+          {/* Delete — shrink-0 ensures it is always fully visible */}
           <button
             type="button"
             aria-label="Delete property"
             onClick={() => onDelete(property)}
             className={cn(
-              'flex h-8 items-center justify-center rounded-full transition-all duration-150',
-              'text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive',
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-150 sm:h-8 sm:w-8',
+              'text-muted-foreground/50 hover:bg-destructive/8 hover:text-destructive',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             )}
           >
@@ -377,12 +378,12 @@ export const PropertyListRow = memo(function PropertyListRow({
       onClick={() => onView(property)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(property) } }}
       className={cn(
-        'group flex min-w-[320px] cursor-pointer overflow-hidden rounded-[20px] bg-card',
+        'group flex min-w-0 cursor-pointer overflow-hidden rounded-[20px] bg-card',
         'border border-border/30',
-        'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]',
-        'transition-all duration-300 ease-out',
-        'hover:-translate-y-1 hover:border-border/50 hover:ring-1 hover:ring-primary/12',
-        'hover:shadow-[0_16px_40px_rgba(0,0,0,0.13),0_4px_12px_rgba(0,0,0,0.07)]',
+        'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05),0_12px_32px_rgba(0,0,0,0.07)]',
+        'transition-all duration-200 ease-out',
+        'hover:-translate-y-1 hover:border-border/55 hover:ring-1 hover:ring-primary/12',
+        'hover:shadow-[0_4px_16px_rgba(0,0,0,0.08),0_12px_32px_rgba(0,0,0,0.10),0_24px_48px_rgba(0,0,0,0.08)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
       )}
     >
@@ -482,11 +483,32 @@ export const PropertyListRow = memo(function PropertyListRow({
             </div>
           )}
 
-          {/* 5 — Stats row — 10px below type */}
-          <div className="mt-2.5 flex items-center gap-1.5 @[260px]:gap-2">
-            <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                        label="Beds"  variant="list" />
-            <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                        label="Baths" variant="list" />
-            <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : '—'} label="m²"   variant="list" />
+          {/* 5 — Stats row */}
+          {/* Mobile: vertical icon-above-value mini cards — horizontal chips can't
+              fit in the ~107px content column (31.7px per chip → 19.7px inner after
+              px-1.5 padding → clips even the size-4 icon alone). */}
+          <div className="mt-2 flex gap-1 sm:hidden">
+            {([
+              { S: BedDouble,  v: bedroomCount  ?? '—'                               },
+              { S: Bath,       v: bathroomCount ?? '—'                               },
+              { S: Maximize2,  v: square != null ? square.toLocaleString() : '—'    },
+            ] as { S: ComponentType<{ className?: string }>; v: React.ReactNode }[]).map(({ S: Stat, v }, i) => (
+              <div
+                key={i}
+                className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-muted/35 py-2"
+              >
+                <Stat className="size-3 shrink-0 text-muted-foreground/60" />
+                <span className="text-[8.5px] font-bold tabular-nums leading-none text-foreground">
+                  {v}
+                </span>
+              </div>
+            ))}
+          </div>
+          {/* Desktop: horizontal stat chips with icon + value + label */}
+          <div className="mt-2.5 hidden items-center gap-1.5 @[260px]:gap-2 sm:flex">
+            <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                           label="Beds"  variant="list" />
+            <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                           label="Baths" variant="list" />
+            <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : '—'} label="m²"    variant="list" />
           </div>
 
         </div>

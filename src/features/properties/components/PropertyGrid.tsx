@@ -123,7 +123,7 @@ export const PropertyGrid = memo(function PropertyGrid({
   // @[1560px] → large screen: 6 cols
   return (
     <div className="@container w-full">
-      <div className="grid grid-cols-2 gap-4 @[600px]:grid-cols-3 @[1100px]:grid-cols-4 @[1280px]:grid-cols-5 @[1560px]:grid-cols-6">
+      <div className="grid grid-cols-2 gap-x-2 gap-y-4 @[600px]:grid-cols-3 @[600px]:gap-4 @[1100px]:grid-cols-4 @[1280px]:grid-cols-5 @[1560px]:grid-cols-6">
         {properties.map(p => (
           <PropertyCard
             key={p.id}

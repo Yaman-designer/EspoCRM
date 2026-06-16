@@ -149,9 +149,12 @@ export function PropertyToolbar({
   return (
     <div className="flex flex-col gap-3">
 
-      {/* ── Row 1: Title + Add ────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
+      {/* ── Row 1: Title + (sm+) Add button ─────────────────────────────── */}
+      {/* Mobile: title row has no button — prevents overflow.
+          The Add Property button sits in the subtitle row on mobile,
+          and is hidden there on sm+ where it appears here instead. */}
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-baseline gap-2.5">
             <h1 className="text-[26px] font-black leading-none tracking-tight text-foreground">
               Properties
@@ -163,18 +166,24 @@ export function PropertyToolbar({
               {fmtCount(totalCount)}
             </span>
           </div>
-          <p className="text-[13px] text-muted-foreground">
+          <Button size="sm" className="hidden shrink-0 gap-1.5 sm:inline-flex" aria-label="Add Property" onClick={onAddProperty}>
+            <Plus className="size-3.5" />
+            Add Property
+          </Button>
+        </div>
+        <div className="flex items-center gap-3">
+          <p className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground">
             Manage and monitor your real estate portfolio
           </p>
+          <Button size="sm" className="shrink-0 gap-1.5 sm:hidden" aria-label="Add Property" onClick={onAddProperty}>
+            <Plus className="size-3.5" />
+            Add Property
+          </Button>
         </div>
-        <Button size="sm" className="mt-0.5 shrink-0 gap-1.5" onClick={onAddProperty}>
-          <Plus className="size-3.5" />
-          Add Property
-        </Button>
       </div>
 
       {/* ── Row 2 — Mobile: Search + Filters button + View toggle ─────────── */}
-      <div className="flex items-center gap-2 sm:hidden">
+      <div className="flex items-center gap-3 sm:hidden">
         <SearchInput
           value={search}
           onChange={onSearchChange}
@@ -436,7 +445,7 @@ const SearchInput = memo(function SearchInput({
           'w-full rounded-xl border border-border bg-card text-foreground',
           'placeholder:text-muted-foreground/40 shadow-(--shadow-xs) outline-none',
           'transition-all duration-200 hover:border-border/70',
-          'focus:border-primary/40 focus:shadow-(--shadow-sm) focus:ring-2 focus:ring-primary/10',
+          'focus:border-primary/40 focus:shadow-(--shadow-sm) focus:ring-2 focus:ring-primary/12',
         )}
       />
     </div>
@@ -807,7 +816,7 @@ const ViewToggle = memo(function ViewToggle({
           style={{ width: 38, height: 38 }}
           className={cn(
             'flex shrink-0 cursor-pointer items-center justify-center outline-none',
-            'transition-colors duration-150',
+            'transition-all duration-150',
             'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/20',
             viewMode === mode
               ? 'bg-primary text-primary-foreground'
