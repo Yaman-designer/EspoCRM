@@ -136,7 +136,7 @@ export function PropertyListRenderer({
     <div className="flex flex-col">
 
       {/* Sticky toolbar — blurs page content scrolling beneath it */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/30 px-4 sm:px-6 pt-4 sm:pt-6 pb-4">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/30 px-0 sm:px-2 pt-4 sm:pt-6 pb-4">
         <PropertyToolbar
           search={filters.search}
           onSearchChange={onSearchChange}
@@ -164,7 +164,7 @@ export function PropertyListRenderer({
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex flex-col gap-4 px-4 sm:px-6 py-4 sm:py-5">
+      <div className="flex flex-col gap-4 px-0 sm:px-2 py-4 sm:py-5">
 
         {/* Loading banner — shown when savedOnly is active and a new page of results
             is loading, but we have stale data already displayed via keepPreviousData */}
