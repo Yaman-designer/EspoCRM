@@ -67,12 +67,14 @@ export interface RealEstateProperty {
 }
 
 export interface PropertyFilters {
-  search:     string
-  status:     string
-  type:       string
-  sortBy:     SortOption
-  priceRange: PriceRange
-  areaRange:  AreaRange
+  search:    string
+  type:      string        // 'all' or a specific type value from API
+  savedOnly: boolean       // heart toggle — maps to isFollowed WHERE clause
+  bedrooms:  number | null // minimum bedroom count; null = no filter
+  bathrooms: number | null // minimum bathroom count; null = no filter
+  minPrice:  number | null // null = no lower bound
+  maxPrice:  number | null // null = no upper bound
+  sortBy:    SortOption
 }
 
 export type Property = RealEstateProperty

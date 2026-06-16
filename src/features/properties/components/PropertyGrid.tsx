@@ -1,6 +1,8 @@
 'use client'
 
 import { memo } from 'react'
+import { AlertCircle, RefreshCw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { PropertyCard, PropertyListRow } from './PropertyCard'
 import { PropertySkeletonGrid, PropertySkeletonList } from './PropertySkeleton'
 import { PropertyEmptyState } from './PropertyEmptyState'
@@ -17,6 +19,10 @@ interface PropertyGridProps {
   onDuplicate?: (property: Property) => void
   onClearFilters: () => void
   onAddProperty: () => void
+  // Error state — takes precedence over isLoading to prevent infinite skeleton
+  isError?:   boolean
+  savedOnly?: boolean
+  onRetry?:   () => void
 }
 
 export const PropertyGrid = memo(function PropertyGrid({
@@ -30,7 +36,38 @@ export const PropertyGrid = memo(function PropertyGrid({
   onDuplicate,
   onClearFilters,
   onAddProperty,
+  isError = false,
+  savedOnly = false,
+  onRetry,
 }: PropertyGridProps) {
+  // Error branch must come before isLoading: when the query errors, data becomes
+  // undefined which makes isLoading=true, causing the skeleton to show forever.
+  if (isError) {
+    return (
+      <div className="flex min-h-72 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-destructive/25 bg-destructive/4 px-8 py-16 text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/8">
+          <AlertCircle className="size-6 text-destructive/70" strokeWidth={1.5} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[15px] font-semibold text-foreground">
+            {savedOnly ? 'Unable to load saved properties.' : 'Unable to load properties.'}
+          </p>
+          <p className="max-w-xs text-[13px] leading-relaxed text-muted-foreground">
+            {savedOnly
+              ? 'The saved properties filter could not complete. Check the browser console for the request duration and HTTP status.'
+              : 'An error occurred while fetching properties. Please try again.'}
+          </p>
+        </div>
+        {onRetry && (
+          <Button variant="outline" size="sm" onClick={onRetry} className="gap-1.5">
+            <RefreshCw className="size-3.5" />
+            Retry
+          </Button>
+        )}
+      </div>
+    )
+  }
+
   if (isLoading) {
     return viewMode === 'list'
       ? <PropertySkeletonList count={6} />

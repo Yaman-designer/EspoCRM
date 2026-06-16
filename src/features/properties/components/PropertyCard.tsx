@@ -143,7 +143,6 @@ export const PropertyCard = memo(function PropertyCard({
   const [imgSrc, setImgSrc]       = useState(() => getWebAssetUrl(resolvedId))
   const [favorited, setFavorited] = useState(() => !!isFollowed)
 
-  const hasSpecs      = bedroomCount !== undefined || bathroomCount !== undefined || square !== undefined
   const hasIndicators = !!(isFeatured || isVerified || isPremium || isNewListing)
   const heading       = propertyCode || displayName || '—'
 
@@ -151,24 +150,28 @@ export const PropertyCard = memo(function PropertyCard({
     <article
       aria-label={heading}
       className={cn(
-        'group flex h-full w-full min-w-0 cursor-default flex-col overflow-hidden rounded-xl bg-card',
+        'group flex h-full w-full min-w-0 cursor-default flex-col overflow-hidden rounded-[20px] bg-card',
         'border border-border/30',
         'shadow-[0_2px_8px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.07)]',
         'transition-all duration-300 ease-out',
         'hover:-translate-y-1 hover:border-border/55 hover:ring-1 hover:ring-primary/10',
-        'hover:shadow-[0_12px_32px_rgba(0,0,0,0.11),0_4px_12px_rgba(0,0,0,0.06)]',
+        'hover:shadow-[0_16px_40px_rgba(0,0,0,0.13),0_4px_12px_rgba(0,0,0,0.06)]',
       )}
     >
 
       {/* ── Image ─────────────────────────────────────────────────────────────── */}
-      <div className="relative h-48 w-full shrink-0 overflow-hidden rounded-t-xl bg-muted sm:h-auto sm:aspect-video">
+      {/* will-change-transform is on the container, not the Image.
+          Moving it here ensures the overflow-hidden + border-radius clip
+          lives on the same GPU compositing layer as its children, so the
+          image scale animation cannot bleed past the rounded corners. */}
+      <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden rounded-t-[20px] bg-muted will-change-transform">
         <Image
           src={imgSrc}
           alt={heading}
           fill
           unoptimized
           draggable={false}
-          className="select-none object-cover brightness-[1.02] contrast-[1.06] saturate-[1.08] transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.04]"
+          className="select-none object-cover brightness-[1.02] contrast-[1.06] saturate-[1.08] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
           sizes="(max-width: 639px) 50vw, (max-width: 871px) 33vw, (max-width: 1167px) 25vw, 20vw"
           loading="lazy"
           onError={() => setImgSrc(FALLBACK_IMAGE)}
@@ -201,9 +204,9 @@ export const PropertyCard = memo(function PropertyCard({
 
         {/* Price — glassmorphism badge, bottom-left */}
         <div className="absolute inset-x-0 bottom-0 z-10 px-3 pb-3">
-          {price !== undefined ? (
+          {price != null ? (
             <div className="inline-flex items-center rounded-lg border border-white/18 bg-white/10 px-3.5 py-2 shadow-[0_2px_8px_rgba(0,0,0,0.10),inset_0_1px_0_rgba(255,255,255,0.11)] backdrop-blur-[14px]">
-              <p className="truncate text-[16px] font-bold leading-none tracking-tight text-white tabular-nums [text-shadow:0_1px_3px_rgba(0,0,0,0.16)] sm:text-[20px]">
+              <p className="truncate text-[18px] font-bold leading-none tracking-tight text-white tabular-nums [text-shadow:0_1px_3px_rgba(0,0,0,0.16)] sm:text-[22px]">
                 {fmtPrice(price)}
               </p>
             </div>
@@ -234,7 +237,7 @@ export const PropertyCard = memo(function PropertyCard({
         {/* Property type chip — fit-content pill, left-aligned */}
         {type ? (
           <div className="mb-2.5">
-            <span className="inline-flex cursor-default select-none items-center rounded-full border border-border/35 bg-muted/40 px-2.5 py-1 text-[11px] font-medium tracking-wide text-muted-foreground/70">
+            <span className="inline-flex cursor-default select-none items-center rounded-full border border-accent/60 bg-accent px-2.5 py-1 text-[11px] font-medium tracking-wide text-accent-foreground">
               {toTitleCase(type)}
             </span>
           </div>
@@ -254,23 +257,14 @@ export const PropertyCard = memo(function PropertyCard({
           </div>
         )}
 
-        {/* Stats chips — equal-width, auto-height, always labeled */}
-        {hasSpecs && (
-          <>
-            <div className="mb-1.5 h-px bg-border/20" />
-            <div className="flex gap-1.5">
-              {bedroomCount !== undefined && (
-                <StatChip Icon={BedDouble} value={bedroomCount}            label="Beds"  variant="grid" />
-              )}
-              {bathroomCount !== undefined && (
-                <StatChip Icon={Bath}      value={bathroomCount}           label="Baths" variant="grid" />
-              )}
-              {square !== undefined && (
-                <StatChip Icon={Maximize2} value={square.toLocaleString()} label="m²"   variant="grid" />
-              )}
-            </div>
-          </>
-        )}
+        {/* Stats chips — 3 chips on every card regardless of property type.
+            "—" stands in for any unavailable value so layout never shifts. */}
+        <div className="mb-1.5 h-px bg-border/20" />
+        <div className="flex gap-1.5">
+          <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                        label="Beds"  variant="grid" />
+          <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                        label="Baths" variant="grid" />
+          <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : '—'} label="m²"   variant="grid" />
+        </div>
 
       </div>
 
@@ -383,12 +377,12 @@ export const PropertyListRow = memo(function PropertyListRow({
       onClick={() => onView(property)}
       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(property) } }}
       className={cn(
-        'group flex min-w-[320px] cursor-pointer overflow-hidden rounded-xl bg-card',
+        'group flex min-w-[320px] cursor-pointer overflow-hidden rounded-[20px] bg-card',
         'border border-border/30',
         'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]',
         'transition-all duration-300 ease-out',
         'hover:-translate-y-1 hover:border-border/50 hover:ring-1 hover:ring-primary/12',
-        'hover:shadow-[0_12px_32px_rgba(0,0,0,0.12),0_4px_12px_rgba(0,0,0,0.07)]',
+        'hover:shadow-[0_16px_40px_rgba(0,0,0,0.13),0_4px_12px_rgba(0,0,0,0.07)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
       )}
     >
@@ -396,14 +390,14 @@ export const PropertyListRow = memo(function PropertyListRow({
       {/* ── LEFT: Image ─────────────────────────────────────────────────────── */}
       {/* w-36 (144px) mobile — never shrinks below 140px spec.                 */}
       {/* w-52 (208px) desktop — substantial visual hero.                       */}
-      <div className="relative w-36 shrink-0 self-stretch overflow-hidden rounded-l-xl sm:w-52">
+      <div className="relative w-36 shrink-0 self-stretch overflow-hidden rounded-l-[20px] sm:w-52 will-change-transform">
         <Image
           src={imgSrc}
           alt={heading}
           fill
           unoptimized
           draggable={false}
-          className="select-none object-cover brightness-[1.02] contrast-[1.06] saturate-[1.08] transition-transform duration-500 ease-out will-change-transform group-hover:scale-[1.04]"
+          className="select-none object-cover brightness-[1.02] contrast-[1.06] saturate-[1.08] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
           sizes="(max-width: 639px) 144px, 208px"
           loading="lazy"
           onError={() => setImgSrc(FALLBACK_IMAGE)}
@@ -446,7 +440,7 @@ export const PropertyListRow = memo(function PropertyListRow({
         <div className="flex min-w-0 flex-1 flex-col">
 
           {/* 1 — Price */}
-          {price !== undefined ? (
+          {price != null ? (
             <p className="min-w-0 truncate text-[18px] font-extrabold leading-none tracking-tight text-foreground tabular-nums sm:text-[24px]">
               {fmtPrice(price)}
             </p>
@@ -482,7 +476,7 @@ export const PropertyListRow = memo(function PropertyListRow({
           {/* 4 — Property type — 8px below location */}
           {type && (
             <div className="mt-2">
-              <span className="inline-flex cursor-default select-none items-center rounded-full border border-border/35 bg-muted/40 px-3 py-1 text-[11px] font-medium tracking-wide text-muted-foreground/70">
+              <span className="inline-flex cursor-default select-none items-center rounded-full border border-accent/60 bg-accent px-3 py-1 text-[11px] font-medium tracking-wide text-accent-foreground">
                 {toTitleCase(type)}
               </span>
             </div>
@@ -490,15 +484,9 @@ export const PropertyListRow = memo(function PropertyListRow({
 
           {/* 5 — Stats row — 10px below type */}
           <div className="mt-2.5 flex items-center gap-1.5 @[260px]:gap-2">
-            {bedroomCount !== undefined && (
-              <StatChip Icon={BedDouble} value={bedroomCount}            label="Beds"  variant="list" />
-            )}
-            {bathroomCount !== undefined && (
-              <StatChip Icon={Bath}      value={bathroomCount}           label="Baths" variant="list" />
-            )}
-            {square !== undefined && (
-              <StatChip Icon={Maximize2} value={square.toLocaleString()} label="m²"   variant="list" />
-            )}
+            <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                        label="Beds"  variant="list" />
+            <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                        label="Baths" variant="list" />
+            <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : '—'} label="m²"   variant="list" />
           </div>
 
         </div>

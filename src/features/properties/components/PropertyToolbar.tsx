@@ -1,54 +1,40 @@
 'use client'
 
-import { Fragment, useState } from 'react'
+import { useState, memo, useCallback, useMemo, useEffect, forwardRef } from 'react'
 import {
   Search, Plus, ChevronDown,
-  LayoutGrid, LayoutList, Check, X,
-  DollarSign, Ruler, SlidersHorizontal,
+  LayoutGrid, LayoutList, X, Heart, SlidersHorizontal, Loader2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Slider } from '@/components/ui/slider'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
+  Popover, PopoverContent, PopoverTrigger,
+} from '@/components/ui/popover'
+import {
+  Sheet, SheetContent, SheetTitle,
+} from '@/components/ui/sheet'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-} from '@/components/ui/sheet'
+  Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from '@/components/ui/command'
 import { cn } from '@/lib/utils'
-import type { SortOption, ViewMode, PriceRange, AreaRange } from '../types/property.types'
-import { PROPERTY_STATUSES, STATUS_DOT_COLORS } from '../domain/constants'
+import { fmtPrice } from '../lib/display'
+import { usePropertyOptions } from '../hooks/usePropertyOptions'
+import type { SortOption, ViewMode } from '../types/property.types'
+import type { TypeOption } from '../services/property.query.service'
 
-// Deterministic locale — avoids hydration mismatch between Node.js (ar) and browser (en-US)
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
+
 const COUNT_FMT = new Intl.NumberFormat('en-US')
 const fmtCount  = (n: number) => COUNT_FMT.format(n)
 
-// Extended option type — dot is an optional Tailwind bg-color class for status indicators
-interface DropdownOption {
-  value: string
-  label: string
-  dot?:  string  // e.g. 'bg-emerald-500' — shown as a 8px circle in both dropdown and mobile sheet
-}
-
-// Colored dots sourced from the canonical STATUS_DOT_COLORS map in domain/constants
-const STATUS_OPTIONS: DropdownOption[] = [
-  { value: 'all', label: 'All Statuses' },
-  ...PROPERTY_STATUSES.map(s => ({ value: s, label: s, dot: STATUS_DOT_COLORS[s] })),
-]
-
-const TYPE_OPTIONS: DropdownOption[] = [
-  { value: 'all',       label: 'All Types'  },
-  { value: 'House',     label: 'House'      },
-  { value: 'Villa',     label: 'Villa'      },
-  { value: 'Apartment', label: 'Apartment'  },
-  { value: 'Townhouse', label: 'Town House' },
-  { value: 'Office',    label: 'Office'     },
-  { value: 'Land',      label: 'Land'       },
-]
+const PRICE_MIN  = 0
+const PRICE_MAX  = 10_000_000
+const PRICE_STEP = 10_000
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'newest',     label: 'Newest First'    },
@@ -57,319 +43,232 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'price-low',  label: 'Price: Low–High' },
 ]
 
-const PRICE_OPTIONS: { value: PriceRange; label: string }[] = [
-  { value: 'all',       label: 'All Prices'    },
-  { value: 'under500k', label: 'Under $500K'   },
-  { value: '500k-1m',   label: '$500K – $1M'   },
-  { value: '1m-2m',     label: '$1M – $2M'     },
-  { value: 'over2m',    label: 'Over $2M'      },
-]
+// ─────────────────────────────────────────────────────────────────────────────
+// Pending state type (used by mobile drawer)
+// ─────────────────────────────────────────────────────────────────────────────
 
-const AREA_OPTIONS: { value: AreaRange; label: string }[] = [
-  { value: 'all',      label: 'All Sizes'    },
-  { value: 'under100', label: 'Under 100 m²' },
-  { value: '100-500',  label: '100 – 500 m²' },
-  { value: 'over500',  label: 'Over 500 m²'  },
-]
+interface PendingFilters {
+  type:      string
+  savedOnly: boolean
+  bedrooms:  number | null
+  bathrooms: number | null
+  minPrice:  number | null
+  maxPrice:  number | null
+  sortBy:    SortOption
+}
 
-const PRICE_LABELS: Record<PriceRange, string> = {
-  'all': '', 'under500k': 'Under $500K', '500k-1m': '$500K–$1M',
-  '1m-2m': '$1M–$2M', 'over2m': 'Over $2M',
-}
-const AREA_LABELS: Record<AreaRange, string> = {
-  'all': '', 'under100': 'Under 100m²', '100-500': '100–500m²', 'over500': 'Over 500m²',
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// PropertyToolbar props
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface PropertyToolbarProps {
-  search: string
-  onSearchChange: (v: string) => void
-  statusFilter: string
-  onStatusChange: (v: string) => void
-  typeFilter: string
-  onTypeChange: (v: string) => void
-  sortBy: SortOption
-  onSortChange: (v: SortOption) => void
-  priceRange: PriceRange
-  onPriceRangeChange: (v: PriceRange) => void
-  areaRange: AreaRange
-  onAreaRangeChange: (v: AreaRange) => void
-  viewMode: ViewMode
-  onViewModeChange: (v: ViewMode) => void
-  totalCount: number
-  onAddProperty: () => void
-  hasActiveFilters: boolean
-  onClearFilters: () => void
+  search:              string;         onSearchChange:    (v: string) => void
+  typeFilter:          string;         onTypeChange:      (v: string) => void
+  savedOnly:           boolean;        onSavedOnlyChange: (v: boolean) => void
+  bedrooms:            number | null;  onBedroomsChange:  (v: number | null) => void
+  bathrooms:           number | null;  onBathroomsChange: (v: number | null) => void
+  minPrice:            number | null
+  maxPrice:            number | null;  onPriceChange:     (min: number | null, max: number | null) => void
+  sortBy:              SortOption;     onSortChange:      (v: SortOption) => void
+  viewMode:            ViewMode;       onViewModeChange:  (v: ViewMode) => void
+  totalCount:          number;         onAddProperty:     () => void
+  hasActiveFilters:    boolean;        onClearFilters:    () => void
+  isSavedFetching?:   boolean
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PropertyToolbar
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function PropertyToolbar({
   search, onSearchChange,
-  statusFilter, onStatusChange,
   typeFilter, onTypeChange,
+  savedOnly, onSavedOnlyChange,
+  bedrooms, onBedroomsChange,
+  bathrooms, onBathroomsChange,
+  minPrice, maxPrice, onPriceChange,
   sortBy, onSortChange,
-  priceRange, onPriceRangeChange,
-  areaRange, onAreaRangeChange,
   viewMode, onViewModeChange,
   totalCount, onAddProperty,
   hasActiveFilters, onClearFilters,
+  isSavedFetching = false,
 }: PropertyToolbarProps) {
 
-  // ── Mobile filter sheet ─────────────────────────────────────────────
-  const [filterSheet, setFilterSheet]   = useState(false)
-  const [pendingStatus, setPendingStatus] = useState(statusFilter)
-  const [pendingType,   setPendingType]   = useState(typeFilter)
-  const [pendingPrice,  setPendingPrice]  = useState<PriceRange>(priceRange)
-  const [pendingArea,   setPendingArea]   = useState<AreaRange>(areaRange)
-  const [pendingSort,   setPendingSort]   = useState<SortOption>(sortBy)
+  // options are fetched once and cached by React Query (staleTime 5 min).
+  // The hook does not re-run when filters change — only on stale/mount.
+  const { data: options } = usePropertyOptions()
+  const typeOptions   = useMemo(() => options?.types     ?? [], [options?.types])
+  const bedroomOpts   = useMemo(() => options?.bedrooms  ?? [], [options?.bedrooms])
+  const bathroomOpts  = useMemo(() => options?.bathrooms ?? [], [options?.bathrooms])
 
-  const activeFilterCount = [
-    statusFilter !== 'all',
-    typeFilter   !== 'all',
-    priceRange   !== 'all',
-    areaRange    !== 'all',
-    sortBy       !== 'newest',
-  ].filter(Boolean).length
+  // ── Stable toggle handler (avoids anonymous function in JSX) ─────────────
 
-  function openFilterSheet() {
-    setPendingStatus(statusFilter)
-    setPendingType(typeFilter)
-    setPendingPrice(priceRange)
-    setPendingArea(areaRange)
-    setPendingSort(sortBy)
-    setFilterSheet(true)
-  }
+  const handleSavedToggle = useCallback(
+    () => onSavedOnlyChange(!savedOnly),
+    [savedOnly, onSavedOnlyChange],
+  )
 
-  function applyFilters() {
-    onStatusChange(pendingStatus)
-    onTypeChange(pendingType)
-    onPriceRangeChange(pendingPrice)
-    onAreaRangeChange(pendingArea)
-    onSortChange(pendingSort)
-    setFilterSheet(false)
-  }
+  // ── Mobile drawer ────────────────────────────────────────────────────────
 
-  function resetFilters() {
-    setPendingStatus('all')
-    setPendingType('all')
-    setPendingPrice('all')
-    setPendingArea('all')
-    setPendingSort('newest')
-  }
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [pending, setPending] = useState<PendingFilters>({
+    type: typeFilter, savedOnly, bedrooms, bathrooms,
+    minPrice, maxPrice, sortBy,
+  })
 
-  // ── Active filter chip labels ───────────────────────────────────────
-  const activeStatusLabel = STATUS_OPTIONS.find(o => o.value === statusFilter && statusFilter !== 'all')?.label
-  const activeTypeLabel   = TYPE_OPTIONS.find(o => o.value === typeFilter && typeFilter !== 'all')?.label
-  const activePriceLabel  = priceRange !== 'all' ? PRICE_LABELS[priceRange] : undefined
-  const activeAreaLabel   = areaRange  !== 'all' ? AREA_LABELS[areaRange]   : undefined
-  const hasChips = !!(activeStatusLabel || activeTypeLabel || activePriceLabel || activeAreaLabel || search)
+  const activeFilterCount = useMemo(() => [
+    typeFilter !== 'all',
+    savedOnly,
+    bedrooms  !== null,
+    bathrooms !== null,
+    minPrice  !== null || maxPrice !== null,
+    sortBy    !== 'newest',
+  ].filter(Boolean).length, [typeFilter, savedOnly, bedrooms, bathrooms, minPrice, maxPrice, sortBy])
+
+  const openDrawer = useCallback(() => {
+    setPending({ type: typeFilter, savedOnly, bedrooms, bathrooms, minPrice, maxPrice, sortBy })
+    setDrawerOpen(true)
+  }, [typeFilter, savedOnly, bedrooms, bathrooms, minPrice, maxPrice, sortBy])
+
+  const applyDrawer = useCallback(() => {
+    onTypeChange(pending.type)
+    onSavedOnlyChange(pending.savedOnly)
+    onBedroomsChange(pending.bedrooms)
+    onBathroomsChange(pending.bathrooms)
+    onPriceChange(pending.minPrice, pending.maxPrice)
+    onSortChange(pending.sortBy)
+    setDrawerOpen(false)
+  }, [pending, onTypeChange, onSavedOnlyChange, onBedroomsChange, onBathroomsChange, onPriceChange, onSortChange])
+
+  const resetDrawer = useCallback(() => {
+    setPending({ type: 'all', savedOnly: false, bedrooms: null, bathrooms: null, minPrice: null, maxPrice: null, sortBy: 'newest' })
+  }, [])
+
+  // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
 
-      {/* ── Row 1: Page heading + Add Property ─────────────────────────── */}
+      {/* ── Row 1: Title + Add ────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">
-
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-baseline gap-3">
-            <h1 className="text-[28px] font-black leading-none tracking-tight text-foreground">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-baseline gap-2.5">
+            <h1 className="text-[26px] font-black leading-none tracking-tight text-foreground">
               Properties
             </h1>
             <span className={cn(
-              'inline-flex items-center rounded-full px-3 py-1',
-              'text-[12.5px] font-bold tabular-nums leading-none',
-              'border border-primary/15 bg-primary/8 text-primary',
+              'inline-flex items-center rounded-full border border-primary/15 bg-primary/8',
+              'px-2.5 py-0.5 text-[12px] font-bold tabular-nums text-primary',
             )}>
               {fmtCount(totalCount)}
             </span>
           </div>
-          <p className="text-[13px] leading-relaxed text-muted-foreground">
+          <p className="text-[13px] text-muted-foreground">
             Manage and monitor your real estate portfolio
           </p>
         </div>
-
         <Button size="sm" className="mt-0.5 shrink-0 gap-1.5" onClick={onAddProperty}>
           <Plus className="size-3.5" />
           Add Property
         </Button>
       </div>
 
-      {/* ── Row 2 — Mobile: Search + Filters button + View toggle ──────── */}
+      {/* ── Row 2 — Mobile: Search + Filters button + View toggle ─────────── */}
       <div className="flex items-center gap-2 sm:hidden">
-
-        <div className="relative flex-1">
-          <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40"
-            style={{ width: 14, height: 14 }}
-          />
-          <input
-            type="search"
-            value={search}
-            onChange={e => onSearchChange(e.target.value)}
-            placeholder="Search…"
-            aria-label="Search properties"
-            style={{ height: 36, paddingLeft: 38, paddingRight: 12, fontSize: 13 }}
-            className={cn(
-              'w-full rounded-xl border border-border bg-card text-foreground',
-              'placeholder:text-muted-foreground/40',
-              'outline-none transition-all duration-200',
-              'hover:border-border/70 focus:border-primary/40 focus:ring-2 focus:ring-primary/10',
-            )}
-          />
-        </div>
-
-        {/* Filters button with active-count badge */}
+        <SearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder="Search…"
+        />
         <button
           type="button"
-          onClick={openFilterSheet}
-          style={{ height: 36 }}
+          onClick={openDrawer}
+          style={{ height: 38 }}
           className={cn(
             'relative inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3',
             'text-[13px] font-medium outline-none transition-colors duration-150',
             activeFilterCount > 0
-              ? 'border-primary/40 bg-brand-azure-soft text-brand-azure'
-              : 'border-border bg-card text-foreground',
+              ? 'border-primary/40 bg-primary/8 text-primary'
+              : 'border-border bg-card text-foreground hover:bg-muted',
           )}
         >
-          <SlidersHorizontal style={{ width: 13, height: 13 }} className="shrink-0" />
+          <SlidersHorizontal className="size-3.5 shrink-0" />
           Filters
           {activeFilterCount > 0 && (
-            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold leading-none text-primary-foreground">
+            <span className="flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold leading-none text-primary-foreground">
               {activeFilterCount}
             </span>
           )}
         </button>
-
         <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
       </div>
 
-      {/* ── Row 2 — Desktop: Unified filter bar ────────────────────────── */}
-      <div className="hidden flex-wrap items-center gap-2 sm:flex">
+      {/* ── Row 2 — Desktop: Single filter bar ───────────────────────────── */}
+      <div className="hidden items-center gap-2 sm:flex">
 
-        {/* Search — primary interaction, flexes to fill available space */}
-        <div className="relative min-w-56 flex-1">
-          <Search
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40"
-            style={{ width: 14, height: 14 }}
+        {/* Search — grows to fill available space */}
+        <SearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder="Search by title, reference, or location…"
+        />
+
+        {/* Filter controls — fixed width, single row, no wrap */}
+        <div className="flex shrink-0 items-center gap-1.5">
+          <TypeFilter
+            types={typeOptions}
+            value={typeFilter}
+            onChange={onTypeChange}
           />
-          <input
-            type="search"
-            value={search}
-            onChange={e => onSearchChange(e.target.value)}
-            placeholder="Search by title, reference, or location…"
-            aria-label="Search properties"
-            style={{ height: 36, paddingLeft: 38, paddingRight: 16, fontSize: 13 }}
-            className={cn(
-              'w-full rounded-xl border border-border bg-card text-foreground',
-              'placeholder:text-muted-foreground/40',
-              'shadow-(--shadow-xs) outline-none',
-              'transition-all duration-200',
-              'hover:border-border/70',
-              'focus:border-primary/40 focus:shadow-(--shadow-sm) focus:ring-2 focus:ring-primary/10',
-            )}
+          <SavedChip active={savedOnly} onToggle={handleSavedToggle} isFetching={isSavedFetching} />
+          <BedsFilter
+            beds={bedroomOpts}
+            value={bedrooms}
+            onChange={onBedroomsChange}
           />
-        </div>
-
-        <FilterDropdown
-          label="Status"
-          currentValue={statusFilter}
-          options={STATUS_OPTIONS}
-          onSelect={onStatusChange}
-          isActive={statusFilter !== 'all'}
-        />
-
-        <FilterDropdown
-          label="Type"
-          currentValue={typeFilter}
-          options={TYPE_OPTIONS}
-          onSelect={onTypeChange}
-          isActive={typeFilter !== 'all'}
-        />
-
-        <FilterDropdown
-          label="Price"
-          currentValue={priceRange}
-          options={PRICE_OPTIONS}
-          onSelect={v => onPriceRangeChange(v as PriceRange)}
-          isActive={priceRange !== 'all'}
-          icon={<DollarSign style={{ width: 12, height: 12 }} className="shrink-0 opacity-40" />}
-        />
-
-        <FilterDropdown
-          label="Area"
-          currentValue={areaRange}
-          options={AREA_OPTIONS}
-          onSelect={v => onAreaRangeChange(v as AreaRange)}
-          isActive={areaRange !== 'all'}
-          icon={<Ruler style={{ width: 12, height: 12 }} className="shrink-0 opacity-40" />}
-        />
-
-        <FilterDropdown
-          label="Sort"
-          currentValue={sortBy}
-          options={SORT_OPTIONS}
-          onSelect={v => onSortChange(v as SortOption)}
-          isActive={sortBy !== 'newest'}
-          showLabelPrefix
-        />
-
-        <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-      </div>
-
-      {/* ── Row 3 (conditional): Active filter chips + result count ──────── */}
-      {hasChips && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[12px] text-muted-foreground">
-            <span className="font-semibold tabular-nums text-foreground">
-              {fmtCount(totalCount)}
-            </span>{' '}
-            {totalCount === 1 ? 'result' : 'results'}
-          </span>
-
-          {activeStatusLabel && (
-            <ActiveChip label={activeStatusLabel} onRemove={() => onStatusChange('all')} />
-          )}
-          {activeTypeLabel && (
-            <ActiveChip label={activeTypeLabel} onRemove={() => onTypeChange('all')} />
-          )}
-          {activePriceLabel && (
-            <ActiveChip label={activePriceLabel} onRemove={() => onPriceRangeChange('all')} />
-          )}
-          {activeAreaLabel && (
-            <ActiveChip label={activeAreaLabel} onRemove={() => onAreaRangeChange('all')} />
-          )}
-          {search && (
-            <ActiveChip label={`"${search}"`} onRemove={() => onSearchChange('')} />
-          )}
-
+          <PriceFilter
+            minPrice={minPrice}
+            maxPrice={maxPrice}
+            onChange={onPriceChange}
+          />
+          <BathsFilter
+            baths={bathroomOpts}
+            value={bathrooms}
+            onChange={onBathroomsChange}
+          />
           {hasActiveFilters && (
             <button
               type="button"
               onClick={onClearFilters}
-              className="text-[11.5px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="px-1 text-[12.5px] font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
             >
-              Clear all
+              Clear
             </button>
           )}
         </div>
-      )}
 
-      {/* ── Mobile filter sheet ──────────────────────────────────────────── */}
-      <Sheet open={filterSheet} onOpenChange={setFilterSheet}>
+        {/* Sort + View — pushed to the right */}
+        <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <SortDropdown sortBy={sortBy} onSortChange={onSortChange} />
+          <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+        </div>
+      </div>
+
+      {/* ── Mobile right-side drawer ──────────────────────────────────────── */}
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
         <SheetContent
-          side="bottom"
-          className="gap-0 flex max-h-[88dvh] flex-col overflow-hidden rounded-t-2xl p-0"
+          side="right"
+          className="flex w-[90vw] max-w-105 flex-col gap-0 overflow-hidden p-0"
           showCloseButton={false}
         >
-          {/* Drag handle */}
-          <div className="mx-auto mb-2 mt-3 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/20" />
-
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-3">
+          <div className="flex items-center justify-between border-b border-border/40 px-5 py-4">
             <SheetTitle className="text-base font-bold text-foreground">
               Filter Properties
             </SheetTitle>
             <button
               type="button"
-              onClick={() => setFilterSheet(false)}
+              onClick={() => setDrawerOpen(false)}
               aria-label="Close filters"
               className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-muted"
             >
@@ -377,79 +276,131 @@ export function PropertyToolbar({
             </button>
           </div>
 
-          {/* Scrollable filter sections */}
-          <div className="flex-1 overflow-y-auto px-5 pb-3">
+          {/* Scrollable sections */}
+          <div className="flex-1 overflow-y-auto">
 
-            <FilterSection title="Sort By">
-              {SORT_OPTIONS.map(opt => (
-                <FilterPill
-                  key={opt.value}
-                  label={opt.label}
-                  active={pendingSort === opt.value}
-                  onClick={() => setPendingSort(opt.value)}
-                />
-              ))}
-            </FilterSection>
+            <DrawerSection title="Sort By">
+              <div className="flex flex-wrap gap-1.5">
+                {SORT_OPTIONS.map(opt => (
+                  <ChipButton
+                    key={opt.value}
+                    active={pending.sortBy === opt.value}
+                    onClick={() => setPending(p => ({ ...p, sortBy: opt.value }))}
+                  >
+                    {opt.label}
+                  </ChipButton>
+                ))}
+              </div>
+            </DrawerSection>
 
-            <FilterSection title="Status">
-              {STATUS_OPTIONS.map(opt => (
-                <FilterPill
-                  key={opt.value}
-                  label={opt.label}
-                  active={pendingStatus === opt.value}
-                  dot={opt.dot}
-                  onClick={() => setPendingStatus(opt.value)}
-                />
-              ))}
-            </FilterSection>
+            {typeOptions.length > 0 && (
+              <DrawerSection title="Property Type">
+                <div className="flex flex-col gap-0.5">
+                  {([{ value: 'all', label: 'All Types' }, ...typeOptions.map(t => ({ value: t.value, label: t.value }))]).map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setPending(p => ({ ...p, type: opt.value }))}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors',
+                        pending.type === opt.value
+                          ? 'bg-primary/8 font-semibold text-primary'
+                          : 'font-medium text-foreground hover:bg-muted',
+                      )}
+                    >
+                      <div className={cn(
+                        'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 transition-all',
+                        pending.type === opt.value
+                          ? 'border-primary bg-primary'
+                          : 'border-muted-foreground/30',
+                      )}>
+                        {pending.type === opt.value && (
+                          <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                        )}
+                      </div>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </DrawerSection>
+            )}
 
-            <FilterSection title="Property Type">
-              {TYPE_OPTIONS.map(opt => (
-                <FilterPill
-                  key={opt.value}
-                  label={opt.label}
-                  active={pendingType === opt.value}
-                  onClick={() => setPendingType(opt.value)}
-                />
-              ))}
-            </FilterSection>
+            <DrawerSection title="Saved Properties">
+              <button
+                type="button"
+                onClick={() => setPending(p => ({ ...p, savedOnly: !p.savedOnly }))}
+                className={cn(
+                  'flex w-full items-center justify-center gap-2 rounded-xl border py-2.5',
+                  'text-[13px] font-medium transition-all duration-150',
+                  pending.savedOnly
+                    ? 'border-rose-400/60 bg-rose-50 text-rose-600'
+                    : 'border-border bg-card text-foreground hover:bg-muted',
+                )}
+              >
+                <Heart className={cn(
+                  'size-4 transition-all duration-150',
+                  pending.savedOnly ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground/60',
+                )} />
+                Saved Properties
+              </button>
+            </DrawerSection>
 
-            <FilterSection title="Price Range">
-              {PRICE_OPTIONS.map(opt => (
-                <FilterPill
-                  key={opt.value}
-                  label={opt.label}
-                  active={pendingPrice === opt.value}
-                  onClick={() => setPendingPrice(opt.value as PriceRange)}
-                />
-              ))}
-            </FilterSection>
+            {bedroomOpts.length > 0 && (
+              <DrawerSection title="Bedrooms">
+                <div className="flex flex-wrap gap-1.5">
+                  {bedroomOpts.map(n => (
+                    <ChipButton
+                      key={n}
+                      active={pending.bedrooms === n}
+                      onClick={() => setPending(p => ({
+                        ...p, bedrooms: p.bedrooms === n ? null : n,
+                      }))}
+                    >
+                      {n}+
+                    </ChipButton>
+                  ))}
+                </div>
+              </DrawerSection>
+            )}
 
-            <FilterSection title="Property Size" last>
-              {AREA_OPTIONS.map(opt => (
-                <FilterPill
-                  key={opt.value}
-                  label={opt.label}
-                  active={pendingArea === opt.value}
-                  onClick={() => setPendingArea(opt.value as AreaRange)}
-                />
-              ))}
-            </FilterSection>
+            <DrawerSection title="Price Range">
+              {/* Local slider state; commits to pending on onValueCommit (pointer up) */}
+              <DrawerPriceControl
+                minPrice={pending.minPrice}
+                maxPrice={pending.maxPrice}
+                onChange={(min, max) => setPending(p => ({ ...p, minPrice: min, maxPrice: max }))}
+              />
+            </DrawerSection>
+
+            {bathroomOpts.length > 0 && (
+              <DrawerSection title="Bathrooms" last>
+                <div className="flex flex-wrap gap-1.5">
+                  {bathroomOpts.map(n => (
+                    <ChipButton
+                      key={n}
+                      active={pending.bathrooms === n}
+                      onClick={() => setPending(p => ({
+                        ...p, bathrooms: p.bathrooms === n ? null : n,
+                      }))}
+                    >
+                      {n}+
+                    </ChipButton>
+                  ))}
+                </div>
+              </DrawerSection>
+            )}
 
           </div>
 
           {/* Sticky footer */}
-          <div className="flex items-center gap-3 border-t border-border/40 px-5 py-4">
-            <Button variant="outline" size="sm" className="flex-1" onClick={resetFilters}>
-              Reset Filters
+          <div className="flex gap-3 border-t border-border/40 px-5 py-4">
+            <Button variant="outline" className="flex-1" onClick={resetDrawer}>
+              Reset
             </Button>
-            <Button size="sm" className="flex-1" onClick={applyFilters}>
+            <Button className="flex-1" onClick={applyDrawer}>
               Apply Filters
             </Button>
           </div>
-
-          {/* iOS safe-area spacing */}
-          <div className="h-6 shrink-0" />
         </SheetContent>
       </Sheet>
 
@@ -457,20 +408,395 @@ export function PropertyToolbar({
   )
 }
 
-// ── ViewToggle — extracted for reuse in mobile and desktop rows ───────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SearchInput
+// ─────────────────────────────────────────────────────────────────────────────
 
-function ViewToggle({
-  viewMode,
-  onViewModeChange,
+const SearchInput = memo(function SearchInput({
+  value, onChange, placeholder,
 }: {
-  viewMode: ViewMode
+  value:       string
+  onChange:    (v: string) => void
+  placeholder: string
+}) {
+  return (
+    <div className="relative min-w-0 flex-1">
+      <Search
+        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40"
+        style={{ width: 13, height: 13 }}
+      />
+      <input
+        type="search"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-label="Search properties"
+        style={{ height: 38, paddingLeft: 36, paddingRight: 14, fontSize: 13 }}
+        className={cn(
+          'w-full rounded-xl border border-border bg-card text-foreground',
+          'placeholder:text-muted-foreground/40 shadow-(--shadow-xs) outline-none',
+          'transition-all duration-200 hover:border-border/70',
+          'focus:border-primary/40 focus:shadow-(--shadow-sm) focus:ring-2 focus:ring-primary/10',
+        )}
+      />
+    </div>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FilterPill — Airbnb-style trigger button for all filter popovers
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface FilterPillProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  isActive?: boolean
+  hasChevron?: boolean
+}
+
+const FilterPill = memo(forwardRef<HTMLButtonElement, FilterPillProps>(
+  function FilterPill({ isActive = false, hasChevron = true, children, className, ...props }, ref) {
+    return (
+      <button
+        ref={ref}
+        type="button"
+        style={{ height: 38 }}
+        className={cn(
+          'inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-xl border px-3',
+          'text-[13px] font-medium outline-none transition-all duration-150',
+          'focus-visible:ring-2 focus-visible:ring-ring/20',
+          isActive
+            ? 'border-foreground/30 bg-foreground/6 text-foreground font-semibold'
+            : 'border-border bg-card text-foreground hover:border-foreground/25 hover:bg-muted',
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        {hasChevron && (
+          <ChevronDown
+            style={{ width: 11, height: 11 }}
+            className="shrink-0 text-muted-foreground/60"
+          />
+        )}
+      </button>
+    )
+  },
+))
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TypeFilter
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TypeFilter = memo(function TypeFilter({
+  types, value, onChange,
+}: {
+  types:    TypeOption[]
+  value:    string
+  onChange: (v: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const isActive = value !== 'all'
+  const label    = isActive ? value : 'Type'
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <FilterPill isActive={isActive}>{label}</FilterPill>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={6} className="w-48 p-0">
+        <Command>
+          <CommandInput placeholder="Search type…" />
+          <CommandList>
+            <CommandEmpty>No type found.</CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value="all"
+                data-checked={value === 'all' ? 'true' : undefined}
+                onSelect={() => { onChange('all'); setOpen(false) }}
+              >
+                All
+              </CommandItem>
+              {types.map(t => (
+                <CommandItem
+                  key={t.value}
+                  value={t.value}
+                  data-checked={value === t.value ? 'true' : undefined}
+                  onSelect={() => { onChange(value === t.value ? 'all' : t.value); setOpen(false) }}
+                >
+                  {t.value}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BedsFilter
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BedsFilter = memo(function BedsFilter({
+  beds, value, onChange,
+}: {
+  beds:     number[]
+  value:    number | null
+  onChange: (v: number | null) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const isActive = value !== null
+  const label    = isActive ? `${value}+ Beds` : 'Beds'
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <FilterPill isActive={isActive}>{label}</FilterPill>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={6} className="w-52 p-3">
+        <PopoverHeader
+          title="Bedrooms"
+          isActive={isActive}
+          onClear={() => { onChange(null); setOpen(false) }}
+        />
+        <div className="mt-2 flex gap-1.5">
+          {beds.map(n => (
+            <ChipButton
+              key={n}
+              active={value === n}
+              onClick={() => { onChange(value === n ? null : n); setOpen(false) }}
+            >
+              {n}+
+            </ChipButton>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PriceFilter — local state during drag; commits on "Apply" only
+// ─────────────────────────────────────────────────────────────────────────────
+
+const PriceFilter = memo(function PriceFilter({
+  minPrice, maxPrice, onChange,
+}: {
+  minPrice: number | null
+  maxPrice: number | null
+  onChange: (min: number | null, max: number | null) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [localMin, setLocalMin] = useState(minPrice ?? PRICE_MIN)
+  const [localMax, setLocalMax] = useState(maxPrice ?? PRICE_MAX)
+
+  // Reset local state to committed values whenever the popover opens
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      setLocalMin(minPrice ?? PRICE_MIN)
+      setLocalMax(maxPrice ?? PRICE_MAX)
+    }
+    setOpen(next)
+  }
+
+  function apply() {
+    onChange(
+      localMin > PRICE_MIN ? localMin : null,
+      localMax < PRICE_MAX ? localMax : null,
+    )
+    setOpen(false)
+  }
+
+  const isActive = minPrice !== null || maxPrice !== null
+  const label = useMemo(() => {
+    if (minPrice !== null && maxPrice !== null) return `${fmtPrice(minPrice)} – ${fmtPrice(maxPrice)}`
+    if (minPrice !== null) return `≥ ${fmtPrice(minPrice)}`
+    if (maxPrice !== null) return `≤ ${fmtPrice(maxPrice)}`
+    return 'Price'
+  }, [minPrice, maxPrice])
+
+  return (
+    <Popover open={open} onOpenChange={handleOpenChange}>
+      <PopoverTrigger asChild>
+        <FilterPill isActive={isActive}>{label}</FilterPill>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={6} className="w-72 p-4">
+        <PopoverHeader
+          title="Price Range"
+          isActive={isActive}
+          onClear={() => { onChange(null, null); setOpen(false) }}
+        />
+
+        {/* Price display */}
+        <div className="mt-3 flex items-baseline justify-between">
+          <span className="text-[15px] font-bold tabular-nums text-foreground">
+            {fmtPrice(localMin)}
+          </span>
+          <span className="text-[12px] text-muted-foreground">to</span>
+          <span className="text-[15px] font-bold tabular-nums text-foreground">
+            {localMax >= PRICE_MAX ? 'No max' : fmtPrice(localMax)}
+          </span>
+        </div>
+
+        {/* Dual-thumb range slider — does NOT trigger onChange until Apply is clicked */}
+        <Slider
+          min={PRICE_MIN}
+          max={PRICE_MAX}
+          step={PRICE_STEP}
+          value={[localMin, localMax]}
+          onValueChange={([min, max]) => { setLocalMin(min); setLocalMax(max) }}
+          className="mt-4 mb-1"
+        />
+
+        <Button size="sm" className="mt-3 w-full" onClick={apply}>
+          Apply
+        </Button>
+      </PopoverContent>
+    </Popover>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BathsFilter
+// ─────────────────────────────────────────────────────────────────────────────
+
+const BathsFilter = memo(function BathsFilter({
+  baths, value, onChange,
+}: {
+  baths:    number[]
+  value:    number | null
+  onChange: (v: number | null) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const isActive = value !== null
+  const label    = isActive ? `${value}+ Baths` : 'Baths'
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <FilterPill isActive={isActive}>{label}</FilterPill>
+      </PopoverTrigger>
+      <PopoverContent align="start" sideOffset={6} className="w-52 p-3">
+        <PopoverHeader
+          title="Bathrooms"
+          isActive={isActive}
+          onClear={() => { onChange(null); setOpen(false) }}
+        />
+        <div className="mt-2 flex gap-1.5">
+          {baths.map(n => (
+            <ChipButton
+              key={n}
+              active={value === n}
+              onClick={() => { onChange(value === n ? null : n); setOpen(false) }}
+            >
+              {n}+
+            </ChipButton>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SavedChip — inline heart toggle (no popover)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SavedChip = memo(function SavedChip({
+  active, onToggle, isFetching = false,
+}: {
+  active:      boolean
+  onToggle:    () => void
+  isFetching?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      style={{ height: 38 }}
+      className={cn(
+        'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3',
+        'text-[13px] font-medium outline-none transition-all duration-150',
+        'focus-visible:ring-2 focus-visible:ring-ring/20',
+        active
+          ? 'border-rose-400/50 bg-rose-50 text-rose-600 font-semibold'
+          : 'border-border bg-card text-foreground hover:border-foreground/25 hover:bg-muted',
+      )}
+    >
+      {isFetching
+        ? <Loader2 className="size-3.5 animate-spin text-rose-500" />
+        : (
+          <Heart className={cn(
+            'size-3.5 transition-all duration-150',
+            active ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground/50',
+          )} />
+        )
+      }
+      Saved
+    </button>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SortDropdown
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SortDropdown = memo(function SortDropdown({
+  sortBy, onSortChange,
+}: {
+  sortBy:       SortOption
+  onSortChange: (v: SortOption) => void
+}) {
+  const current  = SORT_OPTIONS.find(o => o.value === sortBy)
+  const isActive = sortBy !== 'newest'
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <FilterPill isActive={isActive}>
+          <span className="hidden text-[11px] text-muted-foreground sm:inline">Sort:</span>
+          <span>{current?.label ?? 'Sort'}</span>
+        </FilterPill>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="min-w-44 overflow-hidden rounded-xl p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.06)]"
+      >
+        {SORT_OPTIONS.map(opt => (
+          <DropdownMenuItem
+            key={opt.value}
+            onClick={() => onSortChange(opt.value)}
+            className={cn(
+              'cursor-pointer rounded-lg px-3 py-2 text-[13px]',
+              sortBy === opt.value && 'font-semibold',
+            )}
+          >
+            {opt.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ViewToggle
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ViewToggle = memo(function ViewToggle({
+  viewMode, onViewModeChange,
+}: {
+  viewMode:         ViewMode
   onViewModeChange: (v: ViewMode) => void
 }) {
   return (
-    <div style={{ height: 36 }} className="flex overflow-hidden rounded-xl border border-border bg-card">
+    <div
+      style={{ height: 38 }}
+      className="flex shrink-0 overflow-hidden rounded-xl border border-border bg-card"
+    >
       {([
-        { mode: 'grid' as ViewMode, Icon: LayoutGrid, label: 'Grid view'  },
-        { mode: 'list' as ViewMode, Icon: LayoutList, label: 'List view'  },
+        { mode: 'grid' as ViewMode, Icon: LayoutGrid, label: 'Grid view' },
+        { mode: 'list' as ViewMode, Icon: LayoutList, label: 'List view' },
       ] as const).map(({ mode, Icon, label }) => (
         <button
           key={mode}
@@ -478,7 +804,7 @@ function ViewToggle({
           onClick={() => onViewModeChange(mode)}
           aria-label={label}
           aria-pressed={viewMode === mode}
-          style={{ width: 36, height: 36 }}
+          style={{ width: 38, height: 38 }}
           className={cn(
             'flex shrink-0 cursor-pointer items-center justify-center outline-none',
             'transition-colors duration-150',
@@ -493,176 +819,131 @@ function ViewToggle({
       ))}
     </div>
   )
-}
+})
 
-// ── ActiveChip — applied filter tag with × remove button ─────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ChipButton — option chip inside popover panels / mobile drawer
+// ─────────────────────────────────────────────────────────────────────────────
 
-function ActiveChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+const ChipButton = memo(function ChipButton({
+  active, onClick, children,
+}: {
+  active:   boolean
+  onClick:  () => void
+  children: React.ReactNode
+}) {
   return (
-    <span className="inline-flex h-6 items-center gap-1 rounded-full border border-primary/20 bg-brand-azure-soft pl-2.5 pr-1 text-[11px] font-medium text-brand-azure">
-      {label}
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={`Remove ${label} filter`}
-        className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full transition-colors hover:bg-brand-azure/15 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/30"
-      >
-        <X className="size-2.5" />
-      </button>
-    </span>
+    <button
+      type="button"
+      onClick={onClick}
+      style={{ height: 34 }}
+      className={cn(
+        'inline-flex cursor-pointer items-center rounded-lg border px-3 text-[13px] font-medium',
+        'transition-all duration-150',
+        active
+          ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+          : 'border-border bg-card text-foreground hover:bg-muted hover:border-border/70',
+      )}
+    >
+      {children}
+    </button>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PopoverHeader — reused header row inside each filter popover
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PopoverHeader({
+  title, isActive, onClear,
+}: {
+  title:    string
+  isActive: boolean
+  onClear:  () => void
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+        {title}
+      </span>
+      {isActive && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="text-[11.5px] font-medium text-primary underline-offset-2 hover:underline"
+        >
+          Clear
+        </button>
+      )}
+    </div>
   )
 }
 
-// ── FilterSection — labelled group inside the mobile filter sheet ─────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// DrawerSection — labelled group inside the mobile filter drawer
+// ─────────────────────────────────────────────────────────────────────────────
 
-function FilterSection({
-  title,
-  last = false,
-  children,
+function DrawerSection({
+  title, last = false, children,
 }: {
   title:    string
   last?:    boolean
   children: React.ReactNode
 }) {
   return (
-    <div className={cn('py-4', !last && 'border-b border-border/40')}>
-      <p className="mb-3 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+    <div className={cn('px-5 py-4', !last && 'border-b border-border/40')}>
+      <p className="mb-3 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground/60">
         {title}
       </p>
-      <div className="flex flex-wrap gap-2">
-        {children}
-      </div>
+      {children}
     </div>
   )
 }
 
-// ── FilterPill — radio-style chip for the mobile filter sheet ─────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// DrawerPriceControl — price slider inside the mobile drawer.
+// Uses onValueCommit so the pending state only updates when the thumb is released,
+// preventing unnecessary re-renders during drag.
+// ─────────────────────────────────────────────────────────────────────────────
 
-function FilterPill({
-  label,
-  active,
-  onClick,
-  dot,
+function DrawerPriceControl({
+  minPrice, maxPrice, onChange,
 }: {
-  label:   string
-  active:  boolean
-  onClick: () => void
-  dot?:    string
+  minPrice: number | null
+  maxPrice: number | null
+  onChange: (min: number | null, max: number | null) => void
 }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'inline-flex h-9 items-center gap-2 rounded-full border px-4 text-[13px] font-medium',
-        'transition-colors duration-150',
-        active
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'border-border bg-card text-foreground hover:bg-muted',
-      )}
-    >
-      {dot && (
-        <span className={cn(
-          'size-2 shrink-0 rounded-full',
-          active ? 'bg-white/80' : dot,
-        )} />
-      )}
-      {label}
-    </button>
-  )
-}
+  const [localMin, setLocalMin] = useState(minPrice ?? PRICE_MIN)
+  const [localMax, setLocalMax] = useState(maxPrice ?? PRICE_MAX)
 
-// ── FilterDropdown — premium desktop filter dropdown ─────────────────────────
-//
-// Changes from generic shadcn defaults:
-//   • DropdownMenuContent: rounded-2xl, p-1.5, elevated shadow, w-auto min-w-44
-//   • DropdownMenuItem: rounded-xl, px-3 py-2.5 text-[13px], cursor-pointer
-//   • Status options: colored dot rendered inside item AND on the trigger when active
-
-interface FilterDropdownProps {
-  label:            string
-  currentValue:     string
-  options:          DropdownOption[]
-  onSelect:         (value: string) => void
-  isActive?:        boolean
-  showLabelPrefix?: boolean
-  icon?:            React.ReactNode
-}
-
-function FilterDropdown({
-  label,
-  currentValue,
-  options,
-  onSelect,
-  isActive = false,
-  showLabelPrefix = false,
-  icon,
-}: FilterDropdownProps) {
-  const selected    = options.find(o => o.value === currentValue)
-  const selectedDot = selected?.dot
+  // Sync when parent resets (e.g., Reset button sets pending.minPrice/maxPrice to null)
+  useEffect(() => { setLocalMin(minPrice ?? PRICE_MIN) }, [minPrice])
+  useEffect(() => { setLocalMax(maxPrice ?? PRICE_MAX) }, [maxPrice])
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          style={{ height: 36 }}
-          className={cn(
-            'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3',
-            'text-[13px] font-medium outline-none',
-            'transition-colors duration-150 hover:bg-muted',
-            'focus-visible:ring-2 focus-visible:ring-ring/20',
-            isActive
-              ? 'border-primary/40 bg-brand-azure-soft text-brand-azure'
-              : 'border-border bg-card text-foreground',
-          )}
-        >
-          {icon}
-          {/* Status color dot on trigger — shows current filter status at a glance */}
-          {selectedDot && isActive && (
-            <span className={cn('size-2 shrink-0 rounded-full', selectedDot)} />
-          )}
-          {showLabelPrefix && (
-            <span className="hidden text-[11px] text-muted-foreground sm:inline">
-              {label}:
-            </span>
-          )}
-          <span>{selected?.label ?? label}</span>
-          <ChevronDown style={{ width: 12, height: 12 }} className="shrink-0 opacity-50" />
-        </button>
-      </DropdownMenuTrigger>
-
-      {/* Premium floating panel: rounded-2xl, elevated shadow, generous item padding */}
-      <DropdownMenuContent
-        align="start"
-        className={cn(
-          'w-auto min-w-44 overflow-hidden rounded-2xl p-1.5',
-          'shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.06)]',
-        )}
-      >
-        {options.map((opt, i) => (
-          <Fragment key={opt.value}>
-            {i === 1 && <DropdownMenuSeparator className="mx-1.5 my-1" />}
-            <DropdownMenuItem
-              onClick={() => onSelect(opt.value)}
-              className={cn(
-                'flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-[13px]',
-                currentValue === opt.value && 'font-semibold',
-              )}
-            >
-              <span className="flex items-center gap-2.5">
-                {opt.dot && (
-                  <span className={cn('size-2 shrink-0 rounded-full', opt.dot)} />
-                )}
-                {opt.label}
-              </span>
-              {currentValue === opt.value && (
-                <Check className="size-3.5 shrink-0 text-primary" />
-              )}
-            </DropdownMenuItem>
-          </Fragment>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex flex-col gap-3">
+      <Slider
+        min={PRICE_MIN}
+        max={PRICE_MAX}
+        step={PRICE_STEP}
+        value={[localMin, localMax]}
+        onValueChange={([min, max]) => { setLocalMin(min); setLocalMax(max) }}
+        onValueCommit={([min, max]) => {
+          onChange(
+            min > PRICE_MIN ? min : null,
+            max < PRICE_MAX ? max : null,
+          )
+        }}
+      />
+      <div className="flex items-baseline justify-between">
+        <span className="text-[13px] font-bold tabular-nums text-foreground">
+          {fmtPrice(localMin)}
+        </span>
+        <span className="text-[12px] text-muted-foreground">to</span>
+        <span className="text-[13px] font-bold tabular-nums text-foreground">
+          {localMax >= PRICE_MAX ? 'No max' : fmtPrice(localMax)}
+        </span>
+      </div>
+    </div>
   )
 }

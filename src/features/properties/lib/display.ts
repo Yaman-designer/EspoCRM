@@ -60,9 +60,9 @@ export function hasSpecs(
   property: Pick<RealEstateProperty, 'bedroomCount' | 'bathroomCount' | 'square'>,
 ): boolean {
   return (
-    property.bedroomCount !== undefined ||
-    property.bathroomCount !== undefined ||
-    property.square !== undefined
+    property.bedroomCount  != null ||
+    property.bathroomCount != null ||
+    property.square        != null
   )
 }
 

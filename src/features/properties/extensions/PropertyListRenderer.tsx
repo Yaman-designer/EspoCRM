@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useCallback, useEffect, useSyncExternalStore } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
 import { PropertyToolbar } from '../components/PropertyToolbar'
 import { PropertyGrid } from '../components/PropertyGrid'
 import { PropertyPagination } from '../components/PropertyPagination'
 import { buildWhereParams, SORT_MAP } from '../services/property.query.service'
 import { fetchProperties } from '../repositories/property.repository'
 import { PROPERTIES_QUERY_KEY, PAGE_SIZE_OPTIONS, type PageSizeOption } from '../domain/constants'
-import type { PropertyFilters, SortOption, ViewMode, PriceRange, AreaRange } from '../types/property.types'
+import type { PropertyFilters, SortOption, ViewMode } from '../types/property.types'
 import type { RealEstateProperty } from '../types/property.types'
 import type { ListRendererProps } from '@/components/crud/resource-extensions'
 
@@ -22,17 +23,22 @@ import type { ListRendererProps } from '@/components/crud/resource-extensions'
 // open framework-managed dialogs; onAdd opens the framework's DynamicForm in
 // create mode so all mutations stay inside CRMResourcePage.
 
+const EMPTY_PROPERTIES: RealEstateProperty[] = []
+
 const DEFAULT_FILTERS: PropertyFilters = {
-  search: '', status: 'all', type: 'all', sortBy: 'newest', priceRange: 'all', areaRange: 'all',
+  search:    '',
+  type:      'all',
+  savedOnly: false,
+  bedrooms:  null,
+  bathrooms: null,
+  minPrice:  null,
+  maxPrice:  null,
+  sortBy:    'newest',
 }
 
 export function PropertyListRenderer({
   onView, onEdit, onDelete, onAdd,
 }: ListRendererProps<RealEstateProperty>) {
-
-  // Returns false on server / first hydration pass, true on the client after
-  // hydration — avoids React Query cache causing isLoading=false before mount.
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
 
   // ── Filter / pagination state ─────────────────────────────────────────────
 
@@ -52,49 +58,77 @@ export function PropertyListRenderer({
   // Each unique filter combination gets its own cache entry; keepPreviousData
   // prevents the grid from blanking between page turns.
 
-  const { data, isFetching } = useQuery({
+  const { data, isFetching, isError, refetch } = useQuery({
     queryKey: [
       PROPERTIES_QUERY_KEY, page, pageSize,
-      debouncedSearch, filters.status, filters.type, filters.sortBy,
-      filters.priceRange, filters.areaRange,
+      debouncedSearch, filters.type, filters.savedOnly,
+      filters.bedrooms, filters.bathrooms,
+      filters.minPrice, filters.maxPrice, filters.sortBy,
     ],
-    queryFn: () => {
+    queryFn: async () => {
       const { orderBy, order } = SORT_MAP[filters.sortBy]
       const whereParams = buildWhereParams(
-        debouncedSearch, filters.status, filters.type, filters.priceRange, filters.areaRange,
+        debouncedSearch,
+        filters.type,
+        filters.savedOnly,
+        filters.bedrooms,
+        filters.bathrooms,
+        filters.minPrice,
+        filters.maxPrice,
       )
-      return fetchProperties(
-        { maxSize: pageSize, offset: (page - 1) * pageSize, orderBy, order },
-        whereParams,
-      )
+      const params = { maxSize: pageSize, offset: (page - 1) * pageSize, orderBy, order }
+
+      if (filters.savedOnly) {
+        const t0 = performance.now()
+        try {
+          const result = await fetchProperties(params, whereParams)
+          const ms = Math.round(performance.now() - t0)
+          console.log(`[Saved filter] ${ms}ms | success | ${result.list.length} of ${result.total} properties`)
+          return result
+        } catch (err: unknown) {
+          const ms = Math.round(performance.now() - t0)
+          console.error(`[Saved filter] ${ms}ms | FAILED`, err)
+          throw err
+        }
+      }
+
+      return fetchProperties(params, whereParams)
     },
     placeholderData: keepPreviousData,
     staleTime: 30_000,
   })
 
-  const properties = data?.list ?? []
-  const totalCount = data?.total ?? 0
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
-  const isLoading  = !mounted || data === undefined
-  const hasFilters =
-    filters.search     !== '' ||
-    filters.status     !== 'all' ||
-    filters.type       !== 'all' ||
-    filters.priceRange !== 'all' ||
-    filters.areaRange  !== 'all'
+  const properties      = data?.list ?? EMPTY_PROPERTIES
+  const totalCount      = data?.total ?? 0
+  const totalPages      = Math.max(1, Math.ceil(totalCount / pageSize))
+  const isLoading       = data === undefined
+  // Show spinner on the Saved chip + loading banner above grid only while
+  // a savedOnly query is in-flight and we already have previous data to display.
+  const isSavedFetching = filters.savedOnly && isFetching
+  const hasFilters      =
+    filters.search    !== ''   ||
+    filters.type      !== 'all' ||
+    filters.savedOnly          ||
+    filters.bedrooms  !== null  ||
+    filters.bathrooms !== null  ||
+    filters.minPrice  !== null  ||
+    filters.maxPrice  !== null
 
   // ── Callbacks (stable — all reset page to 1 on filter change) ────────────
 
-  const onSearchChange     = useCallback((search: string)         => { setFilters(f => ({ ...f, search }));     setPage(1) }, [])
-  const onStatusChange     = useCallback((status: string)         => { setFilters(f => ({ ...f, status }));     setPage(1) }, [])
-  const onTypeChange       = useCallback((type: string)           => { setFilters(f => ({ ...f, type }));       setPage(1) }, [])
-  const onSortChange       = useCallback((sortBy: SortOption)     => { setFilters(f => ({ ...f, sortBy }));     setPage(1) }, [])
-  const onPriceRangeChange = useCallback((priceRange: PriceRange) => { setFilters(f => ({ ...f, priceRange })); setPage(1) }, [])
-  const onAreaRangeChange  = useCallback((areaRange: AreaRange)   => { setFilters(f => ({ ...f, areaRange }));  setPage(1) }, [])
-  const onClearFilters     = useCallback(()                       => { setFilters(DEFAULT_FILTERS);              setPage(1) }, [])
-  const onViewModeChange   = useCallback((mode: ViewMode)         => setViewMode(mode), [])
-  const onPageChange       = useCallback((p: number)              => setPage(p), [])
-  const onPageSizeChange   = useCallback((size: PageSizeOption)   => { setPageSize(size); setPage(1) }, [])
+  const onSearchChange    = useCallback((search: string)         => { setFilters(f => ({ ...f, search }));    setPage(1) }, [])
+  const onTypeChange      = useCallback((type: string)           => { setFilters(f => ({ ...f, type }));      setPage(1) }, [])
+  const onSavedOnlyChange = useCallback((savedOnly: boolean)     => { setFilters(f => ({ ...f, savedOnly })); setPage(1) }, [])
+  const onBedroomsChange  = useCallback((bedrooms: number|null)  => { setFilters(f => ({ ...f, bedrooms }));  setPage(1) }, [])
+  const onBathroomsChange = useCallback((bathrooms: number|null) => { setFilters(f => ({ ...f, bathrooms })); setPage(1) }, [])
+  const onPriceChange     = useCallback((minPrice: number|null, maxPrice: number|null) => {
+    setFilters(f => ({ ...f, minPrice, maxPrice })); setPage(1)
+  }, [])
+  const onSortChange      = useCallback((sortBy: SortOption)     => { setFilters(f => ({ ...f, sortBy }));    setPage(1) }, [])
+  const onClearFilters    = useCallback(()                       => { setFilters(DEFAULT_FILTERS);             setPage(1) }, [])
+  const onViewModeChange  = useCallback((mode: ViewMode)         => setViewMode(mode), [])
+  const onPageChange      = useCallback((p: number)             => setPage(p), [])
+  const onPageSizeChange  = useCallback((size: PageSizeOption)  => { setPageSize(size); setPage(1) }, [])
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -106,27 +140,41 @@ export function PropertyListRenderer({
         <PropertyToolbar
           search={filters.search}
           onSearchChange={onSearchChange}
-          statusFilter={filters.status}
-          onStatusChange={onStatusChange}
           typeFilter={filters.type}
           onTypeChange={onTypeChange}
+          savedOnly={filters.savedOnly}
+          onSavedOnlyChange={onSavedOnlyChange}
+          bedrooms={filters.bedrooms}
+          onBedroomsChange={onBedroomsChange}
+          bathrooms={filters.bathrooms}
+          onBathroomsChange={onBathroomsChange}
+          minPrice={filters.minPrice}
+          maxPrice={filters.maxPrice}
+          onPriceChange={onPriceChange}
           sortBy={filters.sortBy}
           onSortChange={onSortChange}
-          priceRange={filters.priceRange}
-          onPriceRangeChange={onPriceRangeChange}
-          areaRange={filters.areaRange}
-          onAreaRangeChange={onAreaRangeChange}
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}
           totalCount={totalCount}
           onAddProperty={onAdd}
           hasActiveFilters={hasFilters}
           onClearFilters={onClearFilters}
+          isSavedFetching={isSavedFetching}
         />
       </div>
 
       {/* Scrollable content area */}
       <div className="flex flex-col gap-4 px-4 sm:px-6 py-4 sm:py-5">
+
+        {/* Loading banner — shown when savedOnly is active and a new page of results
+            is loading, but we have stale data already displayed via keepPreviousData */}
+        {isSavedFetching && data !== undefined && (
+          <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-[13px] text-rose-600">
+            <Loader2 className="size-3.5 shrink-0 animate-spin" />
+            <span>Loading saved properties…</span>
+          </div>
+        )}
+
         <PropertyGrid
           properties={properties}
           viewMode={viewMode}
@@ -137,6 +185,9 @@ export function PropertyListRenderer({
           onDelete={onDelete}
           onClearFilters={onClearFilters}
           onAddProperty={onAdd}
+          isError={isError}
+          savedOnly={filters.savedOnly}
+          onRetry={refetch}
         />
         <PropertyPagination
           page={page}
