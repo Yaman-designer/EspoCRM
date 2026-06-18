@@ -61,15 +61,15 @@ function StatChip({
 
   return (
     <div className={cn(
-      'flex items-center justify-center',
       'min-w-0 flex-1 overflow-hidden',
-      'rounded-md border border-border/40 bg-muted/40 gap-1 px-1.5 py-1.5 text-[10px]',
-      'sm:rounded-lg sm:border-border/50 sm:bg-muted/50 sm:gap-1 sm:px-2 sm:py-2 sm:text-[11px]',
+      'flex flex-col items-center justify-center gap-1 rounded-xl border border-border/35 bg-card py-2.5',
+      'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.06)]',
+      'sm:h-auto sm:flex-row sm:gap-1 sm:rounded-lg sm:border-border/50 sm:bg-muted/50 sm:py-2 sm:shadow-none sm:text-[11px]',
     )}>
-      <Icon className="size-3 shrink-0 text-muted-foreground/80" />
-      <span className="shrink-0 font-bold tabular-nums text-foreground">{value}</span>
+      <Icon className="size-3.5 shrink-0 text-muted-foreground/70 sm:size-3 sm:text-muted-foreground/80" />
+      <span className="shrink-0 text-[18px] font-black leading-none tabular-nums text-foreground sm:text-[11px] sm:font-bold">{value}</span>
       {label && (
-        <span className="hidden sm:inline shrink-0 font-medium text-muted-foreground/75">{label}</span>
+        <span className="shrink-0 text-[9px] font-semibold uppercase leading-none tracking-wide text-muted-foreground/50 sm:text-[11px] sm:font-medium sm:normal-case sm:tracking-normal sm:text-muted-foreground/75">{label}</span>
       )}
     </div>
   )
@@ -152,9 +152,10 @@ export const PropertyCard = memo(function PropertyCard({
       aria-label={heading}
       className={cn(
         'group flex h-full w-full min-w-0 cursor-default flex-col overflow-hidden rounded-[20px] bg-card',
-        'border border-border/25',
-        'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05),0_12px_32px_rgba(0,0,0,0.07)]',
+        'border border-border/30 sm:border-border/25',
+        'shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.07),0_14px_36px_rgba(0,0,0,0.06)] sm:shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05),0_12px_32px_rgba(0,0,0,0.07)]',
         'transition-all duration-200 ease-out',
+        'active:scale-[0.98] sm:active:scale-100',
         'hover:-translate-y-1 hover:border-border/60 hover:ring-1 hover:ring-primary/12',
         'hover:shadow-[0_4px_16px_rgba(0,0,0,0.08),0_12px_32px_rgba(0,0,0,0.10),0_24px_48px_rgba(0,0,0,0.08)]',
       )}
@@ -165,7 +166,7 @@ export const PropertyCard = memo(function PropertyCard({
           Moving it here ensures the overflow-hidden + border-radius clip
           lives on the same GPU compositing layer as its children, so the
           image scale animation cannot bleed past the rounded corners. */}
-      <div className="relative aspect-square sm:aspect-4/3 w-full shrink-0 overflow-hidden rounded-t-[20px] bg-muted will-change-transform">
+      <div className="relative aspect-3/2 w-full shrink-0 overflow-hidden rounded-t-[20px] bg-muted will-change-transform sm:aspect-4/3">
         <Image
           src={imgSrc}
           alt={heading}
@@ -173,12 +174,12 @@ export const PropertyCard = memo(function PropertyCard({
           unoptimized
           draggable={false}
           className="select-none object-cover brightness-[1.02] contrast-[1.06] saturate-[1.08] transition-transform duration-500 ease-out group-hover:scale-[1.04]"
-          sizes="(max-width: 639px) 50vw, (max-width: 871px) 33vw, (max-width: 1167px) 25vw, 20vw"
+          sizes="(max-width: 639px) 100vw, (max-width: 871px) 33vw, (max-width: 1167px) 25vw, 20vw"
           loading="lazy"
           onError={() => setImgSrc(FALLBACK_IMAGE)}
         />
         {/* Gradient: subtle at top, atmospheric at bottom */}
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/72 via-black/12 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/80 via-black/16 to-transparent" />
         <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.15)_100%)]" />
 
         {/* Status badge — top-left */}
@@ -193,10 +194,10 @@ export const PropertyCard = memo(function PropertyCard({
             aria-label={favorited ? 'Remove from favourites' : 'Add to favourites'}
             onClick={() => setFavorited(f => !f)}
             className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-all duration-200',
+              'flex h-11 w-11 items-center justify-center rounded-full backdrop-blur-sm transition-all duration-200 sm:h-8 sm:w-8',
               favorited
                 ? 'bg-rose-500 text-white shadow-[0_4px_14px_rgba(239,68,68,0.50)]'
-                : 'bg-black/30 text-white/80 shadow-[0_2px_8px_rgba(0,0,0,0.20)] hover:scale-[1.05] hover:bg-black/45 hover:text-white',
+                : 'bg-black/30 text-white/80 shadow-[0_2px_8px_rgba(0,0,0,0.20)] sm:hover:scale-[1.05] hover:bg-black/45 hover:text-white',
             )}
           >
             <Heart className={cn('size-3.5 transition-transform duration-150', favorited && 'fill-current scale-110')} />
@@ -206,8 +207,8 @@ export const PropertyCard = memo(function PropertyCard({
         {/* Price — glassmorphism badge, bottom-left */}
         <div className="absolute inset-x-0 bottom-0 z-10 px-3 pb-3">
           {price != null ? (
-            <div className="inline-flex items-center rounded-lg border border-white/28 bg-white/14 px-3.5 py-2 shadow-[0_2px_14px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-lg">
-              <p className="truncate text-[18px] font-bold leading-none tracking-tight text-white tabular-nums [text-shadow:0_1px_4px_rgba(0,0,0,0.22)] sm:text-[22px]">
+            <div className="inline-flex items-center rounded-lg border border-white/32 bg-white/22 px-4 py-2.5 shadow-[0_2px_16px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.24)] backdrop-blur-lg sm:px-3.5 sm:py-2">
+              <p className="truncate text-[26px] font-black leading-none tracking-tight text-white tabular-nums [text-shadow:0_1px_6px_rgba(0,0,0,0.32)] sm:text-[22px] sm:font-bold">
                 {fmtPrice(price)}
               </p>
             </div>
@@ -220,37 +221,37 @@ export const PropertyCard = memo(function PropertyCard({
       </div>
 
       {/* ── Content ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col px-3 pb-2 pt-2.5">
+      <div className="flex flex-1 flex-col px-4 pb-3 pt-4 sm:px-3 sm:pb-2 sm:pt-2.5">
 
         {/* Reference */}
-        <p className="mb-1 min-w-0 truncate text-[13px] font-extrabold tracking-tight text-foreground tabular-nums sm:text-[20px]">
+        <p className="mb-1 min-w-0 truncate text-[17px] font-extrabold tracking-tight text-foreground tabular-nums sm:mb-1 sm:text-[20px]">
           {heading}
         </p>
 
         {/* Location */}
         {displayLocation && (
-          <p className="mb-1 flex min-w-0 items-center gap-1 text-[10px] font-medium text-muted-foreground/65">
-            <MapPin className="size-2.5 shrink-0 text-muted-foreground/45" />
+          <p className="mb-1.5 flex min-w-0 items-center gap-1 text-[12px] font-medium text-muted-foreground/75 sm:mb-1 sm:text-[10px] sm:text-muted-foreground/70">
+            <MapPin className="size-3 shrink-0 text-muted-foreground/50 sm:size-2.5 sm:text-muted-foreground/45" />
             <span className="truncate">{displayLocation}</span>
           </p>
         )}
 
         {/* Property type chip — fit-content pill, left-aligned */}
         {type ? (
-          <div className="mb-1.5">
-            <span className="inline-flex cursor-default select-none items-center rounded-full border border-accent/50 bg-accent/80 px-2.5 py-1 text-[9.5px] font-semibold tracking-wider uppercase text-accent-foreground shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+          <div className="mb-1.5 sm:mb-1.5">
+            <span className="inline-flex cursor-default select-none items-center whitespace-nowrap rounded-full border border-accent/50 bg-accent/80 px-3.5 py-1 text-[12px] font-semibold tracking-wide uppercase text-accent-foreground shadow-[0_1px_2px_rgba(0,0,0,0.05)] sm:px-2.5 sm:text-[9.5px] sm:tracking-wider">
               {toTitleCase(type)}
             </span>
           </div>
         ) : displayLocation ? (
-          <div aria-hidden className="mb-1" />
+          <div aria-hidden className="mb-1.5 sm:mb-1" />
         ) : (
-          <div aria-hidden className="mb-1.5 h-3" />
+          <div aria-hidden className="mb-1.5 h-3 sm:mb-1.5" />
         )}
 
         {/* Quality indicators */}
         {hasIndicators && (
-          <div className="mb-1.5 flex flex-wrap items-center gap-1">
+          <div className="mb-1.5 flex flex-wrap items-center gap-1 sm:mb-1.5">
             <PropertyIndicatorPills
               isFeatured={isFeatured} isVerified={isVerified}
               isPremium={isPremium} isNewListing={isNewListing}
@@ -260,18 +261,18 @@ export const PropertyCard = memo(function PropertyCard({
 
         {/* Stats chips — 3 chips on every card regardless of property type.
             "—" stands in for any unavailable value so layout never shifts. */}
-        <div className="mb-1.5 h-px bg-border/25" />
-        <div className="flex gap-1.5">
-          <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                        label="Beds"  variant="grid" />
-          <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                        label="Baths" variant="grid" />
-          <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : '—'} label="m²"   variant="grid" />
+        <div className="mb-1.5 h-px bg-border/30 sm:mb-1.5 sm:bg-border/25" />
+        <div className="flex gap-2 sm:gap-1.5">
+          <StatChip Icon={BedDouble} value={bedroomCount  ?? 'N/A'}                           label="Beds"  variant="grid" />
+          <StatChip Icon={Bath}      value={bathroomCount ?? 'N/A'}                           label="Baths" variant="grid" />
+          <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : 'N/A'} label="m²"   variant="grid" />
         </div>
 
       </div>
 
       {/* ── Footer action bar ─────────────────────────────────────────────────── */}
-      <div className="border-t border-border/20 bg-muted/30 px-2.5 py-1.5 sm:py-2">
-        <div className="flex items-center gap-1 sm:gap-1.5">
+      <div className="border-t border-border/20 bg-muted/30 px-3 py-2.5 sm:px-2.5 sm:py-2">
+        <div className="flex items-center gap-2 sm:gap-1.5">
 
           {/* Details — primary CTA; flex-1 absorbs remaining space at any card width */}
           <button
@@ -280,41 +281,43 @@ export const PropertyCard = memo(function PropertyCard({
             onClick={() => onView(property)}
             className={cn(
               'group/det flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full transition-all duration-200',
-              'h-11 border border-primary/30 bg-primary/8 px-2 text-primary sm:h-7',
+              'h-11 border border-primary/40 bg-primary/12 px-2 text-primary sm:h-7 sm:border-primary/30 sm:bg-primary/8',
               'hover:-translate-y-px hover:border-primary/45 hover:bg-primary/14 hover:shadow-[0_3px_10px_rgba(0,0,0,0.10)]',
               'active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             )}
           >
-            <span className="text-[10.5px] font-semibold tracking-wide">Details</span>
-            <ArrowRight className="size-3 shrink-0 transition-transform duration-200 ease-out group-hover/det:translate-x-1" />
+            <span className="text-[13px] font-bold tracking-wide sm:text-[10.5px] sm:font-semibold">Details</span>
+            <ArrowRight className="size-3.5 shrink-0 transition-transform duration-200 ease-out group-hover/det:translate-x-1 sm:size-3" />
           </button>
 
-          {/* Edit — shrink-0 ensures it never gets squeezed out of view */}
+          {/* Edit — compact secondary; intentionally smaller than Details */}
           <button
             type="button"
             aria-label="Edit property"
             onClick={() => onEdit(property)}
             className={cn(
-              'flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-150 sm:h-8 sm:w-8',
-              'text-muted-foreground/55 hover:bg-muted hover:text-foreground',
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-150 sm:h-8 sm:w-8',
+              'border border-blue-500/40 bg-blue-500/15 text-blue-600 sm:border-0 sm:bg-transparent sm:text-muted-foreground/55 sm:hover:bg-muted sm:hover:text-foreground',
+              'active:scale-95 sm:active:scale-100',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             )}
           >
-            <Pencil className="size-3.5" />
+            <Pencil className="size-3.75 sm:size-3.5" />
           </button>
 
-          {/* Delete — shrink-0 ensures it is always fully visible */}
+          {/* Delete — compact destructive; matches Edit size for visual balance */}
           <button
             type="button"
             aria-label="Delete property"
             onClick={() => onDelete(property)}
             className={cn(
-              'flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all duration-150 sm:h-8 sm:w-8',
-              'text-muted-foreground/50 hover:bg-destructive/8 hover:text-destructive',
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-150 sm:h-8 sm:w-8',
+              'border border-destructive/40 bg-destructive/15 text-destructive sm:border-0 sm:bg-transparent sm:text-muted-foreground/50 sm:hover:bg-destructive/8 sm:hover:text-destructive',
+              'active:scale-95 sm:active:scale-100',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             )}
           >
-            <Trash2 className="size-3.5" />
+            <Trash2 className="size-3.75 sm:size-3.5" />
           </button>
 
         </div>

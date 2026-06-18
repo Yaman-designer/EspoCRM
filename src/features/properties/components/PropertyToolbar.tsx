@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, memo, useCallback, useMemo, useEffect, forwardRef } from 'react'
+import { useState, memo, useCallback, useMemo, forwardRef } from 'react'
 import {
   Search, Plus, ChevronDown,
   LayoutGrid, LayoutList, X, Heart, SlidersHorizontal, Loader2,
@@ -41,6 +41,13 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'oldest',     label: 'Oldest First'    },
   { value: 'price-high', label: 'Price: High–Low' },
   { value: 'price-low',  label: 'Price: Low–High' },
+]
+
+const SORT_OPTIONS_MOBILE: { value: SortOption; label: string }[] = [
+  { value: 'newest',     label: 'Newest'  },
+  { value: 'oldest',     label: 'Oldest'  },
+  { value: 'price-high', label: 'Price ↑' },
+  { value: 'price-low',  label: 'Price ↓' },
 ]
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -111,6 +118,7 @@ export function PropertyToolbar({
   // ── Mobile drawer ────────────────────────────────────────────────────────
 
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [resetToken, setResetToken] = useState(0)
   const [pending, setPending] = useState<PendingFilters>({
     type: typeFilter, savedOnly, bedrooms, bathrooms,
     minPrice, maxPrice, sortBy,
@@ -142,6 +150,7 @@ export function PropertyToolbar({
 
   const resetDrawer = useCallback(() => {
     setPending({ type: 'all', savedOnly: false, bedrooms: null, bathrooms: null, minPrice: null, maxPrice: null, sortBy: 'newest' })
+    setResetToken(t => t + 1)
   }, [])
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -149,56 +158,57 @@ export function PropertyToolbar({
   return (
     <div className="flex flex-col gap-3">
 
-      {/* ── Row 1: Title + (sm+) Add button ─────────────────────────────── */}
-      {/* Mobile: title row has no button — prevents overflow.
-          The Add Property button sits in the subtitle row on mobile,
-          and is hidden there on sm+ where it appears here instead. */}
-      <div className="flex flex-col gap-1">
+      {/* ── Row 1: Title + counter (+ desktop Add Property inline) ─────────── */}
+      <div className="flex flex-col gap-2 sm:gap-1">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-baseline gap-2.5">
+          <div className="flex items-baseline gap-4 sm:gap-3.5">
             <h1 className="text-[26px] font-black leading-none tracking-tight text-foreground">
               Properties
             </h1>
             <span className={cn(
               'inline-flex items-center rounded-full border border-primary/15 bg-primary/8',
-              'px-2.5 py-0.5 text-[12px] font-bold tabular-nums text-primary',
+              'px-3 py-1 text-[12px] font-bold tabular-nums text-primary',
             )}>
               {fmtCount(totalCount)}
             </span>
           </div>
+          {/* Desktop: inline in title row */}
           <Button size="sm" className="hidden shrink-0 gap-1.5 sm:inline-flex" aria-label="Add Property" onClick={onAddProperty}>
             <Plus className="size-3.5" />
             Add Property
           </Button>
         </div>
-        <div className="flex items-center gap-3">
-          <p className="min-w-0 flex-1 truncate text-[13px] text-muted-foreground">
-            Manage and monitor your real estate portfolio
-          </p>
-          <Button size="sm" className="shrink-0 gap-1.5 sm:hidden" aria-label="Add Property" onClick={onAddProperty}>
-            <Plus className="size-3.5" />
-            Add Property
-          </Button>
-        </div>
+        {/* Mobile: full-width primary CTA below title */}
+        <Button className="h-12 w-full gap-2 sm:hidden" aria-label="Add Property" onClick={onAddProperty}>
+          <Plus className="size-4" />
+          Add Property
+        </Button>
+        <p className="hidden min-w-0 truncate text-[13px] text-muted-foreground sm:block">
+          Manage and monitor your real estate portfolio
+        </p>
       </div>
 
-      {/* ── Row 2 — Mobile: Search + Filters button + View toggle ─────────── */}
-      <div className="flex items-center gap-3 sm:hidden">
+      {/* ── Row 2 — Mobile: Search full width ───────────────────────────── */}
+      <div className="sm:hidden">
         <SearchInput
           value={search}
           onChange={onSearchChange}
-          placeholder="Search…"
+          placeholder="Search properties…"
+          height={44}
         />
+      </div>
+
+      {/* ── Row 3 — Mobile: Filters + View Switcher ──────────────────────── */}
+      <div className="flex items-center gap-2.5 sm:hidden">
         <button
           type="button"
           onClick={openDrawer}
-          style={{ height: 38 }}
           className={cn(
-            'relative inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3',
-            'text-[13px] font-medium outline-none transition-colors duration-150',
+            'relative flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border outline-none transition-all duration-150',
+            'h-10 text-[13px] font-medium active:scale-[0.97]',
             activeFilterCount > 0
               ? 'border-primary/40 bg-primary/8 text-primary'
-              : 'border-border bg-card text-foreground hover:bg-muted',
+              : 'border-border bg-card text-foreground',
           )}
         >
           <SlidersHorizontal className="size-3.5 shrink-0" />
@@ -209,7 +219,7 @@ export function PropertyToolbar({
             </span>
           )}
         </button>
-        <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+        <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} buttonSize={36} />
       </div>
 
       {/* ── Row 2 — Desktop: Single filter bar ───────────────────────────── */}
@@ -271,10 +281,17 @@ export function PropertyToolbar({
           showCloseButton={false}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-border/40 px-5 py-4">
-            <SheetTitle className="text-base font-bold text-foreground">
-              Filter Properties
-            </SheetTitle>
+          <div className="flex items-center justify-between border-b border-border/30 px-5 py-4">
+            <div className="flex items-center gap-2.5">
+              <SheetTitle className="text-[17px] font-bold leading-none text-foreground">
+                Filters
+              </SheetTitle>
+              {activeFilterCount > 0 && (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold leading-none text-primary-foreground">
+                  {activeFilterCount}
+                </span>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
@@ -289,66 +306,50 @@ export function PropertyToolbar({
           <div className="flex-1 overflow-y-auto">
 
             <DrawerSection title="Sort By">
-              <div className="flex flex-wrap gap-1.5">
-                {SORT_OPTIONS.map(opt => (
-                  <ChipButton
+              <div className="flex flex-wrap gap-2.5">
+                {SORT_OPTIONS_MOBILE.map(opt => (
+                  <DrawerChip
                     key={opt.value}
                     active={pending.sortBy === opt.value}
                     onClick={() => setPending(p => ({ ...p, sortBy: opt.value }))}
                   >
                     {opt.label}
-                  </ChipButton>
+                  </DrawerChip>
                 ))}
               </div>
             </DrawerSection>
 
             {typeOptions.length > 0 && (
               <DrawerSection title="Property Type">
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-wrap gap-2.5">
                   {([{ value: 'all', label: 'All Types' }, ...typeOptions.map(t => ({ value: t.value, label: t.value }))]).map(opt => (
-                    <button
+                    <DrawerChip
                       key={opt.value}
-                      type="button"
+                      active={pending.type === opt.value}
                       onClick={() => setPending(p => ({ ...p, type: opt.value }))}
-                      className={cn(
-                        'flex w-full items-center gap-3 rounded-lg px-2.5 py-2.5 text-[13px] transition-colors',
-                        pending.type === opt.value
-                          ? 'bg-primary/8 font-semibold text-primary'
-                          : 'font-medium text-foreground hover:bg-muted',
-                      )}
                     >
-                      <div className={cn(
-                        'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-2 transition-all',
-                        pending.type === opt.value
-                          ? 'border-primary bg-primary'
-                          : 'border-muted-foreground/30',
-                      )}>
-                        {pending.type === opt.value && (
-                          <div className="h-1.5 w-1.5 rounded-full bg-white" />
-                        )}
-                      </div>
                       {opt.label}
-                    </button>
+                    </DrawerChip>
                   ))}
                 </div>
               </DrawerSection>
             )}
 
-            <DrawerSection title="Saved Properties">
+            <DrawerSection title="Saved">
               <button
                 type="button"
                 onClick={() => setPending(p => ({ ...p, savedOnly: !p.savedOnly }))}
                 className={cn(
-                  'flex w-full items-center justify-center gap-2 rounded-xl border py-2.5',
-                  'text-[13px] font-medium transition-all duration-150',
+                  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4',
+                  'text-[13px] font-semibold transition-all duration-150 active:scale-[0.98]',
                   pending.savedOnly
-                    ? 'border-rose-400/60 bg-rose-50 text-rose-600'
-                    : 'border-border bg-card text-foreground hover:bg-muted',
+                    ? 'border-rose-400/50 bg-rose-500/10 text-rose-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                    : 'border-border/40 bg-muted/30 text-foreground hover:border-border/70 hover:bg-muted/50',
                 )}
               >
                 <Heart className={cn(
                   'size-4 transition-all duration-150',
-                  pending.savedOnly ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground/60',
+                  pending.savedOnly ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground/50',
                 )} />
                 Saved Properties
               </button>
@@ -356,9 +357,9 @@ export function PropertyToolbar({
 
             {bedroomOpts.length > 0 && (
               <DrawerSection title="Bedrooms">
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2.5">
                   {bedroomOpts.map(n => (
-                    <ChipButton
+                    <DrawerChip
                       key={n}
                       active={pending.bedrooms === n}
                       onClick={() => setPending(p => ({
@@ -366,15 +367,15 @@ export function PropertyToolbar({
                       }))}
                     >
                       {n}+
-                    </ChipButton>
+                    </DrawerChip>
                   ))}
                 </div>
               </DrawerSection>
             )}
 
             <DrawerSection title="Price Range">
-              {/* Local slider state; commits to pending on onValueCommit (pointer up) */}
               <DrawerPriceControl
+                key={resetToken}
                 minPrice={pending.minPrice}
                 maxPrice={pending.maxPrice}
                 onChange={(min, max) => setPending(p => ({ ...p, minPrice: min, maxPrice: max }))}
@@ -383,9 +384,9 @@ export function PropertyToolbar({
 
             {bathroomOpts.length > 0 && (
               <DrawerSection title="Bathrooms" last>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-2.5">
                   {bathroomOpts.map(n => (
-                    <ChipButton
+                    <DrawerChip
                       key={n}
                       active={pending.bathrooms === n}
                       onClick={() => setPending(p => ({
@@ -393,7 +394,7 @@ export function PropertyToolbar({
                       }))}
                     >
                       {n}+
-                    </ChipButton>
+                    </DrawerChip>
                   ))}
                 </div>
               </DrawerSection>
@@ -402,12 +403,19 @@ export function PropertyToolbar({
           </div>
 
           {/* Sticky footer */}
-          <div className="flex gap-3 border-t border-border/40 px-5 py-4">
-            <Button variant="outline" className="flex-1" onClick={resetDrawer}>
+          <div className="flex gap-3 border-t border-border/25 bg-background/95 px-4 py-4 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] backdrop-blur-sm">
+            <Button
+              variant="outline"
+              className="h-12 flex-1 rounded-xl text-[13px] font-semibold"
+              onClick={resetDrawer}
+            >
               Reset
             </Button>
-            <Button className="flex-1" onClick={applyDrawer}>
-              Apply Filters
+            <Button
+              className="h-12 flex-[2] rounded-xl text-[13px] font-semibold shadow-sm"
+              onClick={applyDrawer}
+            >
+              Show {fmtCount(totalCount)} Properties
             </Button>
           </div>
         </SheetContent>
@@ -422,11 +430,12 @@ export function PropertyToolbar({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SearchInput = memo(function SearchInput({
-  value, onChange, placeholder,
+  value, onChange, placeholder, height = 38,
 }: {
   value:       string
   onChange:    (v: string) => void
   placeholder: string
+  height?:     number
 }) {
   return (
     <div className="relative min-w-0 flex-1">
@@ -440,7 +449,7 @@ const SearchInput = memo(function SearchInput({
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label="Search properties"
-        style={{ height: 38, paddingLeft: 36, paddingRight: 14, fontSize: 13 }}
+        style={{ height, paddingLeft: 36, paddingRight: 14, fontSize: 13 }}
         className={cn(
           'w-full rounded-xl border border-border bg-card text-foreground',
           'placeholder:text-muted-foreground/40 shadow-(--shadow-xs) outline-none',
@@ -793,14 +802,15 @@ const SortDropdown = memo(function SortDropdown({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ViewToggle = memo(function ViewToggle({
-  viewMode, onViewModeChange,
+  viewMode, onViewModeChange, buttonSize = 38,
 }: {
   viewMode:         ViewMode
   onViewModeChange: (v: ViewMode) => void
+  buttonSize?:      number
 }) {
   return (
     <div
-      style={{ height: 38 }}
+      style={{ height: buttonSize }}
       className="flex shrink-0 overflow-hidden rounded-xl border border-border bg-card"
     >
       {([
@@ -813,7 +823,7 @@ const ViewToggle = memo(function ViewToggle({
           onClick={() => onViewModeChange(mode)}
           aria-label={label}
           aria-pressed={viewMode === mode}
-          style={{ width: 38, height: 38 }}
+          style={{ width: buttonSize, height: buttonSize }}
           className={cn(
             'flex shrink-0 cursor-pointer items-center justify-center outline-none',
             'transition-all duration-150',
@@ -900,12 +910,40 @@ function DrawerSection({
   children: React.ReactNode
 }) {
   return (
-    <div className={cn('px-5 py-4', !last && 'border-b border-border/40')}>
-      <p className="mb-3 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+    <div className={cn('px-4 py-4', !last && 'border-b border-border/25')}>
+      <p className="mb-3 text-[10.5px] font-semibold uppercase tracking-widest text-muted-foreground/45">
         {title}
       </p>
       {children}
     </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DrawerChip — selection chip for mobile filter drawer (sort, type, beds, baths)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function DrawerChip({
+  active, onClick, children,
+}: {
+  active:   boolean
+  onClick:  () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex h-11 cursor-pointer items-center rounded-xl border px-4 text-[13px] font-semibold',
+        'transition-all duration-150 active:scale-[0.97]',
+        active
+          ? 'border-primary bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_3px_rgba(0,0,0,0.08)]'
+          : 'border-border/40 bg-muted/30 text-foreground hover:border-border/70 hover:bg-muted/50',
+      )}
+    >
+      {children}
+    </button>
   )
 }
 
@@ -925,13 +963,27 @@ function DrawerPriceControl({
   const [localMin, setLocalMin] = useState(minPrice ?? PRICE_MIN)
   const [localMax, setLocalMax] = useState(maxPrice ?? PRICE_MAX)
 
-  // Sync when parent resets (e.g., Reset button sets pending.minPrice/maxPrice to null)
-  useEffect(() => { setLocalMin(minPrice ?? PRICE_MIN) }, [minPrice])
-  useEffect(() => { setLocalMax(maxPrice ?? PRICE_MAX) }, [maxPrice])
-
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex items-stretch gap-2.5">
+        <div className="flex flex-1 flex-col gap-1 rounded-xl border border-border/40 bg-muted/30 px-3.5 py-2.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/45">Min Price</span>
+          <span className="text-[15px] font-bold leading-none tabular-nums text-foreground">
+            {fmtPrice(localMin)}
+          </span>
+        </div>
+        <div className="flex items-center">
+          <span className="text-[11px] text-muted-foreground/25">—</span>
+        </div>
+        <div className="flex flex-1 flex-col gap-1 rounded-xl border border-border/40 bg-muted/30 px-3.5 py-2.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/45">Max Price</span>
+          <span className="text-[15px] font-bold leading-none tabular-nums text-foreground">
+            {localMax >= PRICE_MAX ? 'No Limit' : fmtPrice(localMax)}
+          </span>
+        </div>
+      </div>
       <Slider
+        className="**:data-[slot=slider-track]:h-1.5 **:data-[slot=slider-thumb]:size-5 **:data-[slot=slider-thumb]:border-2 **:data-[slot=slider-thumb]:border-primary **:data-[slot=slider-thumb]:shadow-[0_1px_4px_rgba(0,0,0,0.15)]"
         min={PRICE_MIN}
         max={PRICE_MAX}
         step={PRICE_STEP}
@@ -944,15 +996,6 @@ function DrawerPriceControl({
           )
         }}
       />
-      <div className="flex items-baseline justify-between">
-        <span className="text-[13px] font-bold tabular-nums text-foreground">
-          {fmtPrice(localMin)}
-        </span>
-        <span className="text-[12px] text-muted-foreground">to</span>
-        <span className="text-[13px] font-bold tabular-nums text-foreground">
-          {localMax >= PRICE_MAX ? 'No max' : fmtPrice(localMax)}
-        </span>
-      </div>
     </div>
   )
 }
