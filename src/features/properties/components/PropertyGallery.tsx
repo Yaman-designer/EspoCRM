@@ -18,12 +18,10 @@ interface PropertyGalleryProps {
 }
 
 export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyGalleryProps) {
-  // Deduplicate: main image first, then the rest
   const allIds = mainImageId
     ? [mainImageId, ...imageIds.filter(id => id !== mainImageId)]
     : imageIds
 
-  // At least one slot (will show fallback when null)
   const images = allIds.length > 0 ? allIds : [null as string | null]
 
   const [activeIndex, setActiveIndex]   = useState(0)
@@ -39,11 +37,11 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
 
   return (
     <>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col">
 
-        {/* ── Main image ────────────────────────────────────────────────── */}
+        {/* ── Main image — cinematic 16:9 ratio ─────────────────────────── */}
         <div
-          className="group relative aspect-[4/3] w-full cursor-zoom-in overflow-hidden rounded-2xl bg-muted"
+          className="group relative aspect-video w-full cursor-zoom-in overflow-hidden bg-muted"
           onClick={() => setLightboxOpen(true)}
         >
           <Image
@@ -51,54 +49,84 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
             alt={title || 'Property'}
             fill
             priority
-            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-            sizes="(max-width: 1023px) 100vw, 58vw"
+            unoptimized
+            className="object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+            sizes="(max-width: 1023px) 100vw, 60vw"
             onError={() => onError(activeIndex)}
           />
 
-          {/* Prev / Next arrows */}
+          {/* Top scrim — title readability */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-linear-to-b from-black/30 to-transparent" />
+
+          {/* Bottom atmospheric gradient */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-black/55 via-black/18 to-transparent" />
+
+          {/* Prev arrow */}
           {images.length > 1 && (
-            <>
-              <button
-                type="button"
-                aria-label="Previous image"
-                onClick={e => { e.stopPropagation(); handlePrev() }}
-                className="absolute left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
-              >
-                <ChevronLeft className="size-5" />
-              </button>
-              <button
-                type="button"
-                aria-label="Next image"
-                onClick={e => { e.stopPropagation(); handleNext() }}
-                className="absolute right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
-              >
-                <ChevronRight className="size-5" />
-              </button>
-            </>
+            <button
+              type="button"
+              aria-label="Previous image"
+              onClick={e => { e.stopPropagation(); handlePrev() }}
+              className={cn(
+                'absolute left-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center',
+                'rounded-full bg-black/55 text-white',
+                'opacity-40 transition-[opacity,background-color] duration-150',
+                'hover:bg-black/70 hover:opacity-100',
+              )}
+            >
+              <ChevronLeft className="size-5" />
+            </button>
           )}
 
-          {/* Expand button */}
+          {/* Next arrow */}
+          {images.length > 1 && (
+            <button
+              type="button"
+              aria-label="Next image"
+              onClick={e => { e.stopPropagation(); handleNext() }}
+              className={cn(
+                'absolute right-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center',
+                'rounded-full bg-black/55 text-white',
+                'opacity-40 transition-[opacity,background-color] duration-150',
+                'hover:bg-black/70 hover:opacity-100',
+              )}
+            >
+              <ChevronRight className="size-5" />
+            </button>
+          )}
+
+          {/* Fullscreen — top-right, always visible */}
           <button
             type="button"
             aria-label="View full screen"
             onClick={e => { e.stopPropagation(); setLightboxOpen(true) }}
-            className="absolute bottom-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-black/40 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"
+            className={cn(
+              'absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center',
+              'rounded-xl bg-black/55 text-white',
+              'opacity-50 transition-opacity duration-150',
+              'hover:opacity-100',
+            )}
           >
-            <Expand className="size-3.5" />
+            <Expand className="size-4" />
           </button>
 
-          {/* Image counter */}
+          {/* Image counter — bottom-left, premium pill */}
           {images.length > 1 && (
-            <div className="absolute bottom-3 left-3 z-10 rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
-              {activeIndex + 1} / {images.length}
+            <div className="absolute bottom-4 left-4 z-10 flex items-center gap-1.5 rounded-full border border-white/20 bg-black/55 px-3 py-1.5">
+              <span className="text-[11px] font-semibold tabular-nums text-white/90">
+                {activeIndex + 1}
+              </span>
+              <span className="text-[10px] text-white/45">/</span>
+              <span className="text-[11px] font-medium tabular-nums text-white/55">
+                {images.length}
+              </span>
             </div>
           )}
         </div>
 
         {/* ── Thumbnail strip ───────────────────────────────────────────── */}
         {images.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2.5 overflow-x-auto px-3 pb-3 pt-2.5 [&::-webkit-scrollbar]:hidden">
             {images.map((_, i) => (
               <button
                 key={i}
@@ -106,18 +134,20 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
                 aria-label={`View image ${i + 1}`}
                 onClick={() => setActiveIndex(i)}
                 className={cn(
-                  'relative h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-muted transition-all duration-150',
+                  'relative h-17 w-23 shrink-0 overflow-hidden rounded-xl bg-muted',
+                  'transition-[opacity,box-shadow] duration-150',
                   i === activeIndex
-                    ? 'ring-2 ring-primary ring-offset-1'
-                    : 'opacity-55 hover:opacity-90',
+                    ? 'ring-2 ring-primary ring-offset-2 opacity-100'
+                    : 'opacity-50 hover:opacity-85 hover:ring-1 hover:ring-border/60',
                 )}
               >
                 <Image
                   src={src(i)}
                   alt={`${title || 'Property'} ${i + 1}`}
                   fill
+                  unoptimized
                   className="object-cover"
-                  sizes="80px"
+                  sizes="92px"
                   onError={() => onError(i)}
                 />
               </button>
@@ -136,6 +166,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
               src={src(activeIndex)}
               alt={title || 'Property'}
               fill
+              unoptimized
               className="object-contain"
               sizes="90vw"
               onError={() => onError(activeIndex)}
@@ -147,7 +178,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
                   type="button"
                   aria-label="Previous image"
                   onClick={handlePrev}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/22"
                 >
                   <ChevronLeft className="size-6" />
                 </button>
@@ -155,7 +186,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
                   type="button"
                   aria-label="Next image"
                   onClick={handleNext}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/22"
                 >
                   <ChevronRight className="size-6" />
                 </button>
@@ -164,7 +195,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
           </div>
 
           {images.length > 1 && (
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-[12px] font-medium text-white backdrop-blur-sm">
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full border border-white/15 bg-black/45 px-4 py-1.5 text-[12px] font-medium text-white">
               {activeIndex + 1} / {images.length}
             </div>
           )}

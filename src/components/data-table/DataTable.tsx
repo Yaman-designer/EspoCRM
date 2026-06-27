@@ -534,32 +534,50 @@ export function DataTable<T extends object>({
   const firstColKey = columnConfigs[0]?.key
   const isClickable = !!(rowDetails || onRowClick)
 
-  // ── View toggle node ───────────────────────────────────────────────────────
+  // ── View toggle node — segmented control with sliding pill ────────────────
   const viewToggleNode = showViewToggle ? (
-    <div className="flex h-8 items-center rounded-md border border-border/60 bg-background p-0.5">
+    <div
+      role="group"
+      aria-label="View mode"
+      className="relative flex h-8.5 w-17 shrink-0 rounded-[9px] border border-border/20 bg-muted/60 p-0.75"
+    >
+      {/* Sliding pill — translates by 100% of its own width (= half container) */}
+      <div
+        aria-hidden
+        className={cn(
+          'pointer-events-none absolute inset-y-0.75 left-0.75 w-[calc(50%-3px)] rounded-sm',
+          'bg-card shadow-[0_1px_3px_rgba(0,0,0,0.10),0_1px_1px_rgba(0,0,0,0.06)]',
+          'transition-transform duration-200 ease-in-out',
+          viewMode !== 'list' && 'translate-x-full',
+        )}
+      />
       <button
         onClick={() => setViewMode('list')}
         aria-label={t('table.listView')}
+        aria-pressed={viewMode === 'list'}
         className={cn(
-          'flex h-6 w-7 items-center justify-center rounded transition-colors duration-150',
-          viewMode === 'list'
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground',
+          'relative z-10 flex flex-1 cursor-pointer select-none items-center justify-center rounded-sm',
+          'outline-none transition-all duration-150',
+          'focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-inset',
+          'active:scale-[0.92]',
+          viewMode === 'list' ? 'text-foreground' : 'text-muted-foreground/50 hover:text-muted-foreground',
         )}
       >
-        <List className="h-3.5 w-3.5" />
+        <List style={{ width: 14, height: 14, strokeWidth: 1.75 }} />
       </button>
       <button
         onClick={() => setViewMode('grid')}
         aria-label={t('table.gridView')}
+        aria-pressed={viewMode === 'grid'}
         className={cn(
-          'flex h-6 w-7 items-center justify-center rounded transition-colors duration-150',
-          viewMode === 'grid'
-            ? 'bg-primary text-primary-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground',
+          'relative z-10 flex flex-1 cursor-pointer select-none items-center justify-center rounded-sm',
+          'outline-none transition-all duration-150',
+          'focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-inset',
+          'active:scale-[0.92]',
+          viewMode === 'grid' ? 'text-foreground' : 'text-muted-foreground/50 hover:text-muted-foreground',
         )}
       >
-        <LayoutGrid className="h-3.5 w-3.5" />
+        <LayoutGrid style={{ width: 14, height: 14, strokeWidth: 1.75 }} />
       </button>
     </div>
   ) : null

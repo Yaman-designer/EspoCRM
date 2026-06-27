@@ -1,100 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  ArrowLeft, MapPin, BedDouble, Bath, Maximize2,
-  Pencil, Trash2, Heart, Calendar, FileText, User, Clock,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import { useMutation } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { PropertyStatusBadge } from './PropertyStatusBadge'
-import { PropertyGallery } from './PropertyGallery'
-import { PropertyIndicatorPills } from './PropertyIndicators'
-import { followProperty, unfollowProperty } from '../repositories/property.repository'
+import { ArrowLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { fmtPrice, fmtDate, getDisplayName, getDisplayLocation, hasSpecs, hasIndicators } from '../lib/display'
+import { useFavoriteState } from '../hooks/useFavoriteState'
+import { getDisplayName, getDisplayLocation } from '../lib/display'
+import { buildPropertyHealth } from '../lib/property-health'
+import { buildPropertyNarrative } from '../lib/property-narrative'
 import type { RealEstateProperty } from '../types/property.types'
 
-// ── Persistent favorite toggle (EspoCRM follow API) ────────────────────────────
-
-function FavoriteButton({ property }: { property: RealEstateProperty }) {
-  const [favorited, setFavorited] = useState(!!property.isFollowed)
-
-  const followMutation = useMutation({
-    mutationFn: () => followProperty(property.id),
-    onMutate:   () => setFavorited(true),
-    onSuccess:  () => toast.success('Added to favorites'),
-    onError:    () => { setFavorited(false); toast.error('Failed to update favorites') },
-  })
-
-  const unfollowMutation = useMutation({
-    mutationFn: () => unfollowProperty(property.id),
-    onMutate:   () => setFavorited(false),
-    onSuccess:  () => toast.success('Removed from favorites'),
-    onError:    () => { setFavorited(true); toast.error('Failed to update favorites') },
-  })
-
-  const loading = followMutation.isPending || unfollowMutation.isPending
-
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      disabled={loading}
-      onClick={() => favorited ? unfollowMutation.mutate() : followMutation.mutate()}
-      className={cn(
-        'gap-1.5 transition-colors',
-        favorited && 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100',
-      )}
-    >
-      <Heart className={cn('size-3.5', favorited && 'fill-current')} />
-      {favorited ? 'Saved' : 'Save'}
-    </Button>
-  )
-}
-
-// ── Section wrapper ────────────────────────────────────────────────────────────
-
-function Section({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title:    string
-  icon?:    React.ComponentType<{ className?: string }>
-  children: React.ReactNode
-}) {
-  return (
-    <div className="mt-8 border-t border-border/30 pt-8">
-      <div className="mb-4 flex items-center gap-2">
-        {Icon && <Icon className="size-4 text-muted-foreground/50" />}
-        <h2 className="text-[15px] font-bold text-foreground">{title}</h2>
-      </div>
-      {children}
-    </div>
-  )
-}
-
-// ── Placeholder for features not yet wired to EspoCRM API ─────────────────────
-
-function Placeholder({
-  Icon,
-  text,
-}: {
-  Icon: React.ComponentType<{ className?: string }>
-  text: string
-}) {
-  return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border/50 bg-muted/20 px-6 py-10 text-center">
-      <Icon className="size-8 text-muted-foreground/20" />
-      <p className="max-w-sm text-[12.5px] leading-relaxed text-muted-foreground/50">{text}</p>
-    </div>
-  )
-}
-
-// ── PropertyDetailView ─────────────────────────────────────────────────────────
+import { ExecutiveBriefingCard }         from './sections/ExecutiveBriefingCard'
+import { PropertyIntelligenceHeroSection } from './sections/PropertyIntelligenceHeroSection'
+import { PropertySpecsBar }              from './sections/PropertySpecsBar'
+import { FinancialIntelligenceOS }       from './sections/FinancialIntelligenceOS'
+import { PropertyIntelligenceStream }    from './sections/PropertyIntelligenceStream'
+import { AssetManagementSystem }         from './sections/AssetManagementSystem'
+import { LocationIntelligenceCenter }    from './sections/LocationIntelligenceCenter'
+import { OperationsCommandHub }          from './sections/OperationsCommandHub'
+import { RelatedPropertiesSection }      from './sections/RelatedPropertiesSection'
 
 interface PropertyDetailViewProps {
   property: RealEstateProperty
@@ -104,236 +28,138 @@ interface PropertyDetailViewProps {
 
 export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetailViewProps) {
   const router = useRouter()
-
-  const {
-    price, status, type,
-    propertyCode, locationName, addressCity,
-    description, square, bedroomCount, bathroomCount,
-    assignedUserName, createdAt, modifiedAt,
-    mainImageId, imagesIds,
-    isFeatured, isVerified, isPremium, isNewListing,
-  } = property
+  useFavoriteState(property.id)
 
   const displayName     = getDisplayName(property)
-  const displayLocation = [locationName, addressCity].filter(Boolean).join(', ')
-  const propertyHasSpecs      = hasSpecs(property)
-  const propertyHasIndicators = hasIndicators(property)
+  const displayLocation = getDisplayLocation(property)
+  const breadcrumbLabel = property.propertyCode ?? displayName ?? 'Property Details'
 
-  const detailRows = [
-    { label: 'Reference',      value: propertyCode ? `Ref #${propertyCode}` : undefined },
-    { label: 'Property Type',  value: type },
-    { label: 'Status',         value: status },
-    { label: 'Total Area',     value: square ? `${square.toLocaleString()} m²` : undefined },
-    { label: 'Bedrooms',       value: bedroomCount?.toString() },
-    { label: 'Bathrooms',      value: bathroomCount?.toString() },
-    { label: 'City',           value: addressCity },
-    { label: 'District',       value: locationName },
-    { label: 'Assigned Agent', value: assignedUserName },
-    { label: 'Date Listed',    value: fmtDate(createdAt, 'long') },
-    { label: 'Last Updated',   value: fmtDate(modifiedAt, 'long') },
-  ].filter((row): row is { label: string; value: string } => !!row.value)
+  // Derived intelligence
+  const health    = buildPropertyHealth(property)
+  const narrative = buildPropertyNarrative(property)
+
+  function navToProperty(p: RealEstateProperty) {
+    const slug = (p.propertyCode ?? p.id).toLowerCase()
+    router.push(`/properties/${slug}`)
+  }
 
   return (
     <div className="min-h-0">
+      <div className="mx-auto max-w-400 pb-20">
 
-      {/* ── Back navigation ───────────────────────────────────────────── */}
-      <div className="px-4 pt-4 sm:px-6 sm:pt-5">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-3.5" />
-          Back to Properties
-        </button>
-      </div>
-
-      {/* ── Page content ──────────────────────────────────────────────── */}
-      <div className="px-4 pb-16 pt-5 sm:px-6">
-
-        {/* ── Hero: Gallery + Sidebar ─────────────────────────────────── */}
-        <div className="grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-start">
-
-          {/* Gallery */}
-          <PropertyGallery
-            mainImageId={mainImageId}
-            imageIds={imagesIds}
-            title={displayName}
-          />
-
-          {/* Sidebar info */}
-          <div className="flex flex-col gap-4">
-
-            {/* Status + Ref */}
-            <div className="flex flex-wrap items-center gap-2">
-              <PropertyStatusBadge status={status} />
-              {propertyCode && (
-                <span className="text-[11.5px] tabular-nums text-muted-foreground/45">
-                  Ref #{propertyCode}
-                </span>
-              )}
-            </div>
-
-            {/* Title */}
-            <div>
-              <h1 className="text-[26px] font-black leading-tight tracking-tight text-foreground sm:text-[28px]">
-                {displayName || '—'}
-              </h1>
-              {type && (
-                <p className="mt-1 text-[13px] text-muted-foreground">{type}</p>
-              )}
-            </div>
-
-            {/* Listing quality indicators */}
-            {propertyHasIndicators && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                <PropertyIndicatorPills
-                  isFeatured={isFeatured} isVerified={isVerified}
-                  isPremium={isPremium} isNewListing={isNewListing}
-                  size="md"
-                />
-              </div>
+        {/* ── Breadcrumb ── */}
+        <div className="mb-5 flex items-center gap-3 px-6 pt-6">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Go back"
+            className={cn(
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+              'border border-border/30 bg-card text-muted-foreground/58',
+              'shadow-[0_1px_3px_rgba(0,0,0,0.05)]',
+              'transition-[colors,shadow] duration-150 hover:border-border/50 hover:text-foreground',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             )}
-
-            {/* Price */}
-            {price !== undefined ? (
-              <p className="text-[32px] font-black leading-none tabular-nums tracking-tight text-primary">
-                {fmtPrice(price)}
-              </p>
-            ) : (
-              <p className="text-[13px] italic text-muted-foreground">Price on request</p>
-            )}
-
-            {/* Location */}
-            {displayLocation && (
-              <div className="flex items-center gap-1.5">
-                <MapPin className="size-3.5 shrink-0 text-muted-foreground/50" />
-                <span className="text-[13px] text-muted-foreground">{displayLocation}</span>
-              </div>
-            )}
-
-            {propertyHasSpecs && <div className="h-px bg-border/40" />}
-
-            {/* Specs tiles */}
-            {propertyHasSpecs && (
-              <div className="grid grid-cols-3 gap-2">
-                {bedroomCount !== undefined && (
-                  <div className="flex flex-col items-center gap-1 rounded-xl bg-muted/40 py-3">
-                    <BedDouble className="size-4 text-muted-foreground/50" />
-                    <span className="text-[18px] font-black tabular-nums">{bedroomCount}</span>
-                    <span className="text-[9.5px] font-medium text-muted-foreground">Beds</span>
-                  </div>
-                )}
-                {bathroomCount !== undefined && (
-                  <div className="flex flex-col items-center gap-1 rounded-xl bg-muted/40 py-3">
-                    <Bath className="size-4 text-muted-foreground/50" />
-                    <span className="text-[18px] font-black tabular-nums">{bathroomCount}</span>
-                    <span className="text-[9.5px] font-medium text-muted-foreground">Baths</span>
-                  </div>
-                )}
-                {square !== undefined && (
-                  <div className="flex flex-col items-center gap-1 rounded-xl bg-muted/40 py-3">
-                    <Maximize2 className="size-4 text-muted-foreground/50" />
-                    <span className="text-[18px] font-black tabular-nums">
-                      {square >= 1000 ? `${(square / 1000).toFixed(1)}k` : square}
-                    </span>
-                    <span className="text-[9.5px] font-medium text-muted-foreground">m²</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="h-px bg-border/40" />
-
-            {/* Action buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => onEdit(property)}>
-                <Pencil className="size-3.5" />
-                Edit
-              </Button>
-              <FavoriteButton property={property} />
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => onDelete(property)}
-              >
-                <Trash2 className="size-3.5" />
-                Delete
-              </Button>
-            </div>
-
-            {/* Assigned Agent card */}
-            {assignedUserName && (
-              <>
-                <div className="h-px bg-border/40" />
-                <div className="flex items-center gap-3 rounded-xl bg-muted/30 p-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                    <User className="size-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/50">
-                      Assigned Agent
-                    </p>
-                    <p className="text-[13px] font-semibold text-foreground">{assignedUserName}</p>
-                  </div>
-                </div>
-              </>
-            )}
-
-          </div>
+          >
+            <ArrowLeft className="size-3.5" />
+          </button>
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[12px]">
+            <Link
+              href="/properties"
+              className="font-medium text-muted-foreground/60 transition-colors hover:text-foreground"
+            >
+              Properties
+            </Link>
+            <ChevronRight className="size-3.5 shrink-0 text-muted-foreground/35" />
+            <span className="font-semibold text-foreground">{breadcrumbLabel}</span>
+          </nav>
         </div>
 
-        {/* ── Description ─────────────────────────────────────────────── */}
-        {description && (
-          <Section title="Description" icon={FileText}>
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-muted-foreground">
-              {description}
-            </p>
-          </Section>
-        )}
+        {/* ── Two-column layout: left scrolls, right sticky ── */}
+        <div className="grid grid-cols-1 gap-5 px-6 lg:grid-cols-12">
 
-        {/* ── Property Details ────────────────────────────────────────── */}
-        {detailRows.length > 0 && (
-          <Section title="Property Details">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              {detailRows.map(({ label, value }) => (
-                <div key={label} className="rounded-xl bg-muted/30 p-3">
-                  <p className="text-[9.5px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-                    {label}
-                  </p>
-                  <p className="mt-0.5 text-[13px] font-semibold leading-snug text-foreground">
-                    {value}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Section>
-        )}
+          {/* ── Left column (Executive Briefing → Location) ── */}
+          <div className="order-2 min-w-0 space-y-4 lg:order-1 lg:col-span-9">
 
-        {/* ── Activity Timeline ────────────────────────────────────────── */}
-        <Section title="Activity Timeline" icon={Clock}>
-          <Placeholder
-            Icon={Clock}
-            text="Property history, status changes, agent notes, and client interactions will appear here."
-          />
-        </Section>
+            {/* Executive Intelligence Briefing */}
+            <ExecutiveBriefingCard
+              narrative={narrative}
+              property={property}
+              displayName={displayName}
+            />
 
-        {/* ── Documents ───────────────────────────────────────────────── */}
-        <Section title="Documents" icon={FileText}>
-          <Placeholder
-            Icon={FileText}
-            text="Contracts, floor plans, title deeds, and other property documents will appear here."
-          />
-        </Section>
+            {/* Hero */}
+            <PropertyIntelligenceHeroSection
+              mainImageId={property.mainImageId}
+              imageIds={property.imagesIds}
+              title={displayName}
+              location={displayLocation}
+              status={property.status}
+              type={property.type}
+              propertyCode={property.propertyCode}
+              price={property.price}
+              health={health}
+              square={property.square}
+              bedroomCount={property.bedroomCount}
+              purpose={property.purpose}
+              yearBuilt={property.yearBuilt}
+              energyClass={property.energyClass}
+              isPremium={property.isPremium}
+              isFeatured={property.isFeatured}
+              isVerified={property.isVerified}
+            />
 
-        {/* ── Property History ────────────────────────────────────────── */}
-        <Section title="Property History" icon={Calendar}>
-          <Placeholder
-            Icon={Calendar}
-            text="Price history, previous listings, and ownership records will appear here."
-          />
-        </Section>
+            {/* Specs Bar */}
+            <PropertySpecsBar
+              property={property}
+              onViewFullSpecs={undefined}
+            />
+
+            {/* Financial Intelligence OS */}
+            <FinancialIntelligenceOS
+              price={property.price}
+              square={property.square}
+              type={property.type}
+              status={property.status}
+              purpose={property.purpose}
+              yearBuilt={property.yearBuilt}
+              createdAt={property.createdAt}
+              modifiedAt={property.modifiedAt}
+              imagesIds={property.imagesIds}
+            />
+
+            {/* Intelligence Stream */}
+            <PropertyIntelligenceStream
+              property={property}
+            />
+
+            {/* Asset Management System */}
+            <AssetManagementSystem property={property} />
+
+            {/* Location Intelligence Center */}
+            <LocationIntelligenceCenter property={property} />
+
+          </div>
+
+          {/* ── Right sidebar — Operations Command Hub (sticky on desktop) ── */}
+          <div className="order-1 lg:order-2 lg:col-span-3">
+            <OperationsCommandHub
+              property={property}
+              onEdit={() => onEdit(property)}
+              onDelete={() => onDelete(property)}
+            />
+          </div>
+
+        </div>
+
+        {/* ── Similar Properties ── */}
+        <RelatedPropertiesSection
+          currentId={property.id}
+          type={property.type}
+          onView={navToProperty}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
 
       </div>
     </div>

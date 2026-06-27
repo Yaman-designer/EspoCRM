@@ -7,13 +7,13 @@ import { STATUS_DOT_COLORS, STATUS_DOT_FALLBACK } from '../domain/constants'
 
 // Tinted glassmorphic background for overlay (image) variant
 const OVERLAY_TINT: Record<string, string> = {
-  Available:        'border-emerald-400/35 bg-emerald-500/20',
-  Reserved:         'border-amber-400/35   bg-amber-500/20',
-  Pending:          'border-violet-400/35  bg-violet-500/20',
-  'Under Approval': 'border-orange-400/35  bg-orange-500/20',
-  Rented:           'border-teal-400/35    bg-teal-500/20',
-  Sold:             'border-rose-400/35    bg-rose-500/20',
-  Draft:            'border-slate-400/25   bg-slate-500/15',
+  Available:        'border-emerald-400/40 bg-emerald-500/35',
+  Reserved:         'border-amber-400/40   bg-amber-500/35',
+  Pending:          'border-violet-400/40  bg-violet-500/35',
+  'Under Approval': 'border-orange-400/40  bg-orange-500/35',
+  Rented:           'border-teal-400/40    bg-teal-500/35',
+  Sold:             'border-rose-400/40    bg-rose-500/35',
+  Draft:            'border-slate-400/30   bg-slate-500/28',
 }
 
 // Soft chip for content area — supporting role only
@@ -49,9 +49,10 @@ export function PropertyStatusBadge({
     return (
       <span
         className={cn(
-          'inline-flex h-5.5 items-center gap-1 rounded-full border px-2.5',
-          'text-[9.5px] font-semibold tracking-wide text-white',
-          'backdrop-blur-[10px] shadow-[0_1px_8px_rgba(0,0,0,0.20)] whitespace-nowrap',
+          'inline-flex items-center rounded-full border',
+          'h-7 gap-1.5 px-3 text-[10.5px] sm:h-5.5 sm:gap-1 sm:px-2.5 sm:text-[9.5px]',
+          'font-bold tracking-wide text-white',
+          'whitespace-nowrap',
           tint,
           className,
         )}

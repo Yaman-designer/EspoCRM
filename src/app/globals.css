@@ -102,13 +102,13 @@
   --chart-3: #12B76A;
   --chart-4: #F79009;
   --chart-5: #F04438;
-  --sidebar: #FAFBFC;
+  --sidebar: #F8F8F6;
   --sidebar-foreground: #344054;
   --sidebar-primary: #0061BC;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #EFF1F4;
+  --sidebar-accent: #EDEEF0;
   --sidebar-accent-foreground: #101828;
-  --sidebar-border: #E3E8EF;
+  --sidebar-border: #E4E8ED;
   --sidebar-ring: #4DA9FF;
   /* Shadows — multi-layer for premium surface depth */
   --shadow-xs: 0 1px 2px rgba(16,24,40,0.03), 0 1px 3px rgba(16,24,40,0.04);
@@ -150,7 +150,12 @@
   transform: translateX(-110%);
   transition:
     transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-    width 0.18s ease;
+    width 0.20s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Layered structural shadow: barely-there border line + deep ambient */
+  box-shadow:
+    1px 0 0 rgba(16, 24, 40, 0.045),
+    6px 0 20px rgba(16, 24, 40, 0.04),
+    16px 0 40px rgba(16, 24, 40, 0.025);
 }
 
 /* Sidebar: visible when toggled on mobile */
@@ -162,7 +167,7 @@
 @media (min-width: 768px) {
   .app-sidebar {
     transform: none !important;
-    transition: width 0.18s ease;
+    transition: width 0.20s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -208,4 +213,155 @@
 @media (prefers-reduced-motion: reduce) {
   @keyframes float      { from, to { transform: none; } }
   @keyframes fade-in-up { from { opacity: 0; } to { opacity: 1; } }
+}
+
+/* ── Stitch timeline connector lines (PropertyIntelligenceStream) ── */
+.timeline-line::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 40px;
+  bottom: -24px;
+  width: 2px;
+  background: #E3E8EF;
+}
+.timeline-node:last-child .timeline-line::before {
+  display: none;
+}
+
+/* ── Stitch stripe-bg dot-grid pattern (used by FinancialIntelligenceOS) ── */
+.stripe-bg {
+  background-image: radial-gradient(#E3E8EF 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+/* ── Hide scrollbar utility (used by PropertySpecsBar overflow-x scroll) ── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Stitch map-grid dot pattern (LocationIntelligenceCenter map container) ── */
+.map-grid {
+  background-image: radial-gradient(rgba(0, 97, 188, 0.10) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+}
+
+/* ── Form Framework — animations & utilities ── */
+
+/* Page mount */
+@keyframes ff-form-mount {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ff-form-mount {
+  animation: ff-form-mount 0.28s cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+/* Submit success pulse on CTA button */
+@keyframes ff-success-pulse {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.06); }
+  65%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+.ff-success-pulse {
+  animation: ff-success-pulse 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Step indicator entrance */
+@keyframes ff-badge-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+.ff-badge-pop {
+  animation: ff-badge-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Stepper horizontal scroll — edge fade mask (shown when steps > 5) */
+.ff-stepper-mask {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black 40px,
+    black calc(100% - 40px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    black 40px,
+    black calc(100% - 40px),
+    transparent 100%
+  );
+}
+
+/* ── Form Framework — step transition animations ── */
+@keyframes ff-slide-out-left {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-22px); }
+}
+@keyframes ff-slide-out-right {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(22px); }
+}
+@keyframes ff-slide-in-right {
+  from { opacity: 0; transform: translateX(22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes ff-slide-in-left {
+  from { opacity: 0; transform: translateX(-22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.ff-exit-forward  { animation: ff-slide-out-left  0.17s cubic-bezier(0.4, 0, 1, 1) both; }
+.ff-exit-backward { animation: ff-slide-out-right 0.17s cubic-bezier(0.4, 0, 1, 1) both; }
+.ff-enter-forward { animation: ff-slide-in-right  0.25s cubic-bezier(0, 0, 0.2, 1) 0.02s both; }
+.ff-enter-backward{ animation: ff-slide-in-left   0.25s cubic-bezier(0, 0, 0.2, 1) 0.02s both; }
+
+/* Step connector line fill */
+.ff-connector-fill {
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Step bubble state transitions */
+.ff-step-bubble {
+  transition: background-color 0.25s ease, border-color 0.25s ease,
+              box-shadow 0.25s ease, transform 0.18s ease, opacity 0.25s ease;
+}
+
+/* Step label transitions */
+.ff-step-label {
+  transition: color 0.25s ease, font-weight 0.25s ease;
+}
+
+/* Mobile progress bar */
+.ff-mobile-progress {
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-exit-forward, .ff-exit-backward,
+  .ff-enter-forward, .ff-enter-backward {
+    animation: none;
+  }
+  .ff-connector-fill,
+  .ff-step-bubble,
+  .ff-step-label,
+  .ff-mobile-progress {
+    transition: none;
+  }
+}
+
+/* ── Sidebar nav scrollbar — minimal, premium ── */
+.app-sidebar nav::-webkit-scrollbar       { width: 3px; }
+.app-sidebar nav::-webkit-scrollbar-track { background: transparent; }
+.app-sidebar nav::-webkit-scrollbar-thumb {
+  background-color: rgba(227, 232, 239, 0.55);
+  border-radius: 999px;
+}
+.app-sidebar nav::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(167, 178, 194, 0.75);
+}
+.app-sidebar nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(227, 232, 239, 0.55) transparent;
 }

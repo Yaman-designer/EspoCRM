@@ -2,25 +2,18 @@ import { Building2 } from 'lucide-react'
 import { propertySchema } from './schema'
 import { propertySections } from './fields'
 import { PropertyListRenderer } from './extensions/PropertyListRenderer'
-import { PropertyViewRenderer } from './extensions/PropertyViewRenderer'
 import type { RealEstateProperty } from './types/property.types'
 import type { ResourceConfig } from '@/components/crud/resource-config'
 
 // ── propertiesConfig ──────────────────────────────────────────────────────────
 //
-// Properties uses two CRMResourcePage extensions:
+// Properties uses a custom listRenderer (PropertyListRenderer) that manages its
+// own useQuery with server-side filtering and renders PropertyToolbar +
+// PropertyGrid + PropertyPagination. Clicking "View Property" navigates to
+// /properties/[slug] which renders the full PropertyDetailView page.
 //
-//   listRenderer — PropertyListRenderer manages its own useQuery with server-side
-//     filtering (status / type / price range / area range / sort) via
-//     buildWhereParams. The standard DataTable and PageHeader are skipped; the
-//     renderer supplies PropertyToolbar + PropertyGrid + PropertyPagination.
-//
-//   viewRenderer — PropertyViewRenderer wraps PropertyDetailsSheet (hero image,
-//     specs, agent card). It manages its own <Sheet> open state so EntityViewSheet
-//     is skipped.
-//
-// columns / viewFields are empty arrays — they are unused by the extensions but
-// required by ResourceConfig's type signature.
+// columns / viewFields are empty arrays — unused by the extension but required
+// by ResourceConfig's type signature.
 
 export const propertiesConfig: ResourceConfig<RealEstateProperty> = {
   endpoint:  '/RealEstateProperty',
@@ -41,6 +34,5 @@ export const propertiesConfig: ResourceConfig<RealEstateProperty> = {
 
   extensions: {
     listRenderer: PropertyListRenderer,
-    viewRenderer: PropertyViewRenderer,
   },
 }

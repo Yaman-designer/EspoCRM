@@ -18,7 +18,6 @@ import {
   MessageSquare,
   Mail,
   ChevronRight,
-  ChevronDown,
   UserSquare2,
   UsersRound,
   type LucideIcon,
@@ -140,26 +139,31 @@ export function AppSidebar() {
       data-dragging={dragging || undefined}
       className={cn(
         'app-sidebar fixed inset-y-0 inset-s-0 z-50 flex flex-col overflow-hidden',
-        'bg-sidebar border-e border-sidebar-border',
+        'bg-sidebar border-e border-sidebar-border/20',
         mobileOpen && 'sidebar-mobile-open',
       )}
     >
       {/* ── Logo ── */}
       <div
         className={cn(
-          'flex h-14 shrink-0 items-center border-b border-sidebar-border',
-          isCollapsed ? 'justify-center px-0' : 'gap-2.5 px-4',
+          'flex h-[68px] shrink-0 items-center border-b border-sidebar-border/12',
+          isCollapsed ? 'justify-center px-0' : 'gap-3 px-5',
         )}
       >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary shadow-design-sm">
-          <Building2 className="h-4 w-4 text-primary-foreground" />
+        <div className={cn(
+          'flex shrink-0 items-center justify-center rounded-[10px]',
+          'bg-linear-to-br from-primary to-primary/80',
+          'shadow-[0_2px_10px_rgba(0,97,188,0.26),0_1px_2px_rgba(0,97,188,0.16),inset_0_1px_0_rgba(255,255,255,0.22),inset_0_-1px_0_rgba(0,0,0,0.07)]',
+          'h-[34px] w-[34px]',
+        )}>
+          <Building2 className="h-[17px] w-[17px] text-primary-foreground" strokeWidth={1.8} />
         </div>
         {showLabels && (
-          <div className="overflow-hidden">
-            <p className="whitespace-nowrap text-[13px] font-semibold leading-none text-foreground">
+          <div className="min-w-0 overflow-hidden">
+            <p className="truncate text-[13px] font-semibold leading-tight tracking-[-0.01em] text-foreground">
               {t('appName')}
             </p>
-            <p className="mt-0.5 whitespace-nowrap text-[10px] leading-none text-muted-foreground">
+            <p className="mt-[3px] truncate text-[8.5px] leading-none tracking-[0.16em] text-muted-foreground/52 uppercase">
               {t('appTagline')}
             </p>
           </div>
@@ -167,17 +171,17 @@ export function AppSidebar() {
       </div>
 
       {/* ── Navigation ── */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2">
-        <div className="flex flex-col gap-3">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-2.5">
+        <div className="flex flex-col gap-[22px]">
           {NAV_GROUPS.map((group) => (
             <div key={group.id}>
               {showLabels && (
-                <p className="mb-0.5 px-3 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/40">
+                <p className="mb-[7px] px-3 text-[9.5px] font-medium uppercase tracking-[0.13em] text-muted-foreground/46">
                   {t(group.id)}
                 </p>
               )}
               {!showLabels && group.id !== 'main' && (
-                <div className="my-1 mx-auto h-px w-5 bg-sidebar-border/60" />
+                <div className="my-3 mx-auto h-px w-4 bg-sidebar-border/22" />
               )}
 
               <div className="space-y-0.5">
@@ -190,15 +194,16 @@ export function AppSidebar() {
                   const highlighted   = isActive || isChildActive
 
                   const iconCls = cn(
-                    'h-[17px] w-[17px] shrink-0 stroke-[1.8] transition-colors',
-                    highlighted ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground',
+                    'h-[15px] w-[15px] shrink-0 stroke-[1.7] transition-colors duration-150 ease-out',
+                    highlighted ? 'text-primary' : 'text-muted-foreground/48 group-hover:text-foreground/70',
                   )
                   const rowCls = cn(
-                    'group flex h-9 items-center rounded-lg transition-colors duration-150 select-none',
-                    isCollapsed ? 'justify-center px-2' : 'gap-2.5 px-3',
+                    'group relative flex h-9 items-center rounded-[9px] transition-all duration-150 ease-out select-none',
+                    isCollapsed ? 'justify-center px-2' : 'gap-2.5 px-2.5',
                     highlighted
-                      ? 'bg-primary text-primary-foreground shadow-design-xs'
-                      : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground',
+                      ? 'bg-primary/[0.07] text-primary ring-1 ring-inset ring-primary/[0.10] shadow-[0_1px_2px_rgba(0,97,188,0.08)]'
+                      : 'text-sidebar-foreground hover:bg-sidebar-accent/65 hover:text-foreground',
+                    highlighted && !isCollapsed && "before:absolute before:content-[''] before:left-0 before:top-[9px] before:bottom-[9px] before:w-[2.5px] before:rounded-full before:bg-primary/80",
                   )
 
                   return (
@@ -206,23 +211,27 @@ export function AppSidebar() {
                       {hasChildren && !isCollapsed ? (
                         <div className={cn(rowCls, 'cursor-pointer')} onClick={() => toggleExpand(item.id)}>
                           <item.icon className={iconCls} />
-                          {showLabels && <span className="flex-1 truncate text-[13px] font-medium">{label}</span>}
+                          {showLabels && <span className={cn('flex-1 truncate text-[12.5px] transition-colors duration-150 ease-out', highlighted ? 'font-semibold' : 'font-[450]')}>{label}</span>}
                           {showLabels && (
-                            isExpanded
-                              ? <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
-                              : <ChevronRight className="h-3 w-3 shrink-0 opacity-50" />
+                            <ChevronRight
+                              className={cn(
+                                'h-3 w-3 shrink-0 transition-transform duration-200',
+                                highlighted ? 'text-primary/55' : 'text-muted-foreground/30',
+                                isExpanded && 'rotate-90',
+                              )}
+                            />
                           )}
                         </div>
                       ) : (
                         <Link href={item.href} className={rowCls} title={isCollapsed ? label : undefined}>
                           <item.icon className={iconCls} />
-                          {showLabels && <span className="flex-1 truncate text-[13px] font-medium">{label}</span>}
+                          {showLabels && <span className={cn('flex-1 truncate text-[12.5px] transition-colors duration-150 ease-out', highlighted ? 'font-semibold' : 'font-[450]')}>{label}</span>}
                         </Link>
                       )}
 
-                      {/* Submenu */}
+                      {/* Submenu — grouped workspace container */}
                       {hasChildren && isExpanded && !isCollapsed && (
-                        <div className="ms-5 mt-0.5 space-y-0.5 border-s border-sidebar-border ps-3">
+                        <div className="mt-1 mx-0.5 rounded-[10px] bg-sidebar-accent/55 p-1.5 space-y-0.5">
                           {item.children!.map((child) => {
                             const childActive = pathname === child.href
                             return (
@@ -230,16 +239,16 @@ export function AppSidebar() {
                                 key={child.id}
                                 href={child.href}
                                 className={cn(
-                                  'flex h-8 items-center gap-2 rounded-md px-2.5 text-[12px] font-medium transition-colors duration-150',
+                                  'flex h-[30px] items-center gap-2 rounded-[7px] px-2.5 text-[12px] transition-all duration-150 ease-out',
                                   childActive
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground',
+                                    ? 'bg-primary/[0.09] text-primary font-semibold ring-1 ring-inset ring-primary/[0.10]'
+                                    : 'text-sidebar-foreground/80 font-[450] hover:bg-sidebar-accent hover:text-foreground',
                                 )}
                               >
                                 <child.icon
                                   className={cn(
-                                    'h-3.5 w-3.5 shrink-0 stroke-[1.8]',
-                                    childActive ? 'text-primary' : 'text-muted-foreground',
+                                    'h-3.5 w-3.5 shrink-0 stroke-[1.7] transition-colors duration-150 ease-out',
+                                    childActive ? 'text-primary' : 'text-muted-foreground/40',
                                   )}
                                 />
                                 <span>{t(child.labelKey)}</span>
@@ -265,9 +274,9 @@ export function AppSidebar() {
       >
         <div
           className={cn(
-            'absolute inset-y-0 inset-e-0 w-0.5 origin-right scale-x-0 rounded-full bg-primary/40',
+            'absolute inset-y-0 inset-e-0 w-0.5 origin-right scale-x-0 rounded-full bg-primary/35',
             'transition-transform duration-150 group-hover:scale-x-100',
-            dragging && 'scale-x-100 bg-primary/60',
+            dragging && 'scale-x-100 bg-primary/55',
           )}
         />
       </div>

@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 
-import { useState, memo, useCallback, useMemo, forwardRef } from 'react'
+import { useState, memo, useCallback, useMemo, forwardRef, useRef, useEffect } from 'react'
 import {
-  Search, Plus, ChevronDown,
-  LayoutGrid, LayoutList, X, Heart, SlidersHorizontal, Loader2,
+  Search, Plus, ChevronDown, Check,
+  LayoutGrid, LayoutList, X, Heart, SlidersHorizontal, Loader2, Clock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils'
 import { fmtPrice } from '../lib/display'
 import { usePropertyOptions } from '../hooks/usePropertyOptions'
+import { useFavoritesCount } from '../hooks/useFavoriteState'
 import type { SortOption, ViewMode } from '../types/property.types'
 import type { TypeOption } from '../services/property.query.service'
 
@@ -30,7 +31,9 @@ import type { TypeOption } from '../services/property.query.service'
 // ─────────────────────────────────────────────────────────────────────────────
 
 const COUNT_FMT = new Intl.NumberFormat('en-US')
+const NUM_FMT   = new Intl.NumberFormat('en-US')
 const fmtCount  = (n: number) => COUNT_FMT.format(n)
+const fmtNum    = (n: number) => NUM_FMT.format(n)
 
 const PRICE_MIN  = 0
 const PRICE_MAX  = 10_000_000
@@ -49,6 +52,10 @@ const SORT_OPTIONS_MOBILE: { value: SortOption; label: string }[] = [
   { value: 'price-high', label: 'Price ↑' },
   { value: 'price-low',  label: 'Price ↓' },
 ]
+
+// Shared popover content class — 22px radius matches card inner containers, premium layered shadow
+const POPOVER_CLASS =
+  'rounded-2xl border border-border/25 shadow-[0_4px_8px_rgba(0,0,0,0.06),0_12px_24px_rgba(0,0,0,0.09),0_24px_48px_rgba(0,0,0,0.08)] bg-popover p-4'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pending state type (used by mobile drawer)
@@ -101,14 +108,10 @@ export function PropertyToolbar({
   isSavedFetching = false,
 }: PropertyToolbarProps) {
 
-  // options are fetched once and cached by React Query (staleTime 5 min).
-  // The hook does not re-run when filters change — only on stale/mount.
   const { data: options } = usePropertyOptions()
   const typeOptions   = useMemo(() => options?.types     ?? [], [options?.types])
   const bedroomOpts   = useMemo(() => options?.bedrooms  ?? [], [options?.bedrooms])
   const bathroomOpts  = useMemo(() => options?.bathrooms ?? [], [options?.bathrooms])
-
-  // ── Stable toggle handler (avoids anonymous function in JSX) ─────────────
 
   const handleSavedToggle = useCallback(
     () => onSavedOnlyChange(!savedOnly),
@@ -156,35 +159,43 @@ export function PropertyToolbar({
   // ─────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
 
       {/* ── Row 1: Title + counter (+ desktop Add Property inline) ─────────── */}
-      <div className="flex flex-col gap-2 sm:gap-1">
+      <div className="flex flex-col gap-2 sm:gap-[7px]">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-baseline gap-4 sm:gap-3.5">
-            <h1 className="text-[26px] font-black leading-none tracking-tight text-foreground">
+          <div className="flex items-baseline gap-2.5 sm:gap-2">
+            <h1 className="text-[27px] font-bold leading-none tracking-[-0.025em] text-foreground">
               Properties
             </h1>
             <span className={cn(
-              'inline-flex items-center rounded-full border border-primary/15 bg-primary/8',
-              'px-3 py-1 text-[12px] font-bold tabular-nums text-primary',
+              'inline-flex items-center rounded-[7px] border border-primary/[0.12] bg-primary/[0.055]',
+              'px-2.5 py-[5px] text-[11.5px] font-semibold tabular-nums text-primary',
             )}>
               {fmtCount(totalCount)}
             </span>
           </div>
-          {/* Desktop: inline in title row */}
-          <Button size="sm" className="hidden shrink-0 gap-1.5 sm:inline-flex" aria-label="Add Property" onClick={onAddProperty}>
+          <Button
+            size="sm"
+            className="hidden shrink-0 gap-1.5 sm:inline-flex shadow-[0_1px_2px_rgba(0,97,188,0.20),0_2px_8px_rgba(0,97,188,0.14),inset_0_1px_0_rgba(255,255,255,0.16)]"
+            aria-label="Add Property"
+            onClick={onAddProperty}
+          >
             <Plus className="size-3.5" />
             Add Property
           </Button>
         </div>
-        {/* Mobile: full-width primary CTA below title */}
         <Button className="h-12 w-full gap-2 sm:hidden" aria-label="Add Property" onClick={onAddProperty}>
           <Plus className="size-4" />
           Add Property
         </Button>
-        <p className="hidden min-w-0 truncate text-[13px] text-muted-foreground sm:block">
-          Manage and monitor your real estate portfolio
+        <p className="hidden min-w-0 truncate text-[13px] text-muted-foreground/80 sm:block">
+          {savedOnly
+            ? 'Your saved property collection'
+            : activeFilterCount > 0
+              ? `${activeFilterCount} active ${activeFilterCount === 1 ? 'filter' : 'filters'} applied`
+              : 'Manage and monitor your real estate portfolio'
+          }
         </p>
       </div>
 
@@ -204,11 +215,18 @@ export function PropertyToolbar({
           type="button"
           onClick={openDrawer}
           className={cn(
-            'relative flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border outline-none transition-all duration-150',
-            'h-10 text-[13px] font-medium active:scale-[0.97]',
+            'relative flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border outline-none transition-colors duration-150',
+            'h-10 text-[13px] active:scale-[0.97]',
+            'focus-visible:ring-2 focus-visible:ring-primary/15',
             activeFilterCount > 0
-              ? 'border-primary/40 bg-primary/8 text-primary'
-              : 'border-border bg-card text-foreground',
+              ? [
+                  'border-primary/20 bg-primary/[0.07] text-primary font-semibold',
+                  'shadow-[0_1px_3px_rgba(0,97,188,0.10),inset_0_1px_0_rgba(255,255,255,0.65)]',
+                ]
+              : [
+                  'border-border/70 bg-card text-foreground font-medium',
+                  'shadow-[0_1px_2px_rgba(16,24,40,0.05),0_2px_6px_rgba(16,24,40,0.05)]',
+                ],
           )}
         >
           <SlidersHorizontal className="size-3.5 shrink-0" />
@@ -222,7 +240,7 @@ export function PropertyToolbar({
         <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} buttonSize={36} />
       </div>
 
-      {/* ── Row 2 — Desktop: Single filter bar ───────────────────────────── */}
+      {/* ── Desktop: Floating filter bar ─────────────────────────────────── */}
       <div className="hidden items-center gap-2 sm:flex">
 
         {/* Search — grows to fill available space */}
@@ -232,14 +250,13 @@ export function PropertyToolbar({
           placeholder="Search by title, reference, or location…"
         />
 
-        {/* Filter controls — fixed width, single row, no wrap */}
+        {/* ── Attribute filters ──────────────────────────────────────────── */}
         <div className="flex shrink-0 items-center gap-1.5">
           <TypeFilter
             types={typeOptions}
             value={typeFilter}
             onChange={onTypeChange}
           />
-          <SavedChip active={savedOnly} onToggle={handleSavedToggle} isFetching={isSavedFetching} />
           <BedsFilter
             beds={bedroomOpts}
             value={bedrooms}
@@ -259,15 +276,26 @@ export function PropertyToolbar({
             <button
               type="button"
               onClick={onClearFilters}
-              className="px-1 text-[12.5px] font-medium text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+              style={{ height: 36 }}
+              className={cn(
+                'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5',
+                'text-[11.5px] font-medium text-muted-foreground/70',
+                'border-border/40 bg-background',
+                'shadow-[0_1px_2px_rgba(16,24,40,0.04)]',
+                'transition-colors duration-150',
+                'hover:border-border/70 hover:bg-muted/30 hover:text-foreground',
+              )}
             >
+              <X style={{ width: 10, height: 10 }} />
               Clear
             </button>
           )}
         </div>
 
-        {/* Sort + View — pushed to the right */}
+        {/* ── Actions: Saved | divider | Sort + View ─────────────────────── */}
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <SavedChip active={savedOnly} onToggle={handleSavedToggle} isFetching={isSavedFetching} />
+          <div className="mx-1 h-4 w-px shrink-0 bg-border/45" aria-hidden />
           <SortDropdown sortBy={sortBy} onSortChange={onSortChange} />
           <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
         </div>
@@ -335,23 +363,23 @@ export function PropertyToolbar({
               </DrawerSection>
             )}
 
-            <DrawerSection title="Saved">
+            <DrawerSection title="Saved Properties">
               <button
                 type="button"
                 onClick={() => setPending(p => ({ ...p, savedOnly: !p.savedOnly }))}
                 className={cn(
                   'inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4',
-                  'text-[13px] font-semibold transition-all duration-150 active:scale-[0.98]',
+                  'text-[13px] font-semibold transition-colors duration-150 active:scale-[0.98]',
                   pending.savedOnly
                     ? 'border-rose-400/50 bg-rose-500/10 text-rose-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
                     : 'border-border/40 bg-muted/30 text-foreground hover:border-border/70 hover:bg-muted/50',
                 )}
               >
                 <Heart className={cn(
-                  'size-4 transition-all duration-150',
+                  'size-4 transition-colors duration-150',
                   pending.savedOnly ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground/50',
                 )} />
-                Saved Properties
+                Show Saved Only
               </button>
             </DrawerSection>
 
@@ -403,7 +431,7 @@ export function PropertyToolbar({
           </div>
 
           {/* Sticky footer */}
-          <div className="flex gap-3 border-t border-border/25 bg-background/95 px-4 py-4 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] backdrop-blur-sm">
+          <div className="flex gap-3 border-t border-border/25 bg-background/98 px-4 py-4 shadow-[0_-4px_16px_rgba(0,0,0,0.04)]">
             <Button
               variant="outline"
               className="h-12 flex-1 rounded-xl text-[13px] font-semibold"
@@ -426,7 +454,37 @@ export function PropertyToolbar({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SearchInput
+// Search history helpers (localStorage)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SEARCH_HISTORY_KEY = 'property_search_history'
+const MAX_HISTORY = 5
+
+function getSearchHistory(): string[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(SEARCH_HISTORY_KEY)
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as string[]).slice(0, MAX_HISTORY) : []
+  } catch { return [] }
+}
+
+function saveToSearchHistory(term: string): void {
+  if (!term.trim() || typeof window === 'undefined') return
+  try {
+    const existing = getSearchHistory().filter(s => s !== term.trim())
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify([term.trim(), ...existing].slice(0, MAX_HISTORY)))
+  } catch {}
+}
+
+function clearSearchHistoryStorage(): void {
+  if (typeof window === 'undefined') return
+  try { localStorage.removeItem(SEARCH_HISTORY_KEY) } catch {}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SearchInput — command-bar feel with recent searches + keyboard shortcut
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SearchInput = memo(function SearchInput({
@@ -437,32 +495,198 @@ const SearchInput = memo(function SearchInput({
   placeholder: string
   height?:     number
 }) {
+  const [focused,     setFocused]     = useState(false)
+  const [panelOpen,   setPanelOpen]   = useState(false)
+  const [history,     setHistory]     = useState<string[]>([])
+  const inputRef    = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Load history whenever the panel opens
+  useEffect(() => {
+    if (panelOpen) setHistory(getSearchHistory())
+  }, [panelOpen])
+
+  // Global '/' shortcut — focuses the search input from anywhere on the page
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== '/') return
+      const el = e.target as HTMLElement
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable) return
+      e.preventDefault()
+      inputRef.current?.focus()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
+  // Click outside closes the panel without blurring the input
+  useEffect(() => {
+    if (!panelOpen) return
+    const onDown = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setPanelOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [panelOpen])
+
+  const handleFocus = () => {
+    setFocused(true)
+    setPanelOpen(true)
+    setHistory(getSearchHistory())
+  }
+
+  const handleBlur = () => {
+    setFocused(false)
+    if (value.trim()) saveToSearchHistory(value)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') { setPanelOpen(false); inputRef.current?.blur() }
+    if (e.key === 'Enter' && value.trim()) { saveToSearchHistory(value); setPanelOpen(false) }
+  }
+
+  const applyHistory = (term: string) => {
+    onChange(term)
+    saveToSearchHistory(term)
+    setHistory(getSearchHistory())
+    setPanelOpen(false)
+  }
+
+  const clearHistory = () => {
+    clearSearchHistoryStorage()
+    setHistory([])
+  }
+
+  const showHint    = !focused && !value
+  const showPanel   = panelOpen && history.length > 0
+
   return (
-    <div className="relative min-w-0 flex-1">
+    <div ref={containerRef} className="relative min-w-36 flex-1">
+
+      {/* Search icon */}
       <Search
-        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40"
-        style={{ width: 13, height: 13 }}
+        className={cn(
+          'pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 transition-[color,transform] duration-150',
+          focused ? 'text-primary/65 scale-105' : 'text-muted-foreground/35',
+        )}
+        style={{ width: 14, height: 14 }}
       />
+
+      {/* Input */}
       <input
+        ref={inputRef}
         type="search"
         value={value}
         onChange={e => onChange(e.target.value)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
         placeholder={placeholder}
         aria-label="Search properties"
-        style={{ height, paddingLeft: 36, paddingRight: 14, fontSize: 13 }}
+        style={{
+          height,
+          paddingLeft: 38,
+          paddingRight: value ? 32 : (showHint ? 48 : 14),
+          fontSize: 13,
+        }}
         className={cn(
-          'w-full rounded-xl border border-border bg-card text-foreground',
-          'placeholder:text-muted-foreground/40 shadow-(--shadow-xs) outline-none',
-          'transition-all duration-200 hover:border-border/70',
-          'focus:border-primary/40 focus:shadow-(--shadow-sm) focus:ring-2 focus:ring-primary/12',
+          'w-full rounded-xl border bg-card text-foreground outline-none',
+          'placeholder:text-muted-foreground/38',
+          'transition-[border-color,box-shadow,background-color] duration-200',
+          focused || panelOpen
+            ? [
+                'border-primary/30 ring-2 ring-primary/10 bg-white',
+                'shadow-[0_0_0_3px_rgba(0,97,188,0.09),0_4px_16px_rgba(0,97,188,0.07),0_1px_3px_rgba(16,24,40,0.05)]',
+              ]
+            : [
+                'border-border/55 bg-card',
+                'shadow-[0_1px_2px_rgba(16,24,40,0.05),0_2px_8px_rgba(16,24,40,0.05),0_0_0_1px_rgba(16,24,40,0.015)]',
+                'hover:border-border/80 hover:shadow-[0_1px_3px_rgba(16,24,40,0.07),0_3px_10px_rgba(16,24,40,0.06)]',
+              ],
         )}
       />
+
+      {/* Clear button */}
+      {value && (
+        <button
+          type="button"
+          aria-label="Clear search"
+          onMouseDown={e => { e.preventDefault(); onChange(''); inputRef.current?.focus() }}
+          className={cn(
+            'absolute right-2.5 top-1/2 -translate-y-1/2',
+            'flex h-5 w-5 items-center justify-center rounded-full',
+            'bg-muted/80 text-muted-foreground/50',
+            'transition-colors hover:bg-muted hover:text-foreground',
+          )}
+        >
+          <X style={{ width: 10, height: 10 }} />
+        </button>
+      )}
+
+      {/* Keyboard shortcut badge */}
+      {showHint && (
+        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden items-center sm:flex">
+          <kbd className={cn(
+            'inline-flex h-5 items-center justify-center rounded border px-1.5',
+            'border-border/50 bg-muted/60 text-[10px] font-medium leading-none text-muted-foreground/40',
+            'shadow-[0_1px_1px_rgba(0,0,0,0.04),inset_0_-1px_0_rgba(0,0,0,0.06)]',
+          )}>
+            /
+          </kbd>
+        </div>
+      )}
+
+      {/* Recent-searches panel */}
+      {showPanel && (
+        <div className={cn(
+          'absolute left-0 right-0 z-50',
+          'top-[calc(100%+6px)]',
+          'overflow-hidden rounded-2xl',
+          'border border-border/30 bg-popover',
+          'shadow-[0_4px_8px_rgba(0,0,0,0.04),0_12px_28px_rgba(0,0,0,0.09),0_24px_48px_rgba(0,0,0,0.06)]',
+          'animate-in fade-in-0 slide-in-from-top-1 duration-150',
+        )}>
+          {/* Panel header */}
+          <div className="flex items-center justify-between border-b border-border/20 px-4 py-2.5">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/40">
+              Recent Searches
+            </span>
+            <button
+              type="button"
+              onMouseDown={e => { e.preventDefault(); clearHistory() }}
+              className="text-[11px] font-medium text-muted-foreground/40 transition-colors hover:text-muted-foreground"
+            >
+              Clear
+            </button>
+          </div>
+
+          {/* History items */}
+          <div className="py-1">
+            {history.map(term => (
+              <button
+                key={term}
+                type="button"
+                onMouseDown={e => { e.preventDefault(); applyHistory(term) }}
+                className={cn(
+                  'flex w-full items-center gap-3 px-4 py-2.5 text-left',
+                  'text-[13px] text-foreground',
+                  'transition-colors hover:bg-muted/60',
+                )}
+              >
+                <Clock className="size-3.5 shrink-0 text-muted-foreground/30" />
+                <span className="min-w-0 flex-1 truncate">{term}</span>
+                <span aria-hidden className="shrink-0 text-[11px] text-muted-foreground/20">↵</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FilterPill — Airbnb-style trigger button for all filter popovers
+// FilterPill — trigger button shared by all filter popovers
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface FilterPillProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -476,14 +700,23 @@ const FilterPill = memo(forwardRef<HTMLButtonElement, FilterPillProps>(
       <button
         ref={ref}
         type="button"
-        style={{ height: 38 }}
+        style={{ height: 36 }}
         className={cn(
-          'inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-xl border px-3',
-          'text-[13px] font-medium outline-none transition-all duration-150',
-          'focus-visible:ring-2 focus-visible:ring-ring/20',
+          // `group` enables chevron rotation via group-data-[state=open] (Radix sets data-state on trigger)
+          'group inline-flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border px-3',
+          'text-[12.5px] font-medium outline-none transition-colors duration-150',
+          'active:scale-[0.97]',
+          'focus-visible:ring-2 focus-visible:ring-primary/15',
           isActive
-            ? 'border-foreground/30 bg-foreground/6 text-foreground font-semibold'
-            : 'border-border bg-card text-foreground hover:border-foreground/25 hover:bg-muted',
+            ? [
+                'border-primary/18 bg-primary/6.5 text-primary font-semibold',
+                'shadow-[0_1px_2px_rgba(0,97,188,0.10),0_2px_6px_rgba(0,97,188,0.08),inset_0_1px_0_rgba(255,255,255,0.55)]',
+              ]
+            : [
+                'border-border/55 bg-card text-foreground',
+                'shadow-[0_1px_2px_rgba(16,24,40,0.05),0_2px_6px_rgba(16,24,40,0.05)]',
+                'hover:border-border/75 hover:bg-muted/30 hover:shadow-[0_1px_3px_rgba(16,24,40,0.07),0_3px_8px_rgba(16,24,40,0.06)]',
+              ],
           className,
         )}
         {...props}
@@ -492,7 +725,11 @@ const FilterPill = memo(forwardRef<HTMLButtonElement, FilterPillProps>(
         {hasChevron && (
           <ChevronDown
             style={{ width: 11, height: 11 }}
-            className="shrink-0 text-muted-foreground/60"
+            className={cn(
+              'shrink-0 transition-transform duration-200 ease-out',
+              'group-data-[state=open]:rotate-180',
+              isActive ? 'text-primary/55' : 'text-muted-foreground/50',
+            )}
           />
         )}
       </button>
@@ -501,7 +738,67 @@ const FilterPill = memo(forwardRef<HTMLButtonElement, FilterPillProps>(
 ))
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TypeFilter
+// PopoverHeader — reused header row inside each filter popover
+// ─────────────────────────────────────────────────────────────────────────────
+
+function PopoverHeader({
+  title, isActive, onClear,
+}: {
+  title:    string
+  isActive: boolean
+  onClear:  () => void
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[9.5px] font-semibold uppercase tracking-widest text-muted-foreground/45">
+        {title}
+      </span>
+      {isActive && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="text-[11.5px] font-medium text-primary/80 underline-offset-2 transition-colors duration-150 hover:text-primary hover:underline"
+        >
+          Clear
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ChipButton — equal-width option chip inside popover panels
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ChipButton = memo(function ChipButton({
+  active, onClick, children, className,
+}: {
+  active:    boolean
+  onClick:   () => void
+  children:  React.ReactNode
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{ height: 34 }}
+      className={cn(
+        'inline-flex cursor-pointer items-center justify-center rounded-xl border px-3 text-[13px] font-medium',
+        'transition-colors duration-150',
+        active
+          ? 'border-primary bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(0,97,188,0.22),inset_0_1px_0_rgba(255,255,255,0.14)]'
+          : 'border-border/70 bg-card text-foreground shadow-[0_1px_2px_rgba(16,24,40,0.04)] hover:bg-muted/60 hover:border-border',
+        className,
+      )}
+    >
+      {children}
+    </button>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TypeFilter — searchable dropdown with checkmark on selected item
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TypeFilter = memo(function TypeFilter({
@@ -520,29 +817,47 @@ const TypeFilter = memo(function TypeFilter({
       <PopoverTrigger asChild>
         <FilterPill isActive={isActive}>{label}</FilterPill>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={6} className="w-48 p-0">
+      <PopoverContent
+        align="start"
+        sideOffset={8}
+        collisionPadding={12}
+        className={cn(POPOVER_CLASS, 'w-52 p-0 overflow-hidden')}
+      >
         <Command>
-          <CommandInput placeholder="Search type…" />
-          <CommandList>
-            <CommandEmpty>No type found.</CommandEmpty>
+          <div className="border-b border-border/25 px-3 py-2.5">
+            <CommandInput
+              placeholder="Search type…"
+              className="h-8 text-[13px]"
+            />
+          </div>
+          <CommandList className="max-h-52 py-1.5">
+            <CommandEmpty className="py-6 text-center text-[13px] text-muted-foreground">
+              No type found.
+            </CommandEmpty>
             <CommandGroup>
-              <CommandItem
-                value="all"
-                data-checked={value === 'all' ? 'true' : undefined}
-                onSelect={() => { onChange('all'); setOpen(false) }}
-              >
-                All
-              </CommandItem>
-              {types.map(t => (
-                <CommandItem
-                  key={t.value}
-                  value={t.value}
-                  data-checked={value === t.value ? 'true' : undefined}
-                  onSelect={() => { onChange(value === t.value ? 'all' : t.value); setOpen(false) }}
-                >
-                  {t.value}
-                </CommandItem>
-              ))}
+              {[{ value: 'all', label: 'All Types' }, ...types.map(t => ({ value: t.value, label: t.value }))].map(opt => {
+                const selected = value === opt.value
+                return (
+                  <CommandItem
+                    key={opt.value}
+                    value={opt.value}
+                    onSelect={() => {
+                      onChange(selected && opt.value !== 'all' ? 'all' : opt.value)
+                      setOpen(false)
+                    }}
+                    className={cn(
+                      'mx-1.5 flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-[13px]',
+                      'transition-colors duration-150 ease-out',
+                      selected
+                        ? 'bg-primary/8 font-semibold text-primary'
+                        : 'font-normal text-foreground hover:bg-muted/65',
+                    )}
+                  >
+                    {opt.label}
+                    {selected && <Check className="size-3.5 shrink-0 text-primary" />}
+                  </CommandItem>
+                )
+              })}
             </CommandGroup>
           </CommandList>
         </Command>
@@ -552,7 +867,7 @@ const TypeFilter = memo(function TypeFilter({
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// BedsFilter
+// BedsFilter — equal-width chip grid; never overflows regardless of count
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BedsFilter = memo(function BedsFilter({
@@ -571,13 +886,17 @@ const BedsFilter = memo(function BedsFilter({
       <PopoverTrigger asChild>
         <FilterPill isActive={isActive}>{label}</FilterPill>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={6} className="w-52 p-3">
+      <PopoverContent align="start" sideOffset={8} collisionPadding={12} className={cn(POPOVER_CLASS, 'w-60')}>
         <PopoverHeader
           title="Bedrooms"
           isActive={isActive}
           onClear={() => { onChange(null); setOpen(false) }}
         />
-        <div className="mt-2 flex gap-1.5">
+        {/* grid forces equal width per chip — no overflow regardless of count */}
+        <div
+          className="mt-3"
+          style={{ display: 'grid', gridTemplateColumns: `repeat(${beds.length || 1}, 1fr)`, gap: 6 }}
+        >
           {beds.map(n => (
             <ChipButton
               key={n}
@@ -594,7 +913,7 @@ const BedsFilter = memo(function BedsFilter({
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PriceFilter — local state during drag; commits on "Apply" only
+// PriceFilter — dual numeric inputs + range slider, commits on Apply
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PriceFilter = memo(function PriceFilter({
@@ -607,14 +926,51 @@ const PriceFilter = memo(function PriceFilter({
   const [open, setOpen] = useState(false)
   const [localMin, setLocalMin] = useState(minPrice ?? PRICE_MIN)
   const [localMax, setLocalMax] = useState(maxPrice ?? PRICE_MAX)
+  const [minStr, setMinStr] = useState('')
+  const [maxStr, setMaxStr] = useState('')
 
-  // Reset local state to committed values whenever the popover opens
   function handleOpenChange(next: boolean) {
     if (next) {
-      setLocalMin(minPrice ?? PRICE_MIN)
-      setLocalMax(maxPrice ?? PRICE_MAX)
+      const min = minPrice ?? PRICE_MIN
+      const max = maxPrice ?? PRICE_MAX
+      setLocalMin(min)
+      setLocalMax(max)
+      setMinStr(min > PRICE_MIN ? fmtNum(min) : '')
+      setMaxStr(max < PRICE_MAX ? fmtNum(max) : '')
     }
     setOpen(next)
+  }
+
+  // Slider → updates both numeric state and input strings simultaneously
+  function handleSlider([min, max]: number[]) {
+    setLocalMin(min)
+    setLocalMax(max)
+    setMinStr(min > PRICE_MIN ? fmtNum(min) : '')
+    setMaxStr(max < PRICE_MAX ? fmtNum(max) : '')
+  }
+
+  // Min input → parse digits, update slider position, keep raw string for display
+  function handleMinInput(v: string) {
+    const digits = v.replace(/[^0-9]/g, '')
+    setMinStr(digits)
+    const n = parseInt(digits, 10)
+    if (!isNaN(n)) {
+      setLocalMin(Math.min(Math.max(Math.round(n / PRICE_STEP) * PRICE_STEP, PRICE_MIN), localMax - PRICE_STEP))
+    } else if (digits === '') {
+      setLocalMin(PRICE_MIN)
+    }
+  }
+
+  // Max input → parse digits, update slider position, keep raw string for display
+  function handleMaxInput(v: string) {
+    const digits = v.replace(/[^0-9]/g, '')
+    setMaxStr(digits)
+    const n = parseInt(digits, 10)
+    if (!isNaN(n)) {
+      setLocalMax(Math.max(Math.min(Math.round(n / PRICE_STEP) * PRICE_STEP, PRICE_MAX), localMin + PRICE_STEP))
+    } else if (digits === '') {
+      setLocalMax(PRICE_MAX)
+    }
   }
 
   function apply() {
@@ -633,40 +989,77 @@ const PriceFilter = memo(function PriceFilter({
     return 'Price'
   }, [minPrice, maxPrice])
 
+  const priceInputClass = cn(
+    'w-full rounded-xl border border-border bg-muted/30 px-3 py-2.5',
+    'text-[13px] font-semibold text-foreground tabular-nums',
+    'placeholder:font-normal placeholder:text-muted-foreground/35',
+    'transition-[border-color,box-shadow,background-color] duration-150 outline-none',
+    'focus:border-primary/40 focus:bg-card focus:ring-2 focus:ring-primary/10',
+  )
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <FilterPill isActive={isActive}>{label}</FilterPill>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={6} className="w-72 p-4">
+      <PopoverContent align="end" sideOffset={8} collisionPadding={12} className={cn(POPOVER_CLASS, 'w-80')}>
         <PopoverHeader
           title="Price Range"
           isActive={isActive}
           onClear={() => { onChange(null, null); setOpen(false) }}
         />
 
-        {/* Price display */}
-        <div className="mt-3 flex items-baseline justify-between">
-          <span className="text-[15px] font-bold tabular-nums text-foreground">
-            {fmtPrice(localMin)}
-          </span>
-          <span className="text-[12px] text-muted-foreground">to</span>
-          <span className="text-[15px] font-bold tabular-nums text-foreground">
-            {localMax >= PRICE_MAX ? 'No max' : fmtPrice(localMax)}
-          </span>
+        {/* Dual numeric inputs */}
+        <div className="mt-3 flex items-end gap-2">
+          <div className="flex-1">
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+              Min Price
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={minStr}
+              onChange={e => handleMinInput(e.target.value)}
+              placeholder="No min"
+              aria-label="Minimum price"
+              className={priceInputClass}
+            />
+          </div>
+          <span className="mb-3 shrink-0 text-[13px] text-muted-foreground/30">–</span>
+          <div className="flex-1">
+            <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/50">
+              Max Price
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={maxStr}
+              onChange={e => handleMaxInput(e.target.value)}
+              placeholder="No max"
+              aria-label="Maximum price"
+              className={priceInputClass}
+            />
+          </div>
         </div>
 
-        {/* Dual-thumb range slider — does NOT trigger onChange until Apply is clicked */}
-        <Slider
-          min={PRICE_MIN}
-          max={PRICE_MAX}
-          step={PRICE_STEP}
-          value={[localMin, localMax]}
-          onValueChange={([min, max]) => { setLocalMin(min); setLocalMax(max) }}
-          className="mt-4 mb-1"
-        />
+        {/* Dual-thumb range slider */}
+        <div className="mt-5 px-0.5">
+          <Slider
+            min={PRICE_MIN}
+            max={PRICE_MAX}
+            step={PRICE_STEP}
+            value={[localMin, localMax]}
+            onValueChange={handleSlider}
+          />
+        </div>
 
-        <Button size="sm" className="mt-3 w-full" onClick={apply}>
+        {/* Range boundary labels */}
+        <div className="mt-1.5 flex justify-between">
+          <span className="text-[10px] text-muted-foreground/35">$0</span>
+          <span className="text-[10px] text-muted-foreground/35">$10M+</span>
+        </div>
+
+        <Button size="sm" className="mt-3 w-full rounded-xl font-semibold" onClick={apply}>
           Apply
         </Button>
       </PopoverContent>
@@ -694,13 +1087,16 @@ const BathsFilter = memo(function BathsFilter({
       <PopoverTrigger asChild>
         <FilterPill isActive={isActive}>{label}</FilterPill>
       </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={6} className="w-52 p-3">
+      <PopoverContent align="end" sideOffset={8} collisionPadding={12} className={cn(POPOVER_CLASS, 'w-60')}>
         <PopoverHeader
           title="Bathrooms"
           isActive={isActive}
           onClear={() => { onChange(null); setOpen(false) }}
         />
-        <div className="mt-2 flex gap-1.5">
+        <div
+          className="mt-3"
+          style={{ display: 'grid', gridTemplateColumns: `repeat(${baths.length || 1}, 1fr)`, gap: 6 }}
+        >
           {baths.map(n => (
             <ChipButton
               key={n}
@@ -717,7 +1113,7 @@ const BathsFilter = memo(function BathsFilter({
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SavedChip — inline heart toggle (no popover)
+// SavedChip — heart toggle in the actions group, visually distinct from filters
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SavedChip = memo(function SavedChip({
@@ -727,36 +1123,48 @@ const SavedChip = memo(function SavedChip({
   onToggle:    () => void
   isFetching?: boolean
 }) {
+  const count = useFavoritesCount()
   return (
     <button
       type="button"
       onClick={onToggle}
+      aria-pressed={active}
+      aria-label={active ? 'Showing saved properties' : 'Show saved properties'}
       style={{ height: 38 }}
       className={cn(
         'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3',
-        'text-[13px] font-medium outline-none transition-all duration-150',
-        'focus-visible:ring-2 focus-visible:ring-ring/20',
+        'text-[13px] font-semibold outline-none transition-colors duration-150',
+        'focus-visible:ring-2 focus-visible:ring-rose-400/30',
         active
-          ? 'border-rose-400/50 bg-rose-50 text-rose-600 font-semibold'
-          : 'border-border bg-card text-foreground hover:border-foreground/25 hover:bg-muted',
+          ? 'border-rose-400/50 bg-rose-500 text-white shadow-[0_2px_8px_rgba(239,68,68,0.25),inset_0_1px_0_rgba(255,255,255,0.12)] dark:bg-rose-500'
+          : 'border-rose-200/80 bg-rose-50/60 text-rose-500 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.05)] hover:border-rose-300/80 hover:bg-rose-50 dark:border-rose-500/20 dark:bg-rose-500/5 dark:text-rose-400',
       )}
     >
       {isFetching
-        ? <Loader2 className="size-3.5 animate-spin text-rose-500" />
+        ? <Loader2 className={cn('size-3.5 animate-spin', active ? 'text-white' : 'text-rose-400')} />
         : (
           <Heart className={cn(
-            'size-3.5 transition-all duration-150',
-            active ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground/50',
+            'size-3.5 transition-colors duration-150',
+            active ? 'fill-white text-white scale-110' : 'fill-rose-200 text-rose-400',
           )} />
         )
       }
       Saved
+      {count > 0 && (
+        <span className={cn(
+          'inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1',
+          'text-[10px] font-bold leading-none tabular-nums',
+          active ? 'bg-white/25 text-white' : 'bg-rose-500 text-white',
+        )}>
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
     </button>
   )
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SortDropdown
+// SortDropdown — checkmark on active item, tighter option spacing
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SortDropdown = memo(function SortDropdown({
@@ -772,24 +1180,29 @@ const SortDropdown = memo(function SortDropdown({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <FilterPill isActive={isActive}>
-          <span className="hidden text-[11px] text-muted-foreground sm:inline">Sort:</span>
+          <span className="hidden text-[11px] text-muted-foreground/50 sm:inline">Sort:</span>
           <span>{current?.label ?? 'Sort'}</span>
         </FilterPill>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="min-w-44 overflow-hidden rounded-xl p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.10),0_2px_8px_rgba(0,0,0,0.06)]"
+        collisionPadding={12}
+        className={cn(POPOVER_CLASS, 'min-w-48 p-1.5')}
       >
         {SORT_OPTIONS.map(opt => (
           <DropdownMenuItem
             key={opt.value}
             onClick={() => onSortChange(opt.value)}
             className={cn(
-              'cursor-pointer rounded-lg px-3 py-2 text-[13px]',
-              sortBy === opt.value && 'font-semibold',
+              'flex cursor-pointer items-center justify-between rounded-xl px-3 py-2.5 text-[13px]',
+              'transition-colors duration-150 ease-out',
+              sortBy === opt.value
+                ? 'bg-primary/8 font-semibold text-primary'
+                : 'font-normal text-foreground hover:bg-muted/65',
             )}
           >
             {opt.label}
+            {sortBy === opt.value && <Check className="size-3.5 shrink-0 text-primary" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -798,7 +1211,7 @@ const SortDropdown = memo(function SortDropdown({
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ViewToggle
+// ViewToggle — segmented control with sliding pill indicator
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ViewToggle = memo(function ViewToggle({
@@ -808,95 +1221,60 @@ const ViewToggle = memo(function ViewToggle({
   onViewModeChange: (v: ViewMode) => void
   buttonSize?:      number
 }) {
+  const isGrid   = viewMode === 'grid'
+  // 15px floor — icons need visual weight at 36–40px button size
+  const iconSize = Math.max(15, Math.round(buttonSize * 0.39))
+  // 3px (0.75 Tailwind unit) follows iOS/Linear formula: innerRadius = outerRadius − padding → 12 − 3 = 9
+  const padding  = 3
+
   return (
     <div
-      style={{ height: buttonSize }}
-      className="flex shrink-0 overflow-hidden rounded-xl border border-border bg-card"
+      role="group"
+      aria-label="View mode"
+      style={{ width: buttonSize * 2, height: buttonSize }}
+      className="relative flex shrink-0 rounded-[12px] border border-border/20 bg-muted/40 p-0.75"
     >
+      {/* Sliding pill — absolutely positioned, translates exactly one button-width */}
+      <div
+        aria-hidden
+        style={{ width: `calc(50% - ${padding}px)` }}
+        className={cn(
+          'pointer-events-none absolute inset-y-0.75 left-0.75 rounded-[9px]',
+          'bg-card shadow-[0_1px_2px_rgba(0,0,0,0.10),0_2px_5px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.70)]',
+          'transition-transform duration-200 ease-out',
+          !isGrid && 'translate-x-full',
+        )}
+      />
+
       {([
         { mode: 'grid' as ViewMode, Icon: LayoutGrid, label: 'Grid view' },
         { mode: 'list' as ViewMode, Icon: LayoutList, label: 'List view' },
-      ] as const).map(({ mode, Icon, label }) => (
-        <button
-          key={mode}
-          type="button"
-          onClick={() => onViewModeChange(mode)}
-          aria-label={label}
-          aria-pressed={viewMode === mode}
-          style={{ width: buttonSize, height: buttonSize }}
-          className={cn(
-            'flex shrink-0 cursor-pointer items-center justify-center outline-none',
-            'transition-all duration-150',
-            'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/20',
-            viewMode === mode
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-card text-muted-foreground hover:bg-muted hover:text-foreground',
-          )}
-        >
-          <Icon style={{ width: 14, height: 14 }} />
-        </button>
-      ))}
+      ] as const).map(({ mode, Icon, label }) => {
+        const active = viewMode === mode
+        return (
+          <button
+            key={mode}
+            type="button"
+            onClick={() => onViewModeChange(mode)}
+            aria-label={label}
+            aria-pressed={active}
+            className={cn(
+              'relative z-10 flex flex-1 cursor-pointer select-none items-center justify-center rounded-[9px]',
+              'outline-none transition-colors duration-150',
+              'focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:ring-inset',
+              'active:scale-[0.93]',
+              active
+                ? 'text-foreground'
+                : 'text-muted-foreground/38 hover:text-muted-foreground/65',
+            )}
+          >
+            <Icon style={{ width: iconSize, height: iconSize, strokeWidth: 1.75 }} />
+          </button>
+        )
+      })}
     </div>
   )
 })
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ChipButton — option chip inside popover panels / mobile drawer
-// ─────────────────────────────────────────────────────────────────────────────
-
-const ChipButton = memo(function ChipButton({
-  active, onClick, children,
-}: {
-  active:   boolean
-  onClick:  () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{ height: 34 }}
-      className={cn(
-        'inline-flex cursor-pointer items-center rounded-lg border px-3 text-[13px] font-medium',
-        'transition-all duration-150',
-        active
-          ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-          : 'border-border bg-card text-foreground hover:bg-muted hover:border-border/70',
-      )}
-    >
-      {children}
-    </button>
-  )
-})
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PopoverHeader — reused header row inside each filter popover
-// ─────────────────────────────────────────────────────────────────────────────
-
-function PopoverHeader({
-  title, isActive, onClear,
-}: {
-  title:    string
-  isActive: boolean
-  onClear:  () => void
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-        {title}
-      </span>
-      {isActive && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="text-[11.5px] font-medium text-primary underline-offset-2 hover:underline"
-        >
-          Clear
-        </button>
-      )}
-    </div>
-  )
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DrawerSection — labelled group inside the mobile filter drawer
@@ -936,10 +1314,10 @@ function DrawerChip({
       onClick={onClick}
       className={cn(
         'inline-flex h-11 cursor-pointer items-center rounded-xl border px-4 text-[13px] font-semibold',
-        'transition-all duration-150 active:scale-[0.97]',
+        'transition-colors duration-150 active:scale-[0.97]',
         active
-          ? 'border-primary bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_3px_rgba(0,0,0,0.08)]'
-          : 'border-border/40 bg-muted/30 text-foreground hover:border-border/70 hover:bg-muted/50',
+          ? 'border-primary bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(0,97,188,0.22),inset_0_1px_0_rgba(255,255,255,0.12)]'
+          : 'border-border/50 bg-muted/30 text-foreground hover:border-border/70 hover:bg-muted/50',
       )}
     >
       {children}
@@ -948,9 +1326,8 @@ function DrawerChip({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DrawerPriceControl — price slider inside the mobile drawer.
-// Uses onValueCommit so the pending state only updates when the thumb is released,
-// preventing unnecessary re-renders during drag.
+// DrawerPriceControl — price range inside the mobile filter drawer.
+// Uses onValueCommit so pending state only updates when thumb is released.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function DrawerPriceControl({
@@ -999,3 +1376,4 @@ function DrawerPriceControl({
     </div>
   )
 }
+

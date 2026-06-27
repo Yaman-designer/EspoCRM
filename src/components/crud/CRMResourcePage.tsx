@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { AlertTriangle, Building2, Eye, Pencil, Trash2 } from 'lucide-react'
 import axiosClient from '@/api/axiosClient'
@@ -104,8 +104,32 @@ export function CRMResourcePage<T extends { id: string }>({
 
   // ── Mutations ────────────────────────────────────────────────────────────────
 
-  const deleteMutation = useMutation<void, Error, T>({
+  type DeleteContext = { snapshot: [QueryKey, EspoListResponse<T> | undefined][] }
+
+  const deleteMutation = useMutation<void, Error, T, DeleteContext>({
     mutationFn: (row) => axiosClient.delete(`${config.endpoint}/${row.id}`).then(() => void 0),
+    onMutate: async (row) => {
+      // Cancel in-flight refetches so they don't overwrite the optimistic removal.
+      await queryClient.cancelQueries({ queryKey: [config.queryKey] })
+
+      // Snapshot all queries sharing this key prefix for rollback on error.
+      const snapshot = queryClient.getQueriesData<EspoListResponse<T>>({ queryKey: [config.queryKey] })
+
+      // Optimistically remove the row from every matching cache entry immediately.
+      queryClient.setQueriesData<EspoListResponse<T>>(
+        { queryKey: [config.queryKey] },
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            list:  old.list.filter((item) => item.id !== row.id),
+            total: Math.max(0, old.total - 1),
+          }
+        },
+      )
+
+      return { snapshot }
+    },
     onSuccess: (_, deletedRow) => {
       toast.success(`${config.getEntityName(deletedRow)} deleted`)
       setDeleteOpen(false)
@@ -115,9 +139,16 @@ export function CRMResourcePage<T extends { id: string }>({
         setViewOpen(false)
         setViewRow(undefined)
       }
+    },
+    onError: (_, __, context) => {
+      toast.error('Failed to delete record')
+      // Roll back every cache entry to its pre-mutation snapshot.
+      context?.snapshot.forEach(([key, data]) => queryClient.setQueryData(key, data))
+    },
+    onSettled: () => {
+      // Always refetch to reconcile the cache with the server regardless of outcome.
       queryClient.invalidateQueries({ queryKey: [config.queryKey] })
     },
-    onError: () => toast.error('Failed to delete record'),
   })
 
   const bulkDeleteMutation = useMutation<{ succeeded: number; failed: number }, Error, T[]>({

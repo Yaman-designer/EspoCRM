@@ -20,9 +20,10 @@ interface PropertyGridProps {
   onClearFilters: () => void
   onAddProperty: () => void
   // Error state — takes precedence over isLoading to prevent infinite skeleton
-  isError?:   boolean
-  savedOnly?: boolean
-  onRetry?:   () => void
+  isError?:     boolean
+  savedOnly?:   boolean
+  searchQuery?: string
+  onRetry?:     () => void
 }
 
 export const PropertyGrid = memo(function PropertyGrid({
@@ -38,6 +39,7 @@ export const PropertyGrid = memo(function PropertyGrid({
   onAddProperty,
   isError = false,
   savedOnly = false,
+  searchQuery = '',
   onRetry,
 }: PropertyGridProps) {
   // Error branch must come before isLoading: when the query errors, data becomes
@@ -78,6 +80,8 @@ export const PropertyGrid = memo(function PropertyGrid({
     return (
       <PropertyEmptyState
         hasActiveFilters={hasActiveFilters}
+        savedOnly={savedOnly}
+        searchQuery={searchQuery}
         onClearFilters={onClearFilters}
         onAddProperty={onAddProperty}
       />

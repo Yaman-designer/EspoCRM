@@ -9,13 +9,13 @@ export const SORT_MAP: Record<SortOption, { orderBy: string; order: 'asc' | 'des
 }
 
 export function buildWhereParams(
-  search:    string,
-  type:      string,
-  savedOnly: boolean,
-  bedrooms:  number | null,
-  bathrooms: number | null,
-  minPrice:  number | null,
-  maxPrice:  number | null,
+  search:      string,
+  type:        string,
+  favoriteIds: string[] | null,
+  bedrooms:    number | null,
+  bathrooms:   number | null,
+  minPrice:    number | null,
+  maxPrice:    number | null,
 ): Record<string, string> {
   const params: Record<string, string> = {}
   let i = 0
@@ -31,8 +31,12 @@ export function buildWhereParams(
     params[`where[${i}][value]`]     = type
     i++
   }
-  if (savedOnly) {
-    params[`where[${i}][type]`] = 'isFollowed'
+  if (favoriteIds !== null && favoriteIds.length > 0) {
+    params[`where[${i}][type]`]      = 'in'
+    params[`where[${i}][attribute]`] = 'id'
+    favoriteIds.forEach((id, j) => {
+      params[`where[${i}][value][${j}]`] = id
+    })
     i++
   }
   if (bedrooms !== null) {
