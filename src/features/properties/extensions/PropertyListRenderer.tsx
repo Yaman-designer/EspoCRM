@@ -73,16 +73,17 @@ function readPageSizeFromUrl(): PageSizeOption {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function PropertyListRenderer({
-  onEdit, onDelete, onAdd,
+  onEdit, onDelete,
 }: ListRendererProps<RealEstateProperty>) {
 
   const router = useRouter()
 
-  // Navigate to the full detail page instead of opening the legacy side sheet.
   const onView = useCallback((p: RealEstateProperty) => {
     const slug = p.propertyCode?.toLowerCase() ?? p.id
     router.push(`/properties/${encodeURIComponent(slug)}`)
   }, [router])
+
+  const handleAdd = useCallback(() => router.push('/properties/new'), [router])
 
   // ── Favorites (localStorage) ──────────────────────────────────────────────
   const favoriteIds = useFavoriteIds()
@@ -232,7 +233,7 @@ export function PropertyListRenderer({
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}
           totalCount={totalCount}
-          onAddProperty={onAdd}
+          onAddProperty={handleAdd}
           hasActiveFilters={hasFilters}
           onClearFilters={onClearFilters}
           isSavedFetching={isSavedFetching}
@@ -305,7 +306,7 @@ export function PropertyListRenderer({
             onEdit={onEdit}
             onDelete={onDelete}
             onClearFilters={onClearFilters}
-            onAddProperty={onAdd}
+            onAddProperty={handleAdd}
             isError={isError}
             onRetry={refetch}
           />

@@ -22,6 +22,8 @@ export interface StepEmptyState {
 export interface StepConfig {
   id: string
   title: string
+  /** Full display title for the step page header (e.g. "Basic Information" vs stepper label "Basic Info") */
+  displayTitle?: string
   description?: string
   icon?: ComponentType<{ className?: string }>
   optional?: boolean
@@ -35,6 +37,12 @@ export interface StepConfig {
   docsUrl?: string
   /** Empty state shown when the step has no content/data yet */
   emptyState?: StepEmptyState
+  /** Number of required fields shown in the step header badge */
+  requiredCount?: number
+  /** Estimated time to complete this step (e.g. "4 min") */
+  estTime?: string
+  /** Overall form completion percentage after this step (0–100) */
+  completion?: number
 }
 
 /* ─── Per-step validation state ─────────────────────────────────── */
@@ -111,6 +119,11 @@ export interface FormFrameworkConfig {
    * confirmation dialog. Default: true.
    */
   navigationGuard?: boolean
+  /**
+   * Overrides the total phases denominator shown in the action bar phase counter.
+   * E.g. set to 5 to display "PHASE 01 / 05" even when steps array has 3 entries.
+   */
+  totalPhasesCount?: number
 }
 
 /* ─── Lifecycle callbacks ───────────────────────────────────────── */

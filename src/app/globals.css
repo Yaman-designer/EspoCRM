@@ -338,9 +338,49 @@
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Section collapse / expand animations */
+@keyframes ff-section-expand {
+  from { opacity: 0; transform: translateY(-8px) scale(0.988); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);     }
+}
+@keyframes ff-section-collapse {
+  from { opacity: 1; transform: translateY(0)    scale(1);     }
+  to   { opacity: 0; transform: translateY(-6px) scale(0.992); }
+}
+@keyframes ff-section-bar-appear {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+.ff-section-expand    { animation: ff-section-expand    0.26s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.ff-section-collapse  { animation: ff-section-collapse  0.22s cubic-bezier(0.4, 0, 1, 1)    both; }
+.ff-section-bar-appear{ animation: ff-section-bar-appear 0.18s cubic-bezier(0, 0, 0.2, 1)   both; }
+
+/* Section card staggered entrance — --section-i controls per-section delay */
+@keyframes ff-section-card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ff-section-card-in {
+  animation: ff-section-card-in 0.28s cubic-bezier(0, 0, 0.2, 1) both;
+  animation-delay: calc(var(--section-i, 0) * 60ms + 50ms);
+}
+
+/* Field error message reveal */
+@keyframes ff-field-error-in {
+  from { opacity: 0; transform: translateY(-2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ff-field-error-in {
+  animation: ff-field-error-in 0.15s cubic-bezier(0, 0, 0.2, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .ff-form-mount, .ff-success-pulse, .ff-badge-pop,
   .ff-exit-forward, .ff-exit-backward,
-  .ff-enter-forward, .ff-enter-backward {
+  .ff-enter-forward, .ff-enter-backward,
+  .ff-section-expand, .ff-section-collapse, .ff-section-bar-appear,
+  .ff-section-card-in, .ff-field-error-in {
     animation: none;
   }
   .ff-connector-fill,

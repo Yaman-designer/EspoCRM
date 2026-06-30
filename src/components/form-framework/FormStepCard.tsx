@@ -7,50 +7,81 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useFormFramework } from './context'
 import type { StepEmptyState } from './types'
 
-/* ─── Step loading skeleton (inside card body) ───────────────────── */
+/* ─── Step loading skeleton ───────────────────────────────────────────
+   Mirrors the actual card layout so the loading state feels native.
+────────────────────────────────────────────────────────────────────── */
 
-function StepBodySkeleton() {
+function PremiumCardSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-5">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="space-y-2">
-            <Skeleton className="h-3 w-24 rounded" />
-            <Skeleton className="h-11 w-full rounded-lg" />
+    <div className="overflow-hidden rounded-[24px] border border-border/30 bg-card shadow-[0_1px_2px_rgba(16,24,40,0.04),0_3px_16px_rgba(16,24,40,0.05)]">
+      {/* Header zone */}
+      <div className="px-4 pb-4 pt-5 sm:px-8 sm:pb-5 sm:pt-7">
+        <div className="flex items-start gap-4">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+          <div className="space-y-2 pt-1">
+            <Skeleton className="h-3.5 w-36 rounded-md" />
+            <Skeleton className="h-3 w-52 rounded" />
           </div>
-        ))}
+        </div>
       </div>
-      <div className="space-y-2">
-        <Skeleton className="h-3 w-32 rounded" />
-        <Skeleton className="h-24 w-full rounded-lg" />
+      <div className="mx-4 border-b border-border/20 sm:mx-8" />
+      {/* Body zone */}
+      <div className="px-4 pb-6 pt-4 sm:px-8 sm:pb-8 sm:pt-6">
+        <div className="grid grid-cols-12 gap-x-6 gap-y-5">
+          {Array.from({ length: rows }).map((_, i) => {
+            /* Alternate full-width and half-width skeleton fields */
+            const span = i === 0 || i === rows - 1 ? 12 : 6
+            return (
+              <div
+                key={i}
+                className={cn(
+                  'space-y-2',
+                  span === 12 ? 'col-span-12' : 'col-span-12 sm:col-span-6',
+                )}
+              >
+                <Skeleton className="h-3 w-20 rounded" />
+                <Skeleton className="h-12 w-full rounded-xl" />
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
 }
 
-/* ─── Empty state (inside card body) ─────────────────────────────── */
+function StepBodySkeleton() {
+  return (
+    <div className="space-y-6">
+      <PremiumCardSkeleton rows={5} />
+      <PremiumCardSkeleton rows={4} />
+    </div>
+  )
+}
+
+/* ─── Empty state ─────────────────────────────────────────────────── */
 
 function StepEmptyStateView({ empty }: { empty: StepEmptyState }) {
   const Illustration = empty.illustration
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-border/30 bg-muted/20 py-16 text-center">
       {Illustration && (
-        <div className="text-muted-foreground/30">
-          <Illustration className="h-16 w-16" />
+        <div className="text-muted-foreground/25">
+          <Illustration className="h-14 w-14" />
         </div>
       )}
       <div className="space-y-1.5">
-        <p className="text-sm font-medium text-foreground">{empty.title}</p>
+        <p className="text-sm font-semibold text-foreground">{empty.title}</p>
         {empty.description && (
-          <p className="text-sm text-muted-foreground max-w-xs">{empty.description}</p>
+          <p className="max-w-xs text-sm text-muted-foreground">{empty.description}</p>
         )}
       </div>
       {empty.action && (
         <button
           type="button"
           onClick={empty.action.onClick}
-          className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+          className="text-xs font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
         >
           {empty.action.label}
         </button>
@@ -59,12 +90,11 @@ function StepEmptyStateView({ empty }: { empty: StepEmptyState }) {
   )
 }
 
-/* ─── Main FormStepCard ───────────────────────────────────────────── */
+/* ─── FormStepCard ────────────────────────────────────────────────── */
 
 interface FormStepCardProps {
   children: ReactNode
   headingRef: RefObject<HTMLHeadingElement | null>
-  /** Show body skeleton instead of children */
   isLoading?: boolean
   className?: string
 }
@@ -77,7 +107,6 @@ export function FormStepCard({
 }: FormStepCardProps) {
   const { config, displayedStepIndex, animClass } = useFormFramework()
   const step = config.steps[displayedStepIndex]
-  const StepIcon = step?.icon
   const hasChildren = Boolean(children)
 
   return (
@@ -85,81 +114,56 @@ export function FormStepCard({
       className={cn('will-change-[opacity,transform]', animClass, className)}
       data-slot="form-step-card-wrapper"
     >
-      <article
-        className="overflow-hidden rounded-[28px] border border-border bg-card shadow-design-md"
-        aria-labelledby="ff-step-heading"
-        data-slot="form-step-card"
-      >
-        {/* ── Card header ─────────────────────────────────────── */}
-        {step && (
-          <div className="border-b border-border px-8 py-6">
-            <div className="flex items-start gap-4">
+      {/* Screen reader heading — announces the step to assistive technology */}
+      {step && (
+        <h2
+          id="ff-step-heading"
+          ref={headingRef}
+          tabIndex={-1}
+          className="sr-only outline-none"
+        >
+          {step.title}
+        </h2>
+      )}
 
-              {/* Step icon */}
-              {StepIcon && (
-                <div
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-primary ring-1 ring-primary/10"
-                  aria-hidden
-                >
-                  <StepIcon className="h-5 w-5" />
-                </div>
-              )}
-
-              <div className="flex-1 min-w-0 space-y-1">
-                {/* Step title — focusable for screen-reader announcement */}
-                <h2
-                  id="ff-step-heading"
-                  ref={headingRef}
-                  tabIndex={-1}
-                  className="text-[17px] font-semibold tracking-tight text-foreground outline-none"
-                >
-                  {step.title}
-                </h2>
-
-                {/* Step description */}
-                {step.description && (
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {step.description}
-                  </p>
-                )}
-
-                {/* Helper text callout */}
-                {step.helperText && (
-                  <div className="mt-3 flex items-start gap-2 rounded-xl bg-accent/60 px-3.5 py-2.5 text-xs text-foreground/70 ring-1 ring-primary/8">
-                    <Info
-                      className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/50"
-                      aria-hidden
-                    />
-                    <span className="flex-1 leading-relaxed">{step.helperText}</span>
-                    {step.docsUrl && (
-                      <a
-                        href={step.docsUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="ml-1 shrink-0 font-medium text-primary hover:underline underline-offset-2 inline-flex items-center gap-0.5"
-                      >
-                        Learn more
-                        <ExternalLink className="h-3 w-3" aria-hidden />
-                      </a>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ── Card body ───────────────────────────────────────── */}
-        <div className="px-8 py-8">
-          {isLoading ? (
-            <StepBodySkeleton />
-          ) : !hasChildren && step?.emptyState ? (
-            <StepEmptyStateView empty={step.emptyState} />
-          ) : (
-            children
+      {/* Helper text callout */}
+      {step?.helperText && (
+        <div className={cn(
+          'mb-5 flex items-start gap-3 sm:mb-8',
+          'rounded-2xl border border-primary/10 bg-primary/4',
+          'px-5 py-4',
+        )}>
+          <Info
+            className="mt-0.5 h-4 w-4 shrink-0 text-primary/55"
+            aria-hidden
+          />
+          <span className="flex-1 text-[13px] leading-relaxed text-foreground/70">
+            {step.helperText}
+          </span>
+          {step.docsUrl && (
+            <a
+              href={step.docsUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="ml-1 inline-flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-primary underline-offset-2 hover:underline"
+            >
+              Learn more
+              <ExternalLink className="h-3 w-3" aria-hidden />
+            </a>
           )}
         </div>
-      </article>
+      )}
+
+      {/* Step content */}
+      <div aria-labelledby="ff-step-heading" data-slot="form-step-card">
+        {isLoading ? (
+          <StepBodySkeleton />
+        ) : !hasChildren && step?.emptyState ? (
+          <StepEmptyStateView empty={step.emptyState} />
+        ) : (
+          children
+        )}
+      </div>
     </div>
   )
 }
