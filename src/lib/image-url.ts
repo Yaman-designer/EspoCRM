@@ -31,3 +31,12 @@ export function resolvePropertyImageId(
 ): string | null {
   return mainImageId ?? imagesIds?.[0] ?? null
 }
+
+/**
+ * Returns the internal proxy URL for downloading a Document's file
+ * (an Attachment record, not a WebAsset image) — see /api/espo-file.
+ */
+export function getFileDownloadUrl(fileId: string | null | undefined): string | null {
+  if (!fileId) return null
+  return `/api/espo-file?id=${encodeURIComponent(fileId)}`
+}

@@ -2,7 +2,7 @@
 
 import type { UseFormReturn } from 'react-hook-form'
 import type { FieldSchema, FieldOption } from './types'
-import { isFieldVisible } from './VisibilityEngine'
+import { isFieldVisible, evaluateCondition } from './VisibilityEngine'
 import { getGridClasses } from './utils'
 import { FieldRenderer } from './FieldRenderer'
 
@@ -46,14 +46,16 @@ export function GridEngine({
         // Visibility condition
         if (!isFieldVisible(field.visibility, watchedValues)) return null
 
-        // Resolve disabled / readOnly (supports function form)
-        const isDisabled = typeof field.disabled === 'function'
+        // Resolve disabled / readOnly (supports static, function, and declarative *When forms)
+        const isDisabled = (typeof field.disabled === 'function'
           ? field.disabled(watchedValues)
-          : (field.disabled ?? false)
+          : (field.disabled ?? false)) ||
+          (field.disabledWhen ? evaluateCondition(field.disabledWhen, watchedValues) : false)
 
-        const isReadOnly = typeof field.readOnly === 'function'
+        const isReadOnly = (typeof field.readOnly === 'function'
           ? field.readOnly(watchedValues)
-          : (field.readOnly ?? false)
+          : (field.readOnly ?? false)) ||
+          (field.readOnlyWhen ? evaluateCondition(field.readOnlyWhen, watchedValues) : false)
 
         // Write permission check
         const hasWrite = !field.permissions?.write?.length ||

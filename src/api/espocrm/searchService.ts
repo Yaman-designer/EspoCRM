@@ -1,4 +1,4 @@
-export type SearchEntityType = 'Contact' | 'RealEstateRequest' | 'Account' | 'EblaContractParty'
+export type SearchEntityType = 'Contact' | 'RealEstateRequest' | 'Account' | 'EblaContractParty' | 'RealEstateProperty'
 
 export interface SearchResult {
   id: string
@@ -11,6 +11,7 @@ export const ENTITY_ROUTE: Record<SearchEntityType, string> = {
   RealEstateRequest: '/request',
   Account: '/company',
   EblaContractParty: '/contracts',
+  RealEstateProperty: '/properties',
 }
 
 export async function globalSearch(

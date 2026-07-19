@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useReducer, useDeferredValue } from 'react'
 import Link from 'next/link'
-import { Search, X, Loader2, UserRound, Headphones, Building2, Users, SearchX } from 'lucide-react'
+import { Search, X, Loader2, UserRound, Headphones, Building2, Users, SearchX, Home } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,7 @@ const ENTITY_META: Record<SearchEntityType, EntityMeta> = {
   RealEstateRequest: { icon: Headphones, bg: 'bg-blue-100',   fg: 'text-blue-600',   labelKey: 'search.entities.request' },
   Account:           { icon: Building2,  bg: 'bg-orange-100', fg: 'text-orange-600', labelKey: 'search.entities.account' },
   EblaContractParty: { icon: Users,      bg: 'bg-slate-100',  fg: 'text-slate-500',  labelKey: 'search.entities.contract' },
+  RealEstateProperty:{ icon: Home,       bg: 'bg-emerald-100', fg: 'text-emerald-600', labelKey: 'search.entities.property' },
 }
 
 // ── Debounce hook ────────────────────────────────────────────────────────────

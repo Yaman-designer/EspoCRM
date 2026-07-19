@@ -84,12 +84,21 @@ export type ValidationRule =
 
 /* ─── Dependencies ───────────────────────────────────────────────── */
 
-export type DependencyAction = 'clear' | 'reload-options' | 'update-validation'
+export type DependencyAction = 'clear' | 'reload-options' | 'update-validation' | 'auto-derive'
 
 export interface FieldDependency {
   on: string
   action: DependencyAction
   loadOptions?: OptionsLoader
+  /**
+   * Used by action: 'auto-derive'. Computes this field's new value from the
+   * `on` field's current value (and the full form snapshot, for rules that
+   * need more context). Return `undefined` when the rule can't determine a
+   * value yet (e.g. controlling field empty) — the engine leaves the field
+   * untouched in that case. Synchronous: this is a pure business-rule lookup,
+   * not a network fetch (see `loadOptions` for the async case).
+   */
+  derive?: (parentValue: unknown, allValues: Record<string, unknown>) => unknown
   when?: ConditionNode
 }
 
@@ -125,8 +134,18 @@ interface BaseField {
   helperText?: string
   tooltip?: string
   required?: boolean
+  /** Declarative alternative to a hand-written custom validator: field becomes
+   *  required only while this condition evaluates true against the live form values. */
+  requiredWhen?: ConditionNode
   disabled?: boolean | ((values: Record<string, unknown>) => boolean)
+  /** Declarative disabled condition, OR-combined with `disabled` at render time. */
+  disabledWhen?: ConditionNode
   readOnly?: boolean | ((values: Record<string, unknown>) => boolean)
+  /** Declarative readOnly condition, OR-combined with `readOnly` at render time. */
+  readOnlyWhen?: ConditionNode
+  /** When true, the DependencyEngine clears this field's value the moment its
+   *  own `visibility` condition flips from visible to hidden. */
+  clearWhenHidden?: boolean
   defaultValue?: unknown
   span?: GridSpan
   validation?: ValidationRule[]
@@ -301,6 +320,11 @@ export interface ImageField extends BaseField {
   accept?: string[]
   maxSize?: number
   aspectRatio?: string
+  /** Transforms a stored string value (e.g. an attachment id) into a servable
+   *  preview URL. Preview-only — the field's submitted value is unaffected.
+   *  Optional; omitting it reproduces the previous behavior exactly (the raw
+   *  string value is used as-is). */
+  resolvePreviewSrc?: (value: string) => string
 }
 
 export interface MultiImageField extends BaseField {
@@ -308,6 +332,11 @@ export interface MultiImageField extends BaseField {
   accept?: string[]
   maxSize?: number
   maxFiles?: number
+  /** Transforms a stored string value (e.g. an attachment id) into a servable
+   *  preview URL. Preview-only — the field's submitted value is unaffected.
+   *  Optional; omitting it reproduces the previous behavior exactly (the raw
+   *  string value is used as-is). */
+  resolvePreviewSrc?: (value: string) => string
 }
 
 export interface FileField extends BaseField {

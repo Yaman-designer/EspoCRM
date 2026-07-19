@@ -14,6 +14,7 @@
   "search.entities.request": "Αίτημα",
   "search.entities.account": "Εταιρεία",
   "search.entities.contract": "Μέρος Σύμβασης",
+  "search.entities.property": "Ακίνητο",
   "table": {
     "records_one": "{{count}} εγγραφή",
     "records_other": "{{count}} εγγραφές",

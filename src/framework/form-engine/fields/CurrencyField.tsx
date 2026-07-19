@@ -20,7 +20,11 @@ export function CurrencyField({ schema, form, disabled, readOnly }: FieldCompone
     name: schema.currencyField ?? '__fe_no_currency_field__',
   }) as string | undefined
 
-  const code = (schema.currencyField ? watchedCurrency : undefined) ?? schema.currencyCode ?? 'SAR'
+  // 'EUR' fallback matches this app's single-source-of-truth operating
+  // currency (see lib/format.ts's APP_CURRENCY) — every real consumer sets
+  // schema.currencyCode explicitly, so this only applies if a future field
+  // is added without one.
+  const code = (schema.currencyField ? watchedCurrency : undefined) ?? schema.currencyCode ?? 'EUR'
   const symbol = CURRENCY_SYMBOLS[code] ?? code
 
   return (

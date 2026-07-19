@@ -10,6 +10,21 @@ import { buildRules } from '../ValidationEngine'
 import { getFieldId, formatBytes } from '../utils'
 import type { FieldComponentProps, FileField as Schema } from '../types'
 
+// Wave 7 (2026-07-15, Attachments). An already-persisted item (e.g. a
+// Document already related to this property on Edit) — distinct from a
+// freshly-picked File the user hasn't uploaded yet. FileField had zero
+// consumers before this wave, so extending its value union here carries no
+// regression risk to any other field.
+export interface ExistingFileRef {
+  id: string
+  name: string
+  existing: true
+}
+
+function isExistingFileRef(v: unknown): v is ExistingFileRef {
+  return typeof v === 'object' && v !== null && 'existing' in v && (v as ExistingFileRef).existing === true
+}
+
 export function FileField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
   const { field, fieldState } = useController({
     control: form.control,
@@ -18,10 +33,15 @@ export function FileField({ schema, form, disabled, readOnly }: FieldComponentPr
   })
 
   const multiple = schema.multiple ?? false
-  const files: File[] = multiple
+  // Single mode also accepts a plain non-empty string — a stored Attachment
+  // id (e.g. cDocumentassignment, same belongsTo-Attachment pattern as
+  // ImageField's cBannerphoto), shown as an existing, already-uploaded file.
+  const files: (File | ExistingFileRef)[] = multiple
     ? (Array.isArray(field.value) ? field.value : [])
-    : field.value instanceof File
+    : field.value instanceof File || isExistingFileRef(field.value)
     ? [field.value]
+    : typeof field.value === 'string' && field.value
+    ? [{ id: field.value, name: 'Existing file', existing: true }]
     : []
 
   const canAdd = multiple ? (!schema.maxFiles || files.length < schema.maxFiles) : files.length === 0
@@ -60,7 +80,9 @@ export function FileField({ schema, form, disabled, readOnly }: FieldComponentPr
           >
             <FileIcon className="h-4 w-4 shrink-0 text-primary" />
             <span className="flex-1 truncate text-sm text-foreground">{file.name}</span>
-            <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(file.size)}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {isExistingFileRef(file) ? 'Already attached' : formatBytes(file.size)}
+            </span>
             {!readOnly && !disabled && (
               <button
                 type="button"

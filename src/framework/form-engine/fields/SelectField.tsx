@@ -27,6 +27,7 @@ export function SelectField({ schema, form, disabled, readOnly, options }: Field
             value={field.value != null ? String(field.value) : ''}
             onValueChange={val => {
               if (readOnly) return
+              if (val === '__clear__') { field.onChange(undefined); return }
               // Find original option to preserve value type
               const opt = opts.find(o => String(o.value) === val)
               field.onChange(opt?.value ?? val)

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { stats, type Stat, type StatColor } from './data'
+import { usePropertyKPIs } from '@/features/properties/hooks/usePropertyKPIs'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   DollarSign,
@@ -50,15 +51,17 @@ function KpiCell({ iconName, title, value, trend, up, color }: Stat) {
         <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl border border-border/50 shadow-sm', palette.icon, palette.ring)}>
           <Icon className="h-4 w-4" />
         </div>
-        <span
-          className={cn(
-            'inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold tracking-wide',
-            up ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-brand-crimson/10 text-brand-crimson',
-          )}
-        >
-          {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-          {trend}
-        </span>
+        {trend != null && (
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold tracking-wide',
+              up ? 'bg-brand-emerald/10 text-brand-emerald' : 'bg-brand-crimson/10 text-brand-crimson',
+            )}
+          >
+            {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+            {trend}
+          </span>
+        )}
       </div>
       <div className="mt-2">
         <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
@@ -69,10 +72,29 @@ function KpiCell({ iconName, title, value, trend, up, color }: Stat) {
 }
 
 export function StatBar() {
+  // Business Analytics: "Active Listing" is backed by the real, live
+  // Active-status property count (fetchPropertyKPIs) instead of a static
+  // fixture. Wave 2 (2026-07-14) fixed this hook's underlying query, which
+  // had queried a fabricated status value and always returned 0 since it was
+  // first wired up. No period-over-period trend is fabricated — there is no
+  // real historical snapshot to compare against, so trend/up are simply
+  // omitted for this cell (see data.ts).
+  const { data: kpis, isLoading } = usePropertyKPIs()
+
+  const liveStats = stats.map((s) => {
+    if (s.title !== 'Active Listing') return s
+    return {
+      ...s,
+      value: isLoading || !kpis ? '—' : String(kpis.active),
+      trend: undefined,
+      up: undefined,
+    }
+  })
+
   return (
     <div className="overflow-hidden rounded-xl bg-card shadow-design-sm card-hover">
       <div className="grid grid-cols-2 divide-x divide-y divide-border/50 lg:grid-cols-5 lg:divide-y-0">
-        {stats.map((s) => (
+        {liveStats.map((s) => (
           <KpiCell key={s.title} {...s} />
         ))}
       </div>

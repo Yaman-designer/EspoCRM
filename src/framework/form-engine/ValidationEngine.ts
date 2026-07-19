@@ -1,5 +1,6 @@
 import type { RegisterOptions } from 'react-hook-form'
 import type { FieldSchema } from './types'
+import { evaluateCondition } from './VisibilityEngine'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const URL_RE = /^https?:\/\/.+/
@@ -17,6 +18,20 @@ export function buildRules(field: FieldSchema, getValues?: GetValues): RegisterO
 
   if (field.required) {
     rules.required = 'This field is required'
+  }
+
+  // requiredWhen is sugar over the existing 'custom' validator machinery —
+  // reuses evaluateCondition rather than a second condition-evaluation path.
+  if (field.requiredWhen) {
+    const cond = field.requiredWhen
+    const message = (field.meta?.requiredWhenMessage as string | undefined) ?? 'This field is required'
+    validates.vld_requiredWhen = (val) => {
+      const all = getValues?.() ?? {}
+      if (!evaluateCondition(cond, all)) return true
+      const isEmpty = val === undefined || val === null || val === '' ||
+        (Array.isArray(val) && val.length === 0)
+      return !isEmpty || message
+    }
   }
 
   for (const [i, rule] of (field.validation ?? []).entries()) {

@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { Heart } from 'lucide-react'
+import { toast } from 'sonner'
 import { PropertyToolbar } from '../components/PropertyToolbar'
 import { PropertyGrid } from '../components/PropertyGrid'
 import { PropertyPagination } from '../components/PropertyPagination'
@@ -11,6 +12,9 @@ import { buildWhereParams, SORT_MAP } from '../services/property.query.service'
 import { fetchProperties } from '../repositories/property.repository'
 import { PROPERTIES_QUERY_KEY, PAGE_SIZE_OPTIONS, type PageSizeOption } from '../domain/constants'
 import { useFavoriteIds } from '../hooks/useFavoriteState'
+import { getDataCompleteness } from '../lib/data-completeness'
+import { MIN_COMPLETENESS_TO_PUBLISH } from '../domain/property-lifecycle.rules'
+import { usePropertyDeletePermission } from '../hooks/usePropertyDeletePermission'
 import type { PropertyFilters, SortOption, ViewMode } from '../types/property.types'
 import type { RealEstateProperty } from '../types/property.types'
 import type { ListRendererProps } from '@/components/crud/resource-extensions'
@@ -30,6 +34,7 @@ const DEFAULT_FILTERS: PropertyFilters = {
   search:    '',
   type:      'all',
   savedOnly: false,
+  readyOnly: false,
   bedrooms:  null,
   bathrooms: null,
   minPrice:  null,
@@ -46,6 +51,7 @@ function readFiltersFromUrl(): PropertyFilters {
     search:    p.get('q')    ?? '',
     type:      p.get('type') ?? 'all',
     savedOnly: p.get('saved') === 'true',
+    readyOnly: p.get('ready') === 'true',
     bedrooms:  p.has('beds')     ? (Number(p.get('beds'))     || null) : null,
     bathrooms: p.has('baths')    ? (Number(p.get('baths'))    || null) : null,
     minPrice:  p.has('minPrice') ? (Number(p.get('minPrice')) || null) : null,
@@ -73,7 +79,7 @@ function readPageSizeFromUrl(): PageSizeOption {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function PropertyListRenderer({
-  onEdit, onDelete,
+  onDelete,
 }: ListRendererProps<RealEstateProperty>) {
 
   const router = useRouter()
@@ -83,7 +89,29 @@ export function PropertyListRenderer({
     router.push(`/properties/${encodeURIComponent(slug)}`)
   }, [router])
 
+  // Edit navigates straight to the shared Property wizard's edit route
+  // (per the approved Wizard-for-both ADR) instead of using the onEdit prop
+  // CRMResourcePage would otherwise wire to its own generic legacy-dialog
+  // edit mechanism — same pattern already used above for onView, and below
+  // for handleAdd, neither of which use the generic dialog either.
+  const handleEdit = useCallback((p: RealEstateProperty) => {
+    const slug = p.propertyCode?.toLowerCase() ?? p.id
+    router.push(`/properties/${encodeURIComponent(slug)}/edit`)
+  }, [router])
+
   const handleAdd = useCallback(() => router.push('/properties/new'), [router])
+
+  // Permission policy: shared with PropertyDetailPage.tsx's own delete
+  // button via usePropertyDeletePermission — the ACL check exists in
+  // exactly one place, not re-implemented per delete entry point.
+  const { denied: deleteDenied } = usePropertyDeletePermission()
+  const handleDelete = useCallback((p: RealEstateProperty) => {
+    if (deleteDenied) {
+      toast.error("You don't have permission to delete properties.")
+      return
+    }
+    onDelete(p)
+  }, [deleteDenied, onDelete])
 
   // ── Favorites (localStorage) ──────────────────────────────────────────────
   const favoriteIds = useFavoriteIds()
@@ -118,6 +146,7 @@ export function PropertyListRenderer({
     if (filters.search)              p.set('q',        filters.search)
     if (filters.type !== 'all')      p.set('type',     filters.type)
     if (filters.savedOnly)           p.set('saved',    'true')
+    if (filters.readyOnly)           p.set('ready',    'true')
     if (filters.bedrooms  !== null)  p.set('beds',     String(filters.bedrooms))
     if (filters.bathrooms !== null)  p.set('baths',    String(filters.bathrooms))
     if (filters.minPrice  !== null)  p.set('minPrice', String(filters.minPrice))
@@ -178,6 +207,16 @@ export function PropertyListRenderer({
   const isLoading   = data === undefined
   const isSavedFetching = filters.savedOnly && isFetching
 
+  // Visibility policy: "ready to publish" is computed client-side from the
+  // existing data-completeness score — EspoCRM has no queryable completeness
+  // attribute, so unlike other filters this cannot be pushed into
+  // buildWhereParams. It filters only the CURRENT fetched page, not the full
+  // server-side result set — totalCount/totalPages below stay based on the
+  // server's unfiltered total, since completeness isn't indexed there.
+  const displayedProperties = filters.readyOnly
+    ? properties.filter(p => getDataCompleteness(p).score >= MIN_COMPLETENESS_TO_PUBLISH)
+    : properties
+
   useEffect(() => {
     if (totalCount > 0 && page > totalPages) setPage(totalPages)
   }, [totalCount, page, totalPages])
@@ -186,6 +225,7 @@ export function PropertyListRenderer({
     filters.search    !== ''    ||
     filters.type      !== 'all' ||
     filters.savedOnly           ||
+    filters.readyOnly           ||
     filters.bedrooms  !== null  ||
     filters.bathrooms !== null  ||
     filters.minPrice  !== null  ||
@@ -196,6 +236,7 @@ export function PropertyListRenderer({
   const onSearchChange    = useCallback((search: string)         => { setFilters(f => ({ ...f, search }));    setPage(1) }, [])
   const onTypeChange      = useCallback((type: string)           => { setFilters(f => ({ ...f, type }));      setPage(1) }, [])
   const onSavedOnlyChange = useCallback((savedOnly: boolean)     => { setFilters(f => ({ ...f, savedOnly })); setPage(1) }, [])
+  const onReadyOnlyChange = useCallback((readyOnly: boolean)     => { setFilters(f => ({ ...f, readyOnly })); setPage(1) }, [])
   const onBedroomsChange  = useCallback((bedrooms: number|null)  => { setFilters(f => ({ ...f, bedrooms }));  setPage(1) }, [])
   const onBathroomsChange = useCallback((bathrooms: number|null) => { setFilters(f => ({ ...f, bathrooms })); setPage(1) }, [])
   const onPriceChange     = useCallback((minPrice: number|null, maxPrice: number|null) => {
@@ -221,6 +262,8 @@ export function PropertyListRenderer({
           onTypeChange={onTypeChange}
           savedOnly={filters.savedOnly}
           onSavedOnlyChange={onSavedOnlyChange}
+          readyOnly={filters.readyOnly}
+          onReadyOnlyChange={onReadyOnlyChange}
           bedrooms={filters.bedrooms}
           onBedroomsChange={onBedroomsChange}
           bathrooms={filters.bathrooms}
@@ -277,8 +320,19 @@ export function PropertyListRenderer({
           </div>
         )}
 
+        {/* Ready-to-publish mode — clarifies this filters the current page only */}
+        {filters.readyOnly && !isLoading && (
+          <div className="flex items-center gap-2 text-[12.5px]">
+            <span className="text-muted-foreground">
+              Showing publish-ready listings on this page —{' '}
+              <span className="font-semibold text-foreground">{displayedProperties.length}</span>
+              {' '}of {properties.length}
+            </span>
+          </div>
+        )}
+
         {/* Results context — active filter / search summary above the grid */}
-        {!isLoading && !filters.savedOnly && totalCount > 0 && hasFilters && (
+        {!isLoading && !filters.savedOnly && !filters.readyOnly && totalCount > 0 && hasFilters && (
           <div className="flex items-center gap-2 text-[12.5px]">
             {filters.search.trim() ? (
               <span className="text-muted-foreground">
@@ -296,15 +350,15 @@ export function PropertyListRenderer({
 
         <div className="min-h-75">
           <PropertyGrid
-            properties={properties}
+            properties={displayedProperties}
             viewMode={viewMode}
             isLoading={isLoading}
             hasActiveFilters={hasFilters}
             savedOnly={filters.savedOnly}
             searchQuery={filters.search}
             onView={onView}
-            onEdit={onEdit}
-            onDelete={onDelete}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
             onClearFilters={onClearFilters}
             onAddProperty={handleAdd}
             isError={isError}

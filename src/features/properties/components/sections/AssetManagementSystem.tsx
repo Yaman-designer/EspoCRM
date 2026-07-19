@@ -2,10 +2,41 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Layers, FileText, Camera } from 'lucide-react'
+import { Layers, FileText, Camera, Download, Plane, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getWebAssetUrl, FALLBACK_IMAGE } from '@/lib/image-url'
+import { getWebAssetUrl, FALLBACK_IMAGE, getFileDownloadUrl } from '@/lib/image-url'
+import { formatDate } from '@/lib/format'
+import { handleRovingTabListKeyDown } from '../../lib/keyboard-nav'
 import type { RealEstateProperty } from '../../types/property.types'
+
+// ── Shared empty state ───────────────────────────────────────────────────────
+// Data Completeness Sprint 5.1. Photos/Floor Plans/Drone/Legal each built
+// their own empty-state markup across three different sprints — four
+// different icon-container shapes and sizes, three different title
+// treatments, and Drone broke from the other three entirely with a dark,
+// full-bleed hero card instead of the light centered pattern the rest
+// share. One shared component now backs all four: same icon-container
+// size/shape, same title/description treatment. No section here has a
+// call-to-action — this is a read-only page; editing happens in the
+// Wizard — so none was added.
+
+function AssetEmptyState({ icon: Icon, title, description }: {
+  icon:        LucideIcon
+  title:       string
+  description: string
+}) {
+  return (
+    <div className="bg-card border border-border rounded-[24px] h-full flex flex-col items-center justify-center gap-4 text-center p-6">
+      <div className="w-16 h-16 bg-primary/5 text-primary border border-primary/10 rounded-full flex items-center justify-center shadow-sm">
+        <Icon className="w-7 h-7" />
+      </div>
+      <div>
+        <h4 className="font-heading font-bold text-lg text-foreground">{title}</h4>
+        <p className="text-xs text-muted-foreground max-w-md mx-auto mt-1 leading-relaxed">{description}</p>
+      </div>
+    </div>
+  )
+}
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -21,7 +52,7 @@ export function AssetManagementSystem({ property }: AssetManagementSystemProps) 
   const [activeTab, setActiveTab] = useState<AssetTab>('photos')
   const [errored, setErrored] = useState<Set<string>>(new Set())
 
-  const { mainImageId, imagesIds = [] } = property
+  const { mainImageId, imagesIds = [], documents = [], cBanner, cBannerphotoId } = property
 
   // Main image first, then gallery (deduped)
   const allIds = mainImageId
@@ -40,7 +71,7 @@ export function AssetManagementSystem({ property }: AssetManagementSystemProps) 
     { id: 'photos',     label: 'Photos',      count: allIds.length },
     { id: 'floorplans', label: 'Floor Plans',  count: 0 },
     { id: 'drone',      label: 'Drone',        count: 0 },
-    { id: 'legal',      label: 'Legal',        count: 0 },
+    { id: 'legal',      label: 'Legal',        count: documents.length + (property.cDocumentassignmentId ? 1 : 0) },
   ]
 
   return (
@@ -60,16 +91,30 @@ export function AssetManagementSystem({ property }: AssetManagementSystemProps) 
         </div>
 
         {/* Stitch: flex gap-1 p-1 bg-white border border-border rounded-xl shadow-xs shrink-0 */}
-        <nav className="flex gap-1 p-1 bg-card border border-border rounded-xl shadow-xs shrink-0">
+        {/* Interaction Design Sprint 4: real ARIA tablist — arrow keys move
+            and activate, only the active tab sits in the Tab order. */}
+        <nav
+          role="tablist"
+          aria-label="Asset category"
+          className="flex gap-1 p-1 bg-card border border-border rounded-xl shadow-xs shrink-0"
+          onKeyDown={e => handleRovingTabListKeyDown(e, tabs.map(t => t.id), activeTab, id => setActiveTab(id as AssetTab))}
+        >
           {tabs.map(tab => {
             const active = activeTab === tab.id
             return (
               <button
                 key={tab.id}
                 type="button"
+                role="tab"
+                id={`asset-tab-${tab.id}`}
+                data-tab-id={tab.id}
+                aria-selected={active}
+                aria-controls="asset-tab-panel"
+                tabIndex={active ? 0 : -1}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   'flex items-center gap-2 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
                   active ? 'bg-primary text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'
                 )}
               >
@@ -88,7 +133,7 @@ export function AssetManagementSystem({ property }: AssetManagementSystemProps) 
       </div>
 
       {/* Stitch: <div className="h-[480px]"> */}
-      <div className="h-120">
+      <div id="asset-tab-panel" role="tabpanel" aria-labelledby={`asset-tab-${activeTab}`} className="h-120">
         {activeTab === 'photos' && (
           allIds.length > 0
             ? <PhotosTab allIds={allIds} resolve={resolve} onErr={onErr} />
@@ -96,8 +141,36 @@ export function AssetManagementSystem({ property }: AssetManagementSystemProps) 
         )}
         {activeTab === 'floorplans' && <FloorPlansTab />}
         {activeTab === 'drone' && <DroneTab />}
-        {activeTab === 'legal' && <LegalTab />}
+        {activeTab === 'legal' && (
+          <LegalTab
+            documents={documents}
+            cDocumentassignmentId={property.cDocumentassignmentId}
+            cDocumentassignmentName={property.cDocumentassignmentName}
+          />
+        )}
       </div>
+
+      {/* Banner — Property Details Completion (2026-07-17). cBanner/
+          cBannerphoto had no representation anywhere in the Details page. */}
+      {(cBanner || cBannerphotoId) && (
+        <div className="flex items-center gap-4 bg-card border border-border rounded-2xl p-4">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-border bg-muted/30">
+            {cBannerphotoId ? (
+              <Image src={resolve(cBannerphotoId)} alt="Banner photo" fill unoptimized className="object-cover" onError={() => onErr(cBannerphotoId)} />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <Camera className="w-5 h-5 text-muted-foreground/40" />
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Banner</p>
+            <p className="text-sm font-black text-foreground">
+              {cBanner ? 'Enabled' : 'Disabled'}{cBannerphotoId ? ' · photo attached' : ' · no photo attached'}
+            </p>
+          </div>
+        </div>
+      )}
 
     </section>
   )
@@ -210,8 +283,9 @@ function PhotosTab({ allIds, resolve, onErr }: PhotosTabProps) {
       </div>
 
       {/* ── Counter tile: col-span-2 lg:col-span-1 ── */}
-      {/* Stitch: rounded-[20px] overflow-hidden relative group border border-border shadow-sm bg-slate-900 */}
-      <div className="col-span-2 lg:col-span-1 rounded-[20px] overflow-hidden relative group border border-border shadow-sm bg-slate-900 min-h-28 lg:min-h-0">
+      {/* Visual Polish Sprint 5: matched to its 3 grid siblings (24px) —
+          this was the only tile in the set at 20px. */}
+      <div className="col-span-2 lg:col-span-1 rounded-[24px] overflow-hidden relative group border border-border shadow-sm bg-slate-900 min-h-28 lg:min-h-0">
         {fourth != null && (
           // Stitch: img opacity-60 group-hover:opacity-40 transition-opacity
           <Image
@@ -243,15 +317,11 @@ function PhotosTab({ allIds, resolve, onErr }: PhotosTabProps) {
 
 function PhotosEmptyTab() {
   return (
-    <div className="bg-card border border-border rounded-[24px] h-full flex flex-col items-center justify-center gap-4 text-center p-6">
-      <div className="w-14 h-14 bg-slate-50 border border-border rounded-2xl flex items-center justify-center">
-        <Camera className="w-6 h-6 text-muted-foreground/40" />
-      </div>
-      <div>
-        <p className="text-sm font-semibold text-foreground/55">No photos uploaded</p>
-        <p className="text-xs text-muted-foreground/40 mt-1 max-w-xs">Upload professional photography to attract buyers</p>
-      </div>
-    </div>
+    <AssetEmptyState
+      icon={Camera}
+      title="No Photos Uploaded"
+      description="Upload professional photography to attract buyers."
+    />
   )
 }
 
@@ -259,37 +329,11 @@ function PhotosEmptyTab() {
 
 function FloorPlansTab() {
   return (
-    // Stitch: bg-white border border-border rounded-[24px] p-6 h-full flex flex-col justify-between items-center text-center
-    <div className="bg-card border border-border rounded-[24px] p-6 h-full flex flex-col justify-between items-center text-center">
-
-      <div className="my-auto space-y-4">
-        {/* Stitch: w-16 h-16 bg-blue-50 text-primary border border-blue-100 rounded-full */}
-        <div className="w-16 h-16 bg-blue-50 text-primary border border-blue-100 rounded-full flex items-center justify-center mx-auto shadow-sm">
-          <Layers className="w-8 h-8" />
-        </div>
-        <div>
-          {/* Stitch: font-headline font-bold text-lg text-slate-800 */}
-          <h4 className="font-heading font-bold text-lg text-foreground">Architectural Floor Plans</h4>
-          <p className="text-xs text-muted-foreground max-w-md mx-auto mt-1 leading-relaxed">
-            High-fidelity vector floor plans have not been uploaded for this listing yet.
-          </p>
-        </div>
-      </div>
-
-      {/* Stitch: grid grid-cols-2 gap-4 w-full max-w-md */}
-      <div className="grid grid-cols-2 gap-4 w-full max-w-md">
-        {/* Stitch: p-4 border border-border hover:border-primary rounded-xl text-left bg-slate-50 cursor-pointer */}
-        <div className="p-4 border border-border rounded-xl text-left bg-muted/30 opacity-50">
-          <span className="text-[9px] font-bold text-primary uppercase block">LEVEL 01</span>
-          <span className="text-xs font-bold text-muted-foreground">Floor plan unavailable</span>
-        </div>
-        <div className="p-4 border border-border rounded-xl text-left bg-muted/30 opacity-50">
-          <span className="text-[9px] font-bold text-primary uppercase block">LEVEL 02</span>
-          <span className="text-xs font-bold text-muted-foreground">Floor plan unavailable</span>
-        </div>
-      </div>
-
-    </div>
+    <AssetEmptyState
+      icon={Layers}
+      title="Architectural Floor Plans"
+      description="High-fidelity vector floor plans have not been uploaded for this listing yet."
+    />
   )
 }
 
@@ -297,55 +341,112 @@ function FloorPlansTab() {
 
 function DroneTab() {
   return (
-    // Stitch: bg-slate-950 rounded-[24px] h-full relative overflow-hidden flex flex-col justify-end p-8 group
-    // No hardcoded Unsplash image — no drone footage in backend; visual wrapper preserved with unavailable state
-    <div className="bg-slate-950 rounded-[24px] h-full relative overflow-hidden flex flex-col justify-end p-8 group">
-
-      {/* Stitch: absolute top-6 left-6 ... bg-crimson/80 → bg-brand-crimson/80 */}
-      <div className="absolute top-6 left-6 flex items-center gap-2 bg-brand-crimson/80 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-bold text-white border border-brand-crimson/20 uppercase">
-        <span className="w-1.5 h-1.5 bg-white/70 rounded-full" />
-        Drone LiDAR · Unavailable
-      </div>
-
-      {/* Stitch: relative z-10 max-w-md text-white */}
-      <div className="relative z-10 max-w-md text-white">
-        {/* Stitch: text-2xl font-black font-headline tracking-tight */}
-        <h4 className="text-2xl font-black font-heading tracking-tight">Aerial Survey Footage</h4>
-        <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-          No aerial drone footage has been uploaded for this property. Aerial perspectives and LiDAR surveys dramatically increase buyer engagement.
-        </p>
-      </div>
-
-    </div>
+    <AssetEmptyState
+      icon={Plane}
+      title="Aerial Survey Footage"
+      description="No aerial drone footage has been uploaded for this property. Aerial perspectives and LiDAR surveys dramatically increase buyer engagement."
+    />
   )
 }
 
 // ── Legal tab ─────────────────────────────────────────────────────────────────
+// Property Details Completion (2026-07-17). Previously always rendered the
+// empty state below regardless of real data — `documents` was never even
+// fetched server-side (see [slug]/page.tsx's withDocuments). Now renders the
+// real related Document records: preview (name/fileName), metadata
+// (publishDate), and download (via /api/espo-file, binary-safe).
 
-function LegalTab() {
+interface LegalTabProps {
+  documents: NonNullable<RealEstateProperty['documents']>
+  cDocumentassignmentId?: string | null
+  cDocumentassignmentName?: string
+}
+
+function LegalTab({ documents, cDocumentassignmentId, cDocumentassignmentName }: LegalTabProps) {
+  const assignmentDownloadUrl = getFileDownloadUrl(cDocumentassignmentId)
+  const totalCount = documents.length + (cDocumentassignmentId ? 1 : 0)
+
+  // Data Completeness Sprint 5.1: when there's truly nothing (no documents,
+  // no assignment), this now returns the same single, whole-tab
+  // AssetEmptyState the other three tabs use — previously the header +
+  // count-badge card always rendered first with the empty state nested
+  // inside it, a card-inside-a-card that didn't match Photos/Floor Plans/
+  // Drone, where the empty state IS the entire tab surface.
+  if (totalCount === 0) {
+    return (
+      <AssetEmptyState
+        icon={FileText}
+        title="No Legal Documents Attached"
+        description="Attach title deeds, permits, and compliance certificates to build buyer confidence."
+      />
+    )
+  }
+
   return (
-    // Stitch: bg-white border border-border rounded-[24px] p-6 h-full flex flex-col justify-between
-    <div className="bg-card border border-border rounded-[24px] p-6 h-full flex flex-col justify-between">
+    <div className="bg-card border border-border rounded-[24px] p-6 h-full flex flex-col">
 
-      {/* Stitch: header row */}
-      <div className="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
-        <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">
+      <div className="flex justify-between items-center border-b border-border/50 pb-3 mb-3">
+        <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">
           Active Compliance Document Stack
         </h4>
         <span className="px-2.5 py-0.5 bg-muted/50 text-muted-foreground/60 text-[9px] font-black rounded border border-border uppercase">
-          No Documents
+          {totalCount} Document{totalCount === 1 ? '' : 's'}
         </span>
       </div>
 
-      {/* Stitch: flex-1 space-y-2 overflow-y-auto pr-2 no-scrollbar — empty state inside preserved structure */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center overflow-y-auto pr-2 no-scrollbar py-4">
-        <FileText className="w-10 h-10 text-slate-200" />
-        <p className="text-sm font-semibold text-muted-foreground/60">No legal documents attached</p>
-        <p className="text-xs text-muted-foreground/40 max-w-xs leading-relaxed">
-          Attach title deeds, permits, and compliance certificates to build buyer confidence.
-        </p>
-      </div>
+      {/* cDocumentassignment — a single belongsTo Attachment field, distinct
+          from the `documents` hasMany relation below. Rendered first when
+          present. */}
+      {cDocumentassignmentId && (
+        <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-3 mb-2">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-background">
+            <FileText className="w-4 h-4 text-primary" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-foreground">{cDocumentassignmentName ?? 'Assigned Document'}</p>
+            <p className="text-[11px] text-muted-foreground/60">Document Assignment</p>
+          </div>
+          {assignmentDownloadUrl && (
+            <a
+              href={assignmentDownloadUrl}
+              download={cDocumentassignmentName}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 text-primary transition-colors hover:bg-primary/10"
+              aria-label="Download assigned document"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
+      )}
 
+      <div className="flex-1 space-y-2 overflow-y-auto pr-2 no-scrollbar">
+        {documents.map(doc => {
+          const downloadUrl = getFileDownloadUrl(doc.fileId)
+          return (
+            <div key={doc.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-muted/10 p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/40 bg-background">
+                <FileText className="w-4 h-4 text-muted-foreground/60" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-bold text-foreground">{doc.name}</p>
+                <p className="text-[11px] text-muted-foreground/60">
+                  {doc.fileName ?? 'File'}{doc.publishDate ? ` · ${formatDate(doc.publishDate)}` : ''}
+                </p>
+              </div>
+              {downloadUrl && (
+                <a
+                  href={downloadUrl}
+                  download={doc.fileName ?? doc.name}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/40 text-muted-foreground/60 transition-colors hover:border-primary/40 hover:text-primary"
+                  aria-label={`Download ${doc.name}`}
+                >
+                  <Download className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
+          )
+        })}
+      </div>
 
     </div>
   )

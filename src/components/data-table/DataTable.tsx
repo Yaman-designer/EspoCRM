@@ -23,6 +23,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/format'
 import axiosClient from '@/api/axiosClient'
 
 import { TableToolbar } from './TableToolbar'
@@ -179,12 +180,7 @@ function renderCell<T extends object>(
       if (isNaN(n)) return <span className="text-[13px] text-muted-foreground">—</span>
       return (
         <span className="tabular-nums text-[13px] font-semibold text-foreground">
-          {new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: col.currency ?? 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          }).format(n)}
+          {formatCurrency(n, col.currency)}
         </span>
       )
     }

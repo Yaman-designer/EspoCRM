@@ -40,7 +40,10 @@ export function MultiImageField({ schema, form, disabled, readOnly }: FieldCompo
     disabled: disabled || readOnly || !canAdd,
   })
 
-  const previews = files.map(f => (f instanceof File ? URL.createObjectURL(f) : String(f)))
+  const previews = files.map(f => {
+    if (f instanceof File) return URL.createObjectURL(f)
+    return schema.resolvePreviewSrc ? schema.resolvePreviewSrc(f) : f
+  })
 
   return (
     <FieldWrapper schema={schema} error={fieldState.error?.message} disabled={disabled} readOnly={readOnly}>

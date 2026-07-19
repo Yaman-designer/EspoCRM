@@ -6,8 +6,11 @@ export interface Stat {
   iconName: string
   title: string
   value: string
-  trend: string
-  up: boolean
+  // Optional: cells backed by live data (e.g. Active Listing) have no real
+  // period-over-period comparison available yet, so trend/up are omitted
+  // rather than fabricated.
+  trend?: string
+  up?: boolean
   color: StatColor
 }
 

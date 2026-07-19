@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/format'
 import {
   Sheet,
   SheetContent,
@@ -61,12 +62,7 @@ function DetailRow<T extends object>({
         <span className="text-muted-foreground">—</span>
       ) : (
         <span className="font-semibold tabular-nums text-foreground">
-          {new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: col.currency ?? 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          }).format(n)}
+          {formatCurrency(n, col.currency)}
         </span>
       )
       break

@@ -9,6 +9,8 @@
  */
 
 import type { RealEstateProperty } from '../types/property.types'
+import { isFurnished } from '../domain/predicates'
+import { resolvePropertyType } from '../domain/property-type.registry'
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
@@ -49,22 +51,85 @@ interface Signals {
   hasSouthLight:  boolean
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  'Villa':      'villa',
-  'House':      'residence',
-  'Apartment':  'apartment',
-  'Penthouse':  'penthouse',
-  'Townhouse':  'townhouse',
-  'Office':     'space',
-  'Land':       'parcel',
+// Explicit narrative-noun overrides for both the legacy Title-Case `type`
+// vocabulary (pre-existing records) and the current lowercase PDF catalogue
+// (see property-type.registry.ts's TYPE_VALUES_BY_CATEGORY). Any value not
+// listed here — including any value EspoCRM adds later — falls back to a
+// category-appropriate noun via typeLabelFor() below rather than silently
+// defaulting every unknown value to 'residence'.
+const TYPE_LABEL_OVERRIDES: Record<string, string> = {
+  // Legacy Title-Case
+  Villa:      'villa',
+  House:      'residence',
+  Apartment:  'apartment',
+  Townhouse:  'townhouse',
+  Office:     'space',
+  Land:       'parcel',
+  Detached:   'residence',
+  Maisonette: 'residence',
+  Studio:     'studio',
+  Store:      'retail space',
+  Warehouse:  'warehouse',
+  Plot:       'parcel',
+  // Current lowercase catalogue
+  villa:                'villa',
+  apartment:            'apartment',
+  'apartment complex':  'apartment complex',
+  studio:               'studio',
+  detached:             'residence',
+  maisonette:           'residence',
+  bungalow:             'bungalow',
+  loft:                 'loft',
+  building:             'building',
+  farm:                 'farmhouse',
+  office:               'space',
+  store:                'retail space',
+  warehouse:            'warehouse',
+  hotel:                'hotel property',
+  showroom:             'showroom',
+  plot:                 'parcel',
+  parcel:               'parcel',
+  island:               'island',
+  'other land':         'parcel',
 }
 
+function typeLabelFor(type: string | undefined | null): string {
+  if (!type) return 'residence'
+  const override = TYPE_LABEL_OVERRIDES[type]
+  if (override) return override
+  const category = resolvePropertyType(type).category
+  if (category === 'land') return 'parcel'
+  if (category === 'commercial') return 'space'
+  return 'residence'
+}
+
+// Keys match the live enum values in domain/options.ts, not the pre-migration
+// Title-Case vocabulary.
 const HEATING_LABELS: Record<string, string> = {
+  petrol:              'petrol heating',
+  natural_gas:         'natural gas heating',
+  gas:                 'natural gas heating',
+  current:             'electric heating',
+  stove:               'wood-stove heating',
+  thermal_accumulator: 'thermal accumulator heating',
+  pellet:              'pellet heating',
+  infrared:            'infrared heating',
+  fan_coil:            'fan coil climate system',
+  wood:                'wood heating',
+  teleheating:         'district heating',
+  geothermal_energy:   'geothermal heating',
+  heatpump:            'heat pump climate system',
+  // 'thermopompos' deliberately left unmapped — its exact real-world meaning
+  // relative to 'heatpump' is unconfirmed; falls through to the generic
+  // "<value> heating" fallback rather than guessing a translation.
+  // Legacy Title-Case values kept as a cost-free safety net — `cHeatingMedium`
+  // isn't exposed by the legacy Edit dialog (fields.ts has no entry for it),
+  // so these were never confirmed to be real stored values.
   'Heat Pump': 'heat pump climate system',
-  'Gas':       'natural gas heating',
-  'Electric':  'electric heating',
-  'Solar':     'solar climate system',
-  'Oil':       'oil central heating',
+  Gas:         'natural gas heating',
+  Electric:    'electric heating',
+  Solar:       'solar climate system',
+  Oil:         'oil central heating',
 }
 
 function isFieldPresent(value: string | boolean | null | undefined): boolean {
@@ -79,25 +144,33 @@ function extractSignals(p: RealEstateProperty): Signals {
   const hasPool     = isFieldPresent(p.swimmingPool)
 
   return {
-    typeLabel:      TYPE_LABELS[p.type ?? ''] ?? 'residence',
+    typeLabel:      typeLabelFor(p.type),
     location:       p.locationName?.trim()   || undefined,
     city:           p.addressCity?.trim()    || undefined,
     orientation,
     hasPool,
+    // The live swimmingPool enum (No/External/Interior/indoors) carries no
+    // heated/unheated signal. 'Heated' was a value in the pre-wizard display
+    // maps' assumed vocabulary — never confirmed real, but checked as a
+    // cost-free legacy safety net in case any record predates this enum.
     isHeatedPool:   hasPool && /heated/i.test(p.swimmingPool as string),
     hasSea:         p.accessFrom === 'Sea',
+    // 'Private Road' is not a value in the current accessFrom enum (ACCESS_FROM_OPTIONS) —
+    // checked as a cost-free legacy safety net only, same caveat as isHeatedPool above.
     hasPrivateRoad: p.accessFrom === 'Private Road',
     hasBalcony:     isFieldPresent(p.balcony),
     hasGarage:      isFieldPresent(p.garage),
     hasElevator:    isFieldPresent(p.buildingElevator),
-    isFurnished:    p.furnished === true,
+    isFurnished:    isFurnished(p.furnished),
     energyClass:    p.energyClass?.trim() || undefined,
     isEnergyA:      Boolean(p.energyClass && /^A/.test(p.energyClass)),
-    hasHeatPump:    p.cHeatingMedium === 'Heat Pump',
+    // 'Heat Pump' (Title-Case) checked as a cost-free legacy safety net — see
+    // the HEATING_LABELS comment below for why it's never treated as confirmed.
+    hasHeatPump:    p.cHeatingMedium === 'heatpump' || p.cHeatingMedium === 'Heat Pump',
     heatingLabel:   p.cHeatingMedium ? (HEATING_LABELS[p.cHeatingMedium] ?? undefined) : undefined,
     yearBuilt:      p.yearBuilt ?? undefined,
     isModern:       Boolean(p.yearBuilt && p.yearBuilt >= 2015),
-    hasSouthLight:  Boolean(orientation && ['SW', 'SE', 'S'].includes(orientation)),
+    hasSouthLight:  Boolean(orientation && ['sw', 'se', 's'].includes(orientation)),
   }
 }
 
@@ -110,11 +183,11 @@ function cap(s: string): string {
 /** Returns a one-word light quality adjective for the given orientation code. */
 function lightAdjective(orientation: string): string {
   const map: Record<string, string> = {
-    'S':  'Sun-Drenched',
-    'SW': 'Sun-Drenched',
-    'SE': 'Luminous',
-    'W':  'Golden-Hour',
-    'E':  'Morning-Light',
+    's':  'Sun-Drenched',
+    'sw': 'Sun-Drenched',
+    'se': 'Luminous',
+    'w':  'Golden-Hour',
+    'e':  'Morning-Light',
   }
   return map[orientation] ?? 'Light-Filled'
 }
@@ -122,14 +195,14 @@ function lightAdjective(orientation: string): string {
 /** Returns the full directional phrase for in-sentence use. */
 function orientationFull(orientation: string): string {
   const map: Record<string, string> = {
-    'S':  'south-facing',
-    'SW': 'south-west-facing',
-    'SE': 'south-east-facing',
-    'W':  'west-facing',
-    'E':  'east-facing',
-    'N':  'north-facing',
-    'NW': 'north-west-facing',
-    'NE': 'north-east-facing',
+    's':  'south-facing',
+    'sw': 'south-west-facing',
+    'se': 'south-east-facing',
+    'w':  'west-facing',
+    'e':  'east-facing',
+    'n':  'north-facing',
+    'nw': 'north-west-facing',
+    'ne': 'north-east-facing',
   }
   return map[orientation] ?? orientation.toLowerCase() + '-facing'
 }

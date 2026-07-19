@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { fetchPropertyOptions } from '../services/property.query.service'
 import type { PropertyOptions } from '../services/property.query.service'
 
-export type { StatusOption, TypeOption, PropertyOptions } from '../services/property.query.service'
+export type { TypeOption, PropertyOptions } from '../services/property.query.service'
 
 export function usePropertyOptions() {
   return useQuery<PropertyOptions>({

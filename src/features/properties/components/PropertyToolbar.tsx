@@ -3,7 +3,7 @@
 import { useState, memo, useCallback, useMemo, forwardRef, useRef, useEffect } from 'react'
 import {
   Search, Plus, ChevronDown, Check,
-  LayoutGrid, LayoutList, X, Heart, SlidersHorizontal, Loader2, Clock,
+  LayoutGrid, LayoutList, X, Heart, SlidersHorizontal, Loader2, Clock, BadgeCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
@@ -20,6 +20,7 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
+import { formatNumber } from '@/lib/format'
 import { fmtPrice } from '../lib/display'
 import { usePropertyOptions } from '../hooks/usePropertyOptions'
 import { useFavoritesCount } from '../hooks/useFavoriteState'
@@ -30,10 +31,11 @@ import type { TypeOption } from '../services/property.query.service'
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-const COUNT_FMT = new Intl.NumberFormat('en-US')
-const NUM_FMT   = new Intl.NumberFormat('en-US')
-const fmtCount  = (n: number) => COUNT_FMT.format(n)
-const fmtNum    = (n: number) => NUM_FMT.format(n)
+// Same 'en-US', no-options Intl.NumberFormat lib/format.ts's formatNumber
+// already provides — aliased under their existing call-site names rather
+// than renaming all 6 call sites (Architecture Debt Rank #6).
+const fmtCount = formatNumber
+const fmtNum   = formatNumber
 
 const PRICE_MIN  = 0
 const PRICE_MAX  = 10_000_000
@@ -64,6 +66,7 @@ const POPOVER_CLASS =
 interface PendingFilters {
   type:      string
   savedOnly: boolean
+  readyOnly: boolean
   bedrooms:  number | null
   bathrooms: number | null
   minPrice:  number | null
@@ -79,6 +82,7 @@ interface PropertyToolbarProps {
   search:              string;         onSearchChange:    (v: string) => void
   typeFilter:          string;         onTypeChange:      (v: string) => void
   savedOnly:           boolean;        onSavedOnlyChange: (v: boolean) => void
+  readyOnly:           boolean;        onReadyOnlyChange: (v: boolean) => void
   bedrooms:            number | null;  onBedroomsChange:  (v: number | null) => void
   bathrooms:           number | null;  onBathroomsChange: (v: number | null) => void
   minPrice:            number | null
@@ -98,6 +102,7 @@ export function PropertyToolbar({
   search, onSearchChange,
   typeFilter, onTypeChange,
   savedOnly, onSavedOnlyChange,
+  readyOnly, onReadyOnlyChange,
   bedrooms, onBedroomsChange,
   bathrooms, onBathroomsChange,
   minPrice, maxPrice, onPriceChange,
@@ -118,41 +123,48 @@ export function PropertyToolbar({
     [savedOnly, onSavedOnlyChange],
   )
 
+  const handleReadyToggle = useCallback(
+    () => onReadyOnlyChange(!readyOnly),
+    [readyOnly, onReadyOnlyChange],
+  )
+
   // ── Mobile drawer ────────────────────────────────────────────────────────
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [resetToken, setResetToken] = useState(0)
   const [pending, setPending] = useState<PendingFilters>({
-    type: typeFilter, savedOnly, bedrooms, bathrooms,
+    type: typeFilter, savedOnly, readyOnly, bedrooms, bathrooms,
     minPrice, maxPrice, sortBy,
   })
 
   const activeFilterCount = useMemo(() => [
     typeFilter !== 'all',
     savedOnly,
+    readyOnly,
     bedrooms  !== null,
     bathrooms !== null,
     minPrice  !== null || maxPrice !== null,
     sortBy    !== 'newest',
-  ].filter(Boolean).length, [typeFilter, savedOnly, bedrooms, bathrooms, minPrice, maxPrice, sortBy])
+  ].filter(Boolean).length, [typeFilter, savedOnly, readyOnly, bedrooms, bathrooms, minPrice, maxPrice, sortBy])
 
   const openDrawer = useCallback(() => {
-    setPending({ type: typeFilter, savedOnly, bedrooms, bathrooms, minPrice, maxPrice, sortBy })
+    setPending({ type: typeFilter, savedOnly, readyOnly, bedrooms, bathrooms, minPrice, maxPrice, sortBy })
     setDrawerOpen(true)
-  }, [typeFilter, savedOnly, bedrooms, bathrooms, minPrice, maxPrice, sortBy])
+  }, [typeFilter, savedOnly, readyOnly, bedrooms, bathrooms, minPrice, maxPrice, sortBy])
 
   const applyDrawer = useCallback(() => {
     onTypeChange(pending.type)
     onSavedOnlyChange(pending.savedOnly)
+    onReadyOnlyChange(pending.readyOnly)
     onBedroomsChange(pending.bedrooms)
     onBathroomsChange(pending.bathrooms)
     onPriceChange(pending.minPrice, pending.maxPrice)
     onSortChange(pending.sortBy)
     setDrawerOpen(false)
-  }, [pending, onTypeChange, onSavedOnlyChange, onBedroomsChange, onBathroomsChange, onPriceChange, onSortChange])
+  }, [pending, onTypeChange, onSavedOnlyChange, onReadyOnlyChange, onBedroomsChange, onBathroomsChange, onPriceChange, onSortChange])
 
   const resetDrawer = useCallback(() => {
-    setPending({ type: 'all', savedOnly: false, bedrooms: null, bathrooms: null, minPrice: null, maxPrice: null, sortBy: 'newest' })
+    setPending({ type: 'all', savedOnly: false, readyOnly: false, bedrooms: null, bathrooms: null, minPrice: null, maxPrice: null, sortBy: 'newest' })
     setResetToken(t => t + 1)
   }, [])
 
@@ -295,6 +307,7 @@ export function PropertyToolbar({
         {/* ── Actions: Saved | divider | Sort + View ─────────────────────── */}
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           <SavedChip active={savedOnly} onToggle={handleSavedToggle} isFetching={isSavedFetching} />
+          <ReadyChip active={readyOnly} onToggle={handleReadyToggle} />
           <div className="mx-1 h-4 w-px shrink-0 bg-border/45" aria-hidden />
           <SortDropdown sortBy={sortBy} onSortChange={onSortChange} />
           <ViewToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
@@ -380,6 +393,26 @@ export function PropertyToolbar({
                   pending.savedOnly ? 'fill-rose-500 text-rose-500' : 'text-muted-foreground/50',
                 )} />
                 Show Saved Only
+              </button>
+            </DrawerSection>
+
+            <DrawerSection title="Publish Readiness">
+              <button
+                type="button"
+                onClick={() => setPending(p => ({ ...p, readyOnly: !p.readyOnly }))}
+                className={cn(
+                  'inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4',
+                  'text-[13px] font-semibold transition-colors duration-150 active:scale-[0.98]',
+                  pending.readyOnly
+                    ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]'
+                    : 'border-border/40 bg-muted/30 text-foreground hover:border-border/70 hover:bg-muted/50',
+                )}
+              >
+                <BadgeCheck className={cn(
+                  'size-4 transition-colors duration-150',
+                  pending.readyOnly ? 'text-emerald-500' : 'text-muted-foreground/50',
+                )} />
+                Ready to Publish Only
               </button>
             </DrawerSection>
 
@@ -1159,6 +1192,42 @@ const SavedChip = memo(function SavedChip({
           {count > 99 ? '99+' : count}
         </span>
       )}
+    </button>
+  )
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ReadyChip — visibility-policy toggle: filters the current page to listings
+// that clear the data-completeness publish threshold (property-lifecycle.rules.ts)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ReadyChip = memo(function ReadyChip({
+  active, onToggle,
+}: {
+  active:   boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={active}
+      aria-label={active ? 'Showing publish-ready properties' : 'Show publish-ready properties only'}
+      style={{ height: 38 }}
+      className={cn(
+        'inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-xl border px-3',
+        'text-[13px] font-semibold outline-none transition-colors duration-150',
+        'focus-visible:ring-2 focus-visible:ring-emerald-400/30',
+        active
+          ? 'border-emerald-400/50 bg-emerald-500 text-white shadow-[0_2px_8px_rgba(16,185,129,0.25),inset_0_1px_0_rgba(255,255,255,0.12)] dark:bg-emerald-500'
+          : 'border-emerald-200/80 bg-emerald-50/60 text-emerald-600 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.05)] hover:border-emerald-300/80 hover:bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400',
+      )}
+    >
+      <BadgeCheck className={cn(
+        'size-3.5 transition-colors duration-150',
+        active ? 'text-white' : 'text-emerald-500',
+      )} />
+      Ready
     </button>
   )
 })

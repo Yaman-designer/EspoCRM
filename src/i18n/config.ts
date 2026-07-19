@@ -7,7 +7,6 @@ import enDashboard from './locales/en/dashboard.json'
 import enAuth from './locales/en/auth.json'
 import enProfile from './locales/en/profile.json'
 import enNotifications from './locales/en/notifications.json'
-import enProperties from './locales/en/properties.json'
 
 import elCommon from './locales/el/common.json'
 import elNav from './locales/el/nav.json'
@@ -15,12 +14,20 @@ import elDashboard from './locales/el/dashboard.json'
 import elAuth from './locales/el/auth.json'
 import elProfile from './locales/el/profile.json'
 import elNotifications from './locales/el/notifications.json'
-import elProperties from './locales/el/properties.json'
+
+// No 'properties' namespace — Architecture Debt Rank #9/9a found the
+// Properties feature has zero useTranslation() usage anywhere (a Product
+// Decision, not an engineering gap: real translations for ~125 live fields
+// need business sign-off), and the one existing properties.json (en/el)
+// carried stale, actively-wrong content (fabricated statuses, USD pricing)
+// that would have silently reintroduced two already-fixed defects if ever
+// wired up. Removed rather than left dormant. See the Phase 2 Certification
+// Report for the full evidence trail.
 
 i18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['common', 'nav', 'dashboard', 'auth', 'profile', 'notifications', 'properties'],
+  ns: ['common', 'nav', 'dashboard', 'auth', 'profile', 'notifications'],
   defaultNS: 'common',
   interpolation: { escapeValue: false },
   // Opts out of react-i18next v17's use()-based Suspense integration.
@@ -39,7 +46,6 @@ i18n.use(initReactI18next).init({
       auth: enAuth,
       profile: enProfile,
       notifications: enNotifications,
-      properties: enProperties,
     },
     el: {
       common: elCommon,
@@ -48,7 +54,6 @@ i18n.use(initReactI18next).init({
       auth: elAuth,
       profile: elProfile,
       notifications: elNotifications,
-      properties: elProperties,
     },
   },
 })

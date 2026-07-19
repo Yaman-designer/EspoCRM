@@ -1,4 +1,5 @@
 import type { RealEstateProperty } from '../types/property.types'
+import { resolvePropertyType } from '../domain/property-type.registry'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -32,26 +33,24 @@ export interface MarketDemand {
   signals: DemandSignal[]
 }
 
-export type LeadTier = 'hot' | 'warm' | 'cold'
-
-export interface LeadQuality {
-  score:  number        // 0–100
-  tier:   LeadTier
-  label:  string
-  reason: string
-}
-
-export type ActionPriority = 'urgent' | 'high' | 'medium'
-
-export interface NextAction {
-  id:          string
-  priority:    ActionPriority
-  action:      string
-  description: string
-}
-
 // ── Health Score ──────────────────────────────────────────────────────────────
 
+/**
+ * CRM-facing listing-quality score for the detail page and Wizard review
+ * step — NOT the same concern as data-completeness.ts's getDataCompleteness,
+ * despite both producing a 0-100 number from overlapping raw fields.
+ * getDataCompleteness is load-bearing business logic (property-lifecycle.
+ * rules.ts's canPublish() gates the Active-status transition on its score;
+ * PropertyListRenderer.tsx's publish filter does too) with its own weighting
+ * (includes type/requestType, excludes nothing this function checks). This
+ * function's pass/warning/fail-per-factor grading feeds only display
+ * signals (buildMarketDemand below) — never a business-rule gate.
+ * Architecture Debt Rank #5 considered merging the two; verified this pass
+ * (fresh dependency trace, not assumed) that doing so would mean guessing
+ * which of two different weighting schemes should govern a real
+ * publish-eligibility rule — out of scope without a product decision. Kept
+ * deliberately separate; see the Rank #5 Certification Report.
+ */
 export function buildPropertyHealth(p: RealEstateProperty): PropertyHealth {
   const factors: HealthFactor[] = []
 
@@ -124,8 +123,8 @@ export function buildPropertyHealth(p: RealEstateProperty): PropertyHealth {
 export function buildMarketDemand(p: RealEstateProperty): MarketDemand {
   const signals: DemandSignal[] = []
 
-  if (p.type && ['Villa', 'House', 'Apartment'].includes(p.type)) {
-    signals.push({ id: 'type', label: `${p.type} — high demand segment`, positive: true })
+  if (p.type && resolvePropertyType(p.type).category === 'residential') {
+    signals.push({ id: 'type', label: `${resolvePropertyType(p.type).label} — high demand segment`, positive: true })
   }
   if (p.swimmingPool && !/^no$/i.test(p.swimmingPool.trim())) {
     signals.push({ id: 'pool', label: 'Swimming pool — buyer premium', positive: true })
@@ -153,96 +152,3 @@ export function buildMarketDemand(p: RealEstateProperty): MarketDemand {
   return { level, label, signals }
 }
 
-// ── Lead Quality ──────────────────────────────────────────────────────────────
-
-export function buildLeadQuality(
-  p:             RealEstateProperty,
-  health:        PropertyHealth,
-  pipelineStage: string,
-): LeadQuality {
-  const stageBase: Record<string, number> = {
-    lead: 15, qualified: 35, negotiation: 65, contract: 85, closed: 100,
-  }
-  let score = stageBase[pipelineStage] ?? 15
-
-  // Health contribution — max 40 points
-  score += Math.round(health.score * 0.4)
-
-  // Agent bonus
-  if (p.assignedUserName) score = Math.min(100, score + 8)
-
-  score = Math.min(100, score)
-
-  const tier: LeadTier = score >= 68 ? 'hot' : score >= 40 ? 'warm' : 'cold'
-  const label           = tier === 'hot' ? 'Hot Lead' : tier === 'warm' ? 'Warm Lead' : 'Cold Lead'
-  const reason =
-    tier === 'hot'  ? 'Advanced stage with strong listing quality' :
-    tier === 'warm' ? 'Active deal — listing needs improvement' :
-    'Incomplete listing is reducing conversion odds'
-
-  return { score, tier, label, reason }
-}
-
-// ── Next Actions ──────────────────────────────────────────────────────────────
-
-export function buildNextActions(
-  p:             RealEstateProperty,
-  health:        PropertyHealth,
-  pipelineStage: string,
-): NextAction[] {
-  const actions: NextAction[] = []
-
-  if (!p.assignedUserName) {
-    actions.push({
-      id: 'assign-agent', priority: 'urgent',
-      action:      'Assign a listing agent',
-      description: 'Required to advance the deal pipeline',
-    })
-  }
-
-  if (p.status === 'Reserved' || p.status === 'Pending') {
-    actions.push({
-      id: 'prepare-contract', priority: 'urgent',
-      action:      'Prepare sale contract',
-      description: 'Property reserved — move to contract stage now',
-    })
-  }
-
-  const mediaFactor = health.factors.find(f => f.id === 'media')
-  if (mediaFactor?.status === 'fail') {
-    actions.push({
-      id: 'upload-photos', priority: 'urgent',
-      action:      'Upload property photos',
-      description: 'Listings without photos receive 80% fewer enquiries',
-    })
-  }
-
-  if (p.status === 'Available' && (health.grade === 'A' || health.grade === 'B')) {
-    actions.push({
-      id: 'schedule-viewing', priority: 'high',
-      action:      'Schedule client viewing',
-      description: 'Property is market-ready — book the next showing',
-    })
-  }
-
-  const failFactors = health.factors.filter(f => f.status === 'fail' && f.id !== 'media')
-  if (failFactors.length > 0) {
-    actions.push({
-      id: 'complete-listing', priority: 'high',
-      action:      'Complete listing data',
-      description: failFactors.slice(0, 2).map(f => f.label).join(', ') + ' missing',
-    })
-  }
-
-  const descFactor = health.factors.find(f => f.id === 'description')
-  if (descFactor?.status !== 'pass' && !actions.find(a => a.id === 'complete-listing')) {
-    actions.push({
-      id: 'write-description', priority: 'medium',
-      action:      'Write property description',
-      description: 'Improves search ranking and buyer confidence',
-    })
-  }
-
-  const order: Record<ActionPriority, number> = { urgent: 0, high: 1, medium: 2 }
-  return actions.sort((a, b) => order[a.priority] - order[b.priority]).slice(0, 3)
-}

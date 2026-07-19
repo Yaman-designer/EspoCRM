@@ -1,11 +1,12 @@
 import type { FieldSchema, StepSchema, FieldOption } from './types'
-import { evaluateCondition } from './VisibilityEngine'
+import { evaluateCondition, isFieldVisible } from './VisibilityEngine'
 import { getAllFields } from './utils'
 
 export interface DependencyChange {
   fieldKey: string
-  action: 'clear' | 'reload-options'
+  action: 'clear' | 'reload-options' | 'update-validation' | 'auto-derive'
   loader?: (parentValue: unknown) => Promise<FieldOption[]>
+  deriver?: (parentValue: unknown) => unknown
 }
 
 /**
@@ -43,7 +44,27 @@ export function computeDependencyChanges(
           action: 'reload-options',
           loader: (parentValue: unknown) => loader(String(parentValue ?? ''), currValues),
         })
+      } else if (dep.action === 'update-validation') {
+        changes.push({ fieldKey: field.key, action: 'update-validation' })
+      } else if (dep.action === 'auto-derive' && dep.derive) {
+        const derive = dep.derive
+        changes.push({
+          fieldKey: field.key,
+          action: 'auto-derive',
+          deriver: (parentValue: unknown) => derive(parentValue, currValues),
+        })
       }
+    }
+  }
+
+  // Self-clear-on-hide: a field's OWN visibility (not a declared FieldDependency)
+  // flipping visible -> hidden clears its value when clearWhenHidden is set.
+  for (const field of fields) {
+    if (!field.clearWhenHidden) continue
+    const wasVisible = isFieldVisible(field.visibility, prevValues)
+    const isVisible = isFieldVisible(field.visibility, currValues)
+    if (wasVisible && !isVisible) {
+      changes.push({ fieldKey: field.key, action: 'clear' })
     }
   }
 

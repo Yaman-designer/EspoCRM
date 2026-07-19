@@ -12,6 +12,7 @@ import { EntityViewSheet } from './EntityViewSheet'
 import { EntityDeleteDialog } from './EntityDeleteDialog'
 import { ConfiguredViewPanel } from './ConfiguredViewPanel'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
+import { presentApiError } from '@/lib/errors/presentApiError'
 import type { ComponentType } from 'react'
 import type { EspoListResponse } from '@/api/espocrm/entityService'
 import type { FormProps } from '@/components/data-table'
@@ -140,8 +141,11 @@ export function CRMResourcePage<T extends { id: string }>({
         setViewRow(undefined)
       }
     },
-    onError: (_, __, context) => {
-      toast.error('Failed to delete record')
+    onError: (error, row, context) => {
+      presentApiError(error, {
+        entityLabel: singular.toLowerCase(),
+        onRetry: () => deleteMutation.mutate(row),
+      })
       // Roll back every cache entry to its pre-mutation snapshot.
       context?.snapshot.forEach(([key, data]) => queryClient.setQueryData(key, data))
     },

@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 
 import { env } from '@/lib/env'
 const ESPO_BASE = env.espoApiUrl
-const ENTITIES = ['Contact', 'RealEstateRequest', 'Account', 'EblaContractParty'] as const
+const ENTITIES = ['Contact', 'RealEstateRequest', 'Account', 'EblaContractParty', 'RealEstateProperty'] as const
 
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get('q')?.trim()
@@ -30,9 +30,14 @@ export async function GET(req: NextRequest) {
       if (!res.ok) return []
 
       const data = await res.json()
-      return (data.list ?? []).map((item: { id: string; name?: string }) => ({
+      return (data.list ?? []).map((item: { id: string; name?: string; title?: string; propertyCode?: string }) => ({
         id: item.id,
-        name: item.name ?? item.id,
+        // RealEstateProperty has no populated top-level `name` in this instance
+        // (confirmed via direct API inspection) — title/propertyCode are the
+        // real display fields for it.
+        name: entity === 'RealEstateProperty'
+          ? (item.title ?? item.propertyCode ?? item.id)
+          : (item.name ?? item.id),
         entityType: entity,
       }))
     } catch {

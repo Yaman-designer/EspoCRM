@@ -49,6 +49,22 @@ class FieldBuilder<T extends FieldSchema> {
 
   visibleWhen(cond: ConditionNode) { this._s.visibility = cond; return this }
 
+  /** Field is required only while `cond` evaluates true against the live form values. */
+  requiredWhen(cond: ConditionNode, msg?: string) {
+    this._s.requiredWhen = cond
+    if (msg) this.meta({ requiredWhenMessage: msg })
+    return this
+  }
+
+  /** Declarative disabled condition — OR-combined with `.disabled()` at render time. */
+  disabledWhen(cond: ConditionNode) { this._s.disabledWhen = cond; return this }
+
+  /** Declarative readOnly condition — OR-combined with `.readOnly()` at render time. */
+  readOnlyWhen(cond: ConditionNode) { this._s.readOnlyWhen = cond; return this }
+
+  /** Clears this field's value the moment its own `visibility` condition flips hidden. */
+  clearWhenHidden(v = true) { this._s.clearWhenHidden = v; return this }
+
   validate(rules: ValidationRule[]) {
     this._s.validation = [...(this._s.validation ?? []), ...rules]
     return this
@@ -203,12 +219,14 @@ class ImageBuilder extends FieldBuilder<ImageField> {
   accept(types: string[]) { (this._s as ImageField).accept = types; return this }
   maxSize(bytes: number)  { (this._s as ImageField).maxSize = bytes; return this }
   aspectRatio(r: string)  { (this._s as ImageField).aspectRatio = r; return this }
+  resolvePreviewSrc(fn: (value: string) => string) { (this._s as ImageField).resolvePreviewSrc = fn; return this }
 }
 
 class MultiImageBuilder extends FieldBuilder<MultiImageField> {
   accept(types: string[]) { (this._s as MultiImageField).accept = types; return this }
   maxSize(bytes: number)  { (this._s as MultiImageField).maxSize = bytes; return this }
   maxFiles(n: number)     { (this._s as MultiImageField).maxFiles = n; return this }
+  resolvePreviewSrc(fn: (value: string) => string) { (this._s as MultiImageField).resolvePreviewSrc = fn; return this }
 }
 
 class FileBuilder extends FieldBuilder<FileField> {

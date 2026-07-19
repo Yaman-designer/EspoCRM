@@ -66,32 +66,28 @@ export function buildWhereParams(
   return params
 }
 
+// Wave 2 (2026-07-14): this previously queried status='Available' and
+// status='Pending' — both fabricated values that don't exist in live
+// EspoCRM, confirmed via a live per-status count query to always return 0
+// regardless of real listing volume. Field names below match the real
+// status vocabulary (see the approved Product Decision Record) instead of
+// the old fabricated one.
 export interface KPIStats {
-  available: number
-  pending:   number
-  sold:      number
+  active:        number
+  underApproval: number
+  sold:          number
 }
 
 export async function fetchPropertyKPIs(): Promise<KPIStats> {
-  const [available, pending, underApproval, sold] = await Promise.all([
-    fetchPropertyCount('status', 'Available'),
-    fetchPropertyCount('status', 'Pending'),
+  const [active, underApproval, sold] = await Promise.all([
+    fetchPropertyCount('status', 'Active'),
     fetchPropertyCount('status', 'Under Approval'),
     fetchPropertyCount('status', 'Sold'),
   ])
-  return { available, pending: pending + underApproval, sold }
+  return { active, underApproval, sold }
 }
 
 // ── Options ───────────────────────────────────────────────────────────────────
-
-export interface StatusOption {
-  value: string
-  label: string
-  // null means the count API failed — the option is still shown so users
-  // can filter by it; the display layer renders a dash instead of a number.
-  count: number | null
-  dot:   string
-}
 
 export interface TypeOption {
   value: string
@@ -100,7 +96,6 @@ export interface TypeOption {
 }
 
 export interface PropertyOptions {
-  statuses:  StatusOption[]  // kept for type compatibility; always empty after perf fix
   types:     TypeOption[]
   bedrooms:  number[]
   bathrooms: number[]
@@ -130,7 +125,6 @@ export async function fetchPropertyOptions(): Promise<PropertyOptions> {
   const types: TypeOption[] = typeValues.map(value => ({ value, label: value, count: null }))
 
   return {
-    statuses:  [],
     types,
     bedrooms:  BEDROOM_COUNTS,
     bathrooms: BATHROOM_COUNTS,

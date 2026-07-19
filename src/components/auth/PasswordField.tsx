@@ -31,8 +31,14 @@ export function PasswordField({ control, disabled }: PasswordFieldProps) {
       render={({ field }) => (
         <FormItem>
           <FormLabel>{t('password')}</FormLabel>
-          <FormControl>
-            <div className="relative">
+          {/* FormControl uses a Radix Slot, which forwards id/aria-* to its
+              single immediate child. That child must be the <Input> itself —
+              wrapping it in this div first (needed for the show/hide button's
+              absolute positioning) sent those props to the div instead,
+              silently breaking the label's htmlFor association (and
+              aria-describedby error announcement) for this field only. */}
+          <div className="relative">
+            <FormControl>
               <Input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
@@ -41,26 +47,26 @@ export function PasswordField({ control, disabled }: PasswordFieldProps) {
                 className="pe-11 shadow-[0_1px_4px_rgba(16,24,40,0.07)]"
                 {...field}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                disabled={disabled}
-                className={[
-                  'absolute inset-y-0 end-0 flex items-center px-3 rounded-e-lg',
-                  'text-muted-foreground transition-colors duration-150 hover:text-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1',
-                  'disabled:pointer-events-none',
-                ].join(' ')}
-                aria-label={showPassword ? t('hidePassword') : t('showPassword')}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" aria-hidden />
-                ) : (
-                  <Eye className="h-4 w-4" aria-hidden />
-                )}
-              </button>
-            </div>
-          </FormControl>
+            </FormControl>
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              disabled={disabled}
+              className={[
+                'absolute inset-y-0 end-0 flex items-center px-3 rounded-e-lg',
+                'text-muted-foreground transition-colors duration-150 hover:text-foreground',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1',
+                'disabled:pointer-events-none',
+              ].join(' ')}
+              aria-label={showPassword ? t('hidePassword') : t('showPassword')}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" aria-hidden />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden />
+              )}
+            </button>
+          </div>
           <FormMessage />
         </FormItem>
       )}

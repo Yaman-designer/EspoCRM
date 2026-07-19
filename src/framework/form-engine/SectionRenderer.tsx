@@ -5,7 +5,7 @@ import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UseFormReturn } from 'react-hook-form'
 import type { SectionSchema, FieldOption } from './types'
-import { isFieldVisible } from './VisibilityEngine'
+import { isFieldVisible, evaluateCondition } from './VisibilityEngine'
 import { GridEngine } from './GridEngine'
 
 /* ── Collapse phase state machine ────────────────────────────────────
@@ -39,8 +39,11 @@ function getFieldSummary(section: SectionSchema, watchedValues: Record<string, u
     if (Array.isArray(val)) return val.length > 0
     return true
   })
-  const requiredCount = visible.filter(f => f.required).length
-  const requiredFilledCount = filled.filter(f => f.required).length
+  const isCurrentlyRequired = (f: typeof visible[number]) =>
+    f.required || (f.requiredWhen ? evaluateCondition(f.requiredWhen, watchedValues) : false)
+
+  const requiredCount = visible.filter(isCurrentlyRequired).length
+  const requiredFilledCount = filled.filter(isCurrentlyRequired).length
   return {
     visibleCount: visible.length,
     filledCount: filled.length,

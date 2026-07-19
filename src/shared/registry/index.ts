@@ -8,6 +8,7 @@ export type ResourceKey =
   | 'departments'
   | 'contacts'
   | 'roles'
+  | 'regionLocations'
 
 export interface ResourceOption {
   label: string
@@ -107,6 +108,33 @@ export const resourceRegistry: Record<ResourceKey, ResourceDef> = {
       axiosClient
         .get<EspoListResponse>('/AclRole', {
           params: { maxSize: 200, attributeSelect: 'id,name' },
+        })
+        .then((r) => mapOptions(r.data.list, 'name', 'id')),
+    staleTime: 10 * 60 * 1000,
+  },
+
+  // Top-level Regions (RealEstateLocation records with no parent) - the root
+  // of the Property Wizard's Region -> Sub Region -> Location cascade. Query
+  // shape confirmed working directly against the live EspoCRM API; unlike
+  // Sub Region/Location (parentId-dependent, not a fixed query), Region has
+  // no parameters, so it fits this static-list registry exactly like Users/
+  // Companies/Departments/Contacts/Roles.
+  regionLocations: {
+    queryKey: ['resource', 'regionLocations'] as const,
+    queryFn: () =>
+      axiosClient
+        .get<EspoListResponse>('/RealEstateLocation', {
+          params: {
+            maxSize: 10,
+            offset: 0,
+            orderBy: 'parent',
+            order: 'asc',
+            'whereGroup[0][type]': 'primary',
+            'whereGroup[0][value]': 'primaryParents',
+            'whereGroup[1][type]': 'isNull',
+            'whereGroup[1][attribute]': 'parentId',
+            attributeSelect: 'name',
+          },
         })
         .then((r) => mapOptions(r.data.list, 'name', 'id')),
     staleTime: 10 * 60 * 1000,

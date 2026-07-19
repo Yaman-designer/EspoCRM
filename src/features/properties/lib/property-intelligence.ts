@@ -1,5 +1,6 @@
 import { fmtPrice } from './display'
 import type { RealEstateProperty } from '../types/property.types'
+import { isFurnished } from '../domain/predicates'
 
 // ── Public types ──────────────────────────────────────────────────────────────
 
@@ -36,52 +37,89 @@ export interface InvestmentSignal {
 
 // ── Translation maps ──────────────────────────────────────────────────────────
 
+// Keys match cOrientation's PDF-exact lowercase short codes.
 const ORIENTATION_HIGHLIGHTS: Record<string, string> = {
-  'SW': 'South-West Natural Light Exposure',
-  'SE': 'South-East Natural Light Exposure',
-  'S':  'South-Facing Natural Light',
-  'N':  'North-Facing Aspect',
-  'NE': 'North-East Natural Light',
-  'NW': 'North-West Natural Light',
-  'E':  'East-Facing Morning Light',
-  'W':  'West-Facing Evening Light',
+  'sw': 'South-West Natural Light Exposure',
+  'se': 'South-East Natural Light Exposure',
+  's':  'South-Facing Natural Light',
+  'n':  'North-Facing Aspect',
+  'ne': 'North-East Natural Light',
+  'nw': 'North-West Natural Light',
+  'e':  'East-Facing Morning Light',
+  'w':  'West-Facing Evening Light',
 }
 
+// Keys match the live enum values in domain/options.ts, not the pre-migration
+// Title-Case vocabulary.
 const HEATING_HIGHLIGHTS: Record<string, string> = {
+  petrol:              'Petrol Heating',
+  natural_gas:         'Natural Gas Heating',
+  gas:                 'Natural Gas Heating',
+  current:             'Electric Heating System',
+  stove:               'Wood-Stove Heating',
+  thermal_accumulator: 'Thermal Accumulator Heating',
+  pellet:              'Pellet Heating System',
+  infrared:            'Infrared Heating System',
+  fan_coil:            'Fan Coil Climate System',
+  wood:                'Wood Heating System',
+  teleheating:         'District Heating',
+  geothermal_energy:   'Geothermal Heating System',
+  heatpump:            'Advanced Climate Control System',
+  // 'thermopompos' deliberately left unmapped — see property-narrative.ts.
+  // Legacy Title-Case values kept as a safety net — see property-feature-mapper.ts's
+  // HEATING map comment for why (never confirmed real, cost-free to keep).
   'Heat Pump': 'Advanced Climate Control System',
-  'Gas':       'Natural Gas Heating',
-  'Electric':  'Electric Heating System',
-  'Solar':     'Solar-Powered Climate System',
-  'Oil':       'Central Oil Heating',
+  Gas:         'Natural Gas Heating',
+  Electric:    'Electric Heating System',
+  Solar:       'Solar-Powered Climate System',
+  Oil:         'Central Oil Heating',
 }
 
+// 'No' is excluded by the bare-truthy-check removal below.
 const DOOR_HIGHLIGHTS: Record<string, string> = {
-  'Security': 'Premium Security Entrance',
-  'Armored':  'Armored Security Door',
-  'Steel':    'Reinforced Steel Entrance',
-  'Oak':      'Solid Oak Entry Door',
-  'Wood':     'Timber Entry Door',
+  Security: 'Premium Security Entrance',
+  Simple:   'Standard Entry Door',
+  // Legacy safety net — see HEATING_HIGHLIGHTS's comment above.
+  Armored: 'Armored Security Door',
+  Steel:   'Reinforced Steel Entrance',
+  Oak:     'Solid Oak Entry Door',
+  Wood:    'Timber Entry Door',
 }
 
 const FRAMES_HIGHLIGHTS: Record<string, string> = {
-  'PVC':           'High-Performance PVC Window Frames',
-  'Aluminium':     'Architectural Aluminium Frames',
-  'Wood':          'Premium Timber Window Frames',
+  wooden:    'Premium Timber Window Frames',
+  aluminium: 'Architectural Aluminium Frames',
+  synthetic: 'Synthetic Window Frames',
+  // Legacy safety net — see HEATING_HIGHLIGHTS's comment above.
+  PVC:             'High-Performance PVC Window Frames',
+  Aluminium:       'Architectural Aluminium Frames',
+  Wood:            'Premium Timber Window Frames',
   'Double Glazed': 'Double-Glazed Insulation Frames',
 }
 
+// 'No' is already excluded by the isPresent() check at every call site below.
 const POOL_HIGHLIGHTS: Record<string, string> = {
-  'Yes':     'Private Swimming Pool',
-  'Private': 'Private Swimming Pool',
-  'Heated':  'Heated Private Swimming Pool',
-  'Indoor':  'Indoor Swimming Pool',
-  'Outdoor': 'Outdoor Swimming Pool',
+  External: 'Private Outdoor Swimming Pool',
+  Interior: 'Indoor Swimming Pool',
+  indoors:  'Indoor Swimming Pool',
+  // Legacy safety net — see HEATING_HIGHLIGHTS's comment above.
+  Yes:     'Private Swimming Pool',
+  Private: 'Private Swimming Pool',
+  Indoor:  'Indoor Swimming Pool',
+  Outdoor: 'Outdoor Swimming Pool',
 }
 
+// 'No access' is a valid real value meaning the opposite of a feature —
+// deliberately excluded from this map and from every call site below.
 const ACCESS_HIGHLIGHTS: Record<string, string> = {
-  'Road':         'Direct Road Access',
+  Road:       'Direct Road Access',
+  Pedestrian: 'Pedestrian Access',
+  Paved:      'Paved Road Access',
+  'Dirt road': 'Dirt Road Access',
+  Sea:        'Rare Sea-Access Property',
+  Other:      'Private Access',
+  // Legacy safety net — see HEATING_HIGHLIGHTS's comment above.
   'Private Road': 'Exclusive Private Road Access',
-  'Sea':          'Rare Sea-Access Property',
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -106,7 +144,10 @@ function buildHighlights(p: RealEstateProperty): string[] {
   if (p.energyClass)    result.push(`${p.energyClass} Energy Efficiency`)
   if (p.cOrientation)   push(result, ORIENTATION_HIGHLIGHTS[p.cOrientation]   ?? `${p.cOrientation} Orientation`)
   if (p.cHeatingMedium) push(result, HEATING_HIGHLIGHTS[p.cHeatingMedium]     ?? `${p.cHeatingMedium} Heating`)
-  if (p.door)           push(result, DOOR_HIGHLIGHTS[p.door]                  ?? `${p.door} Entry Door`)
+  // Real door options are 'Security' | 'Simple' | 'yes' | 'no' (confirmed live
+  // entityDefs) — case-insensitive check, not a literal 'No' match, so the
+  // real lowercase 'no' value is actually excluded (Wave 1 reconciliation fix).
+  if (p.door && !/^no$/i.test(p.door)) push(result, DOOR_HIGHLIGHTS[p.door] ?? `${p.door} Entry Door`)
   if (p.frames)         push(result, FRAMES_HIGHLIGHTS[p.frames]              ?? `${p.frames} Window Frames`)
 
   if (isPresent(p.cStorageSpace)) {
@@ -119,7 +160,9 @@ function buildHighlights(p: RealEstateProperty): string[] {
     result.push(POOL_HIGHLIGHTS[v] ?? `${v} Swimming Pool`)
   }
 
-  if (p.accessFrom) push(result, ACCESS_HIGHLIGHTS[p.accessFrom] ?? `${p.accessFrom} Access`)
+  if (p.accessFrom && !/^no(\s+access)?$/i.test(p.accessFrom.trim())) {
+    push(result, ACCESS_HIGHLIGHTS[p.accessFrom] ?? `${p.accessFrom} Access`)
+  }
 
   return result
 }
@@ -127,29 +170,25 @@ function buildHighlights(p: RealEstateProperty): string[] {
 function buildLifestyleBenefits(p: RealEstateProperty): LifestyleBenefit[] {
   const result: LifestyleBenefit[] = []
 
-  if (p.furnished === true) {
+  if (isFurnished(p.furnished)) {
     result.push({ id: 'furnished', label: 'Move-in ready with full furnishings included' })
   }
 
-  if (p.cOrientation && ['SW', 'SE', 'S'].includes(p.cOrientation)) {
+  if (p.cOrientation && ['sw', 'se', 's'].includes(p.cOrientation)) {
     result.push({ id: 'light', label: 'Exceptional natural light throughout the day' })
   }
 
   if (isPresent(p.swimmingPool)) {
-    const isHeated = /heated/i.test(p.swimmingPool as string)
-    result.push({
-      id:    'pool',
-      label: isHeated
-        ? 'Heated pool for year-round outdoor living'
-        : 'Resort-style outdoor living with private pool',
-    })
+    // The live swimmingPool enum (No/External/Interior/indoors) carries no
+    // heated/unheated signal — do not infer one.
+    result.push({ id: 'pool', label: 'Resort-style outdoor living with private pool' })
   }
 
   if (isPresent(p.balcony)) {
     result.push({ id: 'balcony', label: 'Private outdoor retreat with dedicated terrace space' })
   }
 
-  if (p.cHeatingMedium === 'Heat Pump') {
+  if (p.cHeatingMedium === 'heatpump') {
     result.push({ id: 'climate', label: 'Year-round comfort with advanced heat pump system' })
   }
 
@@ -184,16 +223,11 @@ function buildSellingPoints(p: RealEstateProperty): SellingPoint[] {
   }
 
   if (isPresent(p.swimmingPool)) {
-    const label = /heated/i.test(p.swimmingPool as string) ? 'Heated Pool' : 'Swimming Pool'
-    result.push({ id: 'pool',          label, variant: 'default' })
+    result.push({ id: 'pool', label: 'Swimming Pool', variant: 'default' })
   }
 
   if (p.accessFrom === 'Sea') {
     result.push({ id: 'sea-access',    label: 'Sea Access',          variant: 'default' })
-  }
-
-  if (p.accessFrom === 'Private Road') {
-    result.push({ id: 'private-road',  label: 'Private Road',        variant: 'default' })
   }
 
   if (isPresent(p.balcony)) {

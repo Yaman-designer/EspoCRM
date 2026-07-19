@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/format'
 import type { ColumnConfig, RowAction } from './types'
 import { StatusBadge } from './StatusBadge'
 import { TableRowActions } from './TableRowActions'
@@ -28,17 +29,6 @@ function avatarColor(name: string) {
   let h = 0
   for (const ch of name) h = ((h * 31) + ch.charCodeAt(0)) & 0xffff
   return AVATAR_COLORS[h % AVATAR_COLORS.length]
-}
-
-function formatCurrency(value: unknown, currency = 'USD') {
-  const n = Number(value)
-  if (isNaN(n)) return '—'
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n)
 }
 
 function formatDate(value: unknown) {
@@ -146,7 +136,10 @@ function GridCard<T extends object>({
               {col.label}
             </p>
             <p className="mt-0.5 text-[18px] font-bold tabular-nums leading-tight text-foreground">
-              {formatCurrency(r[col.key], col.currency)}
+              {(() => {
+                const n = Number(r[col.key])
+                return isNaN(n) ? '—' : formatCurrency(n, col.currency)
+              })()}
             </p>
           </div>
         ))}

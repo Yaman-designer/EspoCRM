@@ -1,13 +1,26 @@
 import type { NextConfig } from "next";
 
-// All EspoCRM API calls are proxied through /api/espo — connect-src only needs 'self'.
+// Most EspoCRM API calls are proxied through /api/espo, needing only 'self'.
+// The Location Intelligence Center's MapLibre map is the one exception: it
+// talks to MapTiler directly from the browser. Verified (2026-07-19) against
+// a live style.json + its referenced tiles.json — style, sprite, glyphs and
+// vector tiles all resolve to the single host api.maptiler.com, so that's
+// the only origin added, not a wildcard. MapLibre GL JS also spins up a
+// tile-parsing Web Worker via `URL.createObjectURL(new Blob(...))` (verified
+// by inspecting the actual maplibre-gl package bundle used by the build) —
+// that requires worker-src to allow blob:, which falls back to child-src
+// then script-src if unset, neither of which previously allowed blob:.
+// img-src/style-src/font-src are untouched: MapLibre decodes sprite/raster
+// images via fetch()+createImageBitmap (connect-src), never `new Image()`,
+// and its bundled CSS has no external @font-face/url() references.
 const ContentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
-  "connect-src 'self'",
+  "connect-src 'self' https://api.maptiler.com",
+  "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -71,6 +84,9 @@ const nextConfig: NextConfig = {
   },
 
   // Cache Components: static shell + dynamic islands for instant TTFB.
+  // CONFIRMED NOT THE CAUSE (2026-07-19): disabling this had zero effect on
+  // the LocationIntelligenceCenter hydration failure (identical diag trace,
+  // identical zero errors, identical outcome) — restored to its real value.
   cacheComponents: true,
 
   experimental: {

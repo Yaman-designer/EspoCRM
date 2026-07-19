@@ -23,9 +23,23 @@ const W = {
   description: 12,
   type:         5,
   agent:        5,
-  purpose:      3,
+  requestType:  3,
 } as const
 
+/**
+ * Real business-rule gate, not just a display score — property-lifecycle.
+ * rules.ts's canPublish() requires this score to clear
+ * MIN_COMPLETENESS_TO_PUBLISH before a property may transition to 'Active';
+ * PropertyListRenderer.tsx's publish filter checks it directly too.
+ *
+ * Distinct from property-health.ts's buildPropertyHealth, despite both
+ * producing a 0-100 number from overlapping fields (media/price/location/
+ * specs/description/agent) — that function's pass/warning/fail grading
+ * feeds only display and advisory signals, never a transition gate. Verified
+ * this pass (Architecture Debt Rank #5) that merging the two would mean
+ * guessing which weighting scheme should govern a real publish rule; kept
+ * deliberately separate. See the Rank #5 Certification Report.
+ */
 export function getDataCompleteness(p: RealEstateProperty): DataCompleteness {
   const hasMedia       = !!(p.mainImageId || p.imagesIds?.length)
   const hasPrice       = p.price != null
@@ -34,7 +48,7 @@ export function getDataCompleteness(p: RealEstateProperty): DataCompleteness {
   const hasDescription = !!(p.description?.trim())
   const hasAgent       = !!p.assignedUserName
   const hasType        = !!p.type
-  const hasPurpose     = !!p.purpose
+  const hasRequestType = !!p.requestType
 
   const missing: string[] = []
   if (!hasMedia)       missing.push('Photos')
@@ -53,7 +67,7 @@ export function getDataCompleteness(p: RealEstateProperty): DataCompleteness {
     (hasDescription ? W.description : 0) +
     (hasType        ? W.type        : 0) +
     (hasAgent       ? W.agent       : 0) +
-    (hasPurpose     ? W.purpose     : 0)
+    (hasRequestType ? W.requestType : 0)
 
   const level: CompletenessLevel =
     score >= 90 ? 'showcase' :

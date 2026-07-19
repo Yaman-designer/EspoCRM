@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
+import { classifyApiError } from '@/lib/errors/classifyApiError'
 
 import { FormFrameworkProvider, useFormFramework } from './context'
 import { FormActionBar } from './FormActionBar'
@@ -178,7 +179,10 @@ function LayoutShell<T extends FieldValues>({
       // Return to idle after success animation
       setTimeout(() => _setIsSubmitSuccess(false), 1200)
     } catch (err) {
-      setSaveState({ status: 'failed', error: String(err) })
+      // Generic, entity-agnostic message for the inline stepper indicator —
+      // callers get the entity-aware, actionable version via onSubmitError
+      // (see lib/errors/presentApiError), which also drives the toast.
+      setSaveState({ status: 'failed', error: classifyApiError(err).message })
       callbacks.onSubmitError?.(err)
     } finally {
       _setIsSubmitting(false)
@@ -195,7 +199,7 @@ function LayoutShell<T extends FieldValues>({
       setSaveState({ status: 'autosaved', savedAt: new Date() })
       callbacks.onDraftSaved?.()
     } catch (err) {
-      setSaveState({ status: 'failed', error: String(err) })
+      setSaveState({ status: 'failed', error: classifyApiError(err).message })
     } finally {
       _setIsSavingDraft(false)
     }

@@ -235,12 +235,24 @@ interface PropertyLocationCardProps {
 export function PropertyLocationCard({ property, className }: PropertyLocationCardProps) {
   const {
     locationName, subRegionLocationName, regionLocationName,
-    propertyCode,
+    propertyCode, addressLatitude, addressLongitude,
+    addressStreet, addressCity, addressState, addressPostalCode, addressCountry,
   } = property
 
-  const hasAnyLocationField = !!(locationName || subRegionLocationName || regionLocationName)
+  // Address Business Group, Phase 3 — single source of truth: if this
+  // record has real, stored coordinates (Phase 2's addressLatitude/
+  // addressLongitude), use them directly rather than re-geocoding the
+  // coarse Region/Sub-Region/District cascade on every render. The cascade
+  // geocode (still queried below — Rules of Hooks require it run
+  // unconditionally, and its own `enabled` flag already avoids a wasted
+  // request when the cascade itself is empty) is now a fallback only, for
+  // records created before this Business Group existed.
+  const hasPreciseCoords = typeof addressLatitude === 'number' && !Number.isNaN(addressLatitude)
+    && typeof addressLongitude === 'number' && !Number.isNaN(addressLongitude)
 
-  const { data: geo, isLoading, isError } = usePropertyLocation({
+  const hasAnyLocationField = !!(locationName || subRegionLocationName || regionLocationName || hasPreciseCoords)
+
+  const { data: cascadeGeo, isLoading, isError } = usePropertyLocation({
     locationName,
     subRegionLocationName,
     regionLocationName,
@@ -251,6 +263,17 @@ export function PropertyLocationCard({ property, className }: PropertyLocationCa
 
   const geoQuery = buildGeoQuery({ locationName, subRegionLocationName, regionLocationName })
   const title    = getDisplayName(property)
+
+  const addressFormatted = [addressStreet, addressCity, addressState, addressPostalCode, addressCountry]
+    .filter(Boolean).join(', ')
+
+  const geo = hasPreciseCoords
+    ? {
+        latitude: addressLatitude as number,
+        longitude: addressLongitude as number,
+        formattedAddress: addressFormatted || (cascadeGeo?.formattedAddress ?? ''),
+      }
+    : cascadeGeo
 
   return (
     <div className={cn(className)}>
@@ -268,7 +291,7 @@ export function PropertyLocationCard({ property, className }: PropertyLocationCa
       </div>
 
       {/* Content */}
-      {isLoading ? (
+      {isLoading && !hasPreciseCoords ? (
         <LocationSkeleton />
       ) : geo ? (
         <div className="space-y-8">

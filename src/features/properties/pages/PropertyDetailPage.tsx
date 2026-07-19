@@ -17,9 +17,10 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { presentApiError } from '@/lib/errors/presentApiError'
 import { deleteProperty } from '../repositories/property.repository'
 import { PropertyDetailView } from '../components/PropertyDetailView'
-import { PropertyForm } from '../components/PropertyForm'
+import { usePropertyDeletePermission } from '../hooks/usePropertyDeletePermission'
 import { getWebAssetUrl, resolvePropertyImageId } from '@/lib/image-url'
 import type { RealEstateProperty } from '../types/property.types'
 
@@ -31,10 +32,28 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
   const router = useRouter()
 
   // Local copy so edits reflect immediately without a full page reload
-  const [property, setProperty] = useState(initialProperty)
+  const [property] = useState(initialProperty)
 
-  const [editOpen, setEditOpen]     = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
+
+  // Edit now navigates to the shared Property wizard in edit mode (per the
+  // approved Wizard-for-both ADR) instead of opening the legacy dialog.
+  const handleEdit = () => {
+    const slug = (property.propertyCode ?? property.id).toLowerCase()
+    router.push(`/properties/${encodeURIComponent(slug)}/edit`)
+  }
+
+  // Permission policy: shared with PropertyListRenderer.tsx's delete action
+  // via usePropertyDeletePermission — the ACL check exists in exactly one
+  // place, not re-implemented per delete entry point.
+  const { denied: deleteDenied } = usePropertyDeletePermission()
+  const handleDeleteRequest = () => {
+    if (deleteDenied) {
+      toast.error("You don't have permission to delete properties.")
+      return
+    }
+    setDeleteOpen(true)
+  }
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteProperty(id),
@@ -43,7 +62,14 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
       router.push('/properties')
       router.refresh()
     },
-    onError: () => toast.error('Failed to delete property'),
+    onError: (error) => {
+      presentApiError(error, {
+        entityLabel: 'property',
+        onRetry: () => deleteMutation.mutate(property.id),
+        onRecover: () => router.push('/properties'),
+        recoveryLabel: 'Back to properties',
+      })
+    },
   })
 
   const imgSrc = getWebAssetUrl(
@@ -55,21 +81,8 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
     <>
       <PropertyDetailView
         property={property}
-        onEdit={() => setEditOpen(true)}
-        onDelete={() => setDeleteOpen(true)}
-      />
-
-      {/* Edit form */}
-      <PropertyForm
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        onSuccess={() => {
-          setEditOpen(false)
-          // Refresh to get updated data from server
-          router.refresh()
-        }}
-        initialData={property}
-        mode="edit"
+        onEdit={handleEdit}
+        onDelete={handleDeleteRequest}
       />
 
       {/* Delete confirmation — shows property context so user knows exactly what they're deleting */}
@@ -114,8 +127,11 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
             <AlertDialogCancel onClick={() => setDeleteOpen(false)}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
-              disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(property.id)}
+              disabled={deleteMutation.isPending || deleteDenied}
+              onClick={() => {
+                if (deleteDenied) return
+                deleteMutation.mutate(property.id)
+              }}
             >
               {deleteMutation.isPending ? 'Deleting…' : 'Delete Property'}
             </AlertDialogAction>

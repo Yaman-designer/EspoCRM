@@ -4,12 +4,14 @@ import { auth } from '@/lib/auth'
 import { env } from '@/lib/env'
 import type { RealEstateProperty } from '@/features/properties/types/property.types'
 import { PropertyDetailPage } from '@/features/properties/pages/PropertyDetailPage'
+import { fetchPropertyBySlug } from '@/features/properties/repositories/property.repository.server'
 
 // ── Server-side property fetch ─────────────────────────────────────────────────
 //
-// Strategy:
-//  1. Try slug.toUpperCase() as propertyCode  (e.g. "dvl68645" → "DVL68645")
-//  2. Fall back to a direct ID fetch          (for UUID-based slugs)
+// Base record fetch (propertyCode match, then direct ID fallback) lives in
+// property.repository.server.ts, shared with [slug]/edit/page.tsx
+// (Architecture Debt Rank #8) — this function only owns the auth() call and
+// this route's own relation enrichment (withActivity below).
 
 async function getProperty(slug: string): Promise<RealEstateProperty | null> {
   const session = await auth()
@@ -19,31 +21,52 @@ async function getProperty(slug: string): Promise<RealEstateProperty | null> {
     'Espo-Authorization': session.espoToken,
   }
 
-  // ── Attempt 1: propertyCode match ──────────────────────────────────────────
+  const property = await fetchPropertyBySlug(slug, headers)
+  if (!property) return null
+  const withActivityResult = await withActivity(property, headers)
+  return withDocuments(withActivityResult, headers)
+}
+
+// Property Details Completion (2026-07-17). documents is a hasMany/hasMany
+// relation to Document (see document.repository.ts's file header) — never
+// part of the standard entity payload, same reason calls/meetings/tasks
+// below each need their own read call. Previously never fetched at all here,
+// which is why the Legal tab (AssetManagementSystem.tsx) always rendered its
+// hardcoded empty state regardless of whether real documents existed.
+async function withDocuments(
+  property: RealEstateProperty,
+  headers: Record<string, string>,
+): Promise<RealEstateProperty> {
+  const documents = await fetchRelation<NonNullable<RealEstateProperty['documents']>[number]>(property.id, 'documents', headers)
+  return { ...property, documents }
+}
+
+// EC-8 (2026-07-15, Detail Page Relationship Panels). Calls/Meetings/Tasks
+// are hasChildren relations — never returned inline on the main property
+// fetch above — so each needs its own read call, same pattern as Wave 7's
+// withDocuments(). Best-effort per relation: one failing must not block the
+// other two or the property page itself.
+async function withActivity(
+  property: RealEstateProperty,
+  headers: Record<string, string>,
+): Promise<RealEstateProperty> {
+  const [calls, meetings, tasks] = await Promise.all([
+    fetchRelation<NonNullable<RealEstateProperty['calls']>[number]>(property.id, 'calls', headers),
+    fetchRelation<NonNullable<RealEstateProperty['meetings']>[number]>(property.id, 'meetings', headers),
+    fetchRelation<NonNullable<RealEstateProperty['tasks']>[number]>(property.id, 'tasks', headers),
+  ])
+  return { ...property, calls, meetings, tasks }
+}
+
+async function fetchRelation<T>(propertyId: string, relation: string, headers: Record<string, string>): Promise<T[]> {
   try {
-    const codeUrl = new URL(`${env.espoApiUrl}/RealEstateProperty`)
-    codeUrl.searchParams.set('maxSize', '1')
-    codeUrl.searchParams.set('where[0][type]', 'equals')
-    codeUrl.searchParams.set('where[0][attribute]', 'propertyCode')
-    codeUrl.searchParams.set('where[0][value]', slug.toUpperCase())
-
-    const codeRes = await fetch(codeUrl.toString(), { headers, cache: 'no-store' })
-    if (codeRes.ok) {
-      const data: { list?: RealEstateProperty[] } = await codeRes.json()
-      if (data.list?.[0]) return data.list[0]
-    }
-  } catch { /* ignore — try ID next */ }
-
-  // ── Attempt 2: direct ID fetch ─────────────────────────────────────────────
-  try {
-    const idRes = await fetch(
-      `${env.espoApiUrl}/RealEstateProperty/${encodeURIComponent(slug)}`,
-      { headers, cache: 'no-store' },
-    )
-    if (idRes.ok) return (await idRes.json()) as RealEstateProperty
-  } catch { /* not found */ }
-
-  return null
+    const res = await fetch(`${env.espoApiUrl}/RealEstateProperty/${propertyId}/${relation}`, { headers, cache: 'no-store' })
+    if (!res.ok) return []
+    const data: { list?: T[] } = await res.json()
+    return data.list ?? []
+  } catch {
+    return []
+  }
 }
 
 // ── Metadata ───────────────────────────────────────────────────────────────────

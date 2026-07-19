@@ -34,8 +34,8 @@ export function ImageField({ schema, form, disabled, readOnly }: FieldComponentP
 
   const preview = field.value instanceof File
     ? URL.createObjectURL(field.value)
-    : typeof field.value === 'string'
-    ? field.value
+    : typeof field.value === 'string' && field.value
+    ? (schema.resolvePreviewSrc ? schema.resolvePreviewSrc(field.value) : field.value)
     : null
 
   return (

@@ -1,4 +1,8 @@
+'use client'
+
+import { useState } from 'react'
 import { Bed, Bath, Square, Calendar, ShieldCheck } from 'lucide-react'
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import type { RealEstateProperty } from '../../types/property.types'
 
@@ -7,7 +11,15 @@ interface PropertySpecsBarProps {
   onViewFullSpecs?: () => void
 }
 
+// Property Details Completion (2026-07-17). This prop existed before this
+// change but was always passed as `undefined` (see PropertyDetailView.tsx) —
+// the "Full Specifications" button never did anything. Wired up here as a
+// self-contained dialog rather than plumbing new callback state through
+// PropertyDetailView, so the extension stays local to this one component.
+// onViewFullSpecs is kept as an optional override for a future caller that
+// wants its own handling instead of the built-in dialog.
 export function PropertySpecsBar({ property, onViewFullSpecs }: PropertySpecsBarProps) {
+  const [fullSpecsOpen, setFullSpecsOpen] = useState(false)
   const { bedroomCount, bathroomCount, square, yearBuilt, energyClass } = property
 
   type SpecItem = {
@@ -109,16 +121,74 @@ export function PropertySpecsBar({ property, onViewFullSpecs }: PropertySpecsBar
       {/* Stitch: w-full md:w-auto shrink-0 px-6 py-3 bg-text-main text-white
                   rounded-xl text-[10px] font-black uppercase tracking-widest
                   hover:bg-navy transition-all shadow-md active:scale-95       */}
-      {onViewFullSpecs && (
-        <button
-          type="button"
-          onClick={onViewFullSpecs}
-          className="w-full md:w-auto shrink-0 px-6 py-3 bg-foreground text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-85 transition-all shadow-md active:scale-95"
-        >
-          Full Specifications
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={onViewFullSpecs ?? (() => setFullSpecsOpen(true))}
+        className="w-full md:w-auto shrink-0 px-6 py-3 bg-foreground text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-85 transition-all shadow-md active:scale-95"
+      >
+        Full Specifications
+      </button>
+
+      <FullSpecsDialog open={fullSpecsOpen} onOpenChange={setFullSpecsOpen} property={property} />
 
     </section>
+  )
+}
+
+// ── Full Specifications dialog ──────────────────────────────────────────────
+// Property Details Completion (2026-07-17). The Size, Rooms & Structure
+// Wizard step's 16 fields with no other home in the Details page — the
+// bar above is deliberately a curated top-line strip, not a full listing.
+
+function FullSpecsDialog({
+  open, onOpenChange, property,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  property: RealEstateProperty
+}) {
+  const {
+    plotArea, balconyArea, facadeLength, cHalfBathrooms, livingRooms,
+    additionalLivingRooms, kitchens, cMasterrooms, cLivingkitchens, parkingSpaces,
+    floor, floorCount, floorKey, lastFloor, penthouse, cCondition,
+  } = property
+
+  const rows: Array<{ label: string; value: string }> = [
+    plotArea              != null && { label: 'Plot Area',              value: `${plotArea.toLocaleString('en-US')} m²` },
+    balconyArea           != null && { label: 'Balcony Area',           value: `${balconyArea.toLocaleString('en-US')} m²` },
+    facadeLength          != null && { label: 'Facade Length',          value: String(facadeLength) },
+    livingRooms           != null && { label: 'Living Rooms',           value: String(livingRooms) },
+    additionalLivingRooms != null && { label: 'Additional Living Rooms', value: String(additionalLivingRooms) },
+    kitchens               != null && { label: 'Kitchens',              value: String(kitchens) },
+    cMasterrooms           != null && { label: 'Master Rooms',          value: String(cMasterrooms) },
+    cLivingkitchens        != null && { label: 'Living Kitchens',       value: String(cLivingkitchens) },
+    cHalfBathrooms          != null && { label: 'WC / Half Bathrooms',  value: String(cHalfBathrooms) },
+    parkingSpaces           != null && { label: 'Parking Spaces',       value: String(parkingSpaces) },
+    floor                   != null && { label: 'Floor Number',        value: String(floor) },
+    floorCount              != null && { label: 'Floor Count',          value: String(floorCount) },
+    floorKey                != null && { label: 'Floor Key',            value: String(floorKey) },
+    lastFloor               != null && { label: 'Last Floor',           value: lastFloor ? 'Yes' : 'No' },
+    penthouse                != null && { label: 'Penthouse',           value: penthouse ? 'Yes' : 'No' },
+    cCondition                != null && { label: 'Condition',           value: `${cCondition} / 5` },
+  ].filter((r): r is { label: string; value: string } => !!r)
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogTitle>Full Specifications</DialogTitle>
+        {rows.length === 0 ? (
+          <p className="text-sm text-muted-foreground/60 py-4">No additional specifications recorded for this listing.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-5 py-2">
+            {rows.map(row => (
+              <div key={row.label}>
+                <div className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider mb-1">{row.label}</div>
+                <div className="text-sm font-black text-foreground">{row.value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -4,27 +4,34 @@ import { cn } from '@/lib/utils'
 import { STATUS_DOT_COLORS, STATUS_DOT_FALLBACK } from '../domain/constants'
 
 // ── Color maps ────────────────────────────────────────────────────────────────
+// Wave 2 (2026-07-14): rebuilt for the real 8-value live status enum, per the
+// approved Status Design Specification (Gate 1→2 Resolution). Sold keeps its
+// pre-existing crimson brand identity and Received payment is a deeper
+// indigo than Under negotiation's violet — both deliberate deviations from
+// EspoCRM's own flatter style mapping, reasoned in the Design Spec.
 
 // Tinted glassmorphic background for overlay (image) variant
 const OVERLAY_TINT: Record<string, string> = {
-  Available:        'border-emerald-400/40 bg-emerald-500/35',
-  Reserved:         'border-amber-400/40   bg-amber-500/35',
-  Pending:          'border-violet-400/40  bg-violet-500/35',
-  'Under Approval': 'border-orange-400/40  bg-orange-500/35',
-  Rented:           'border-teal-400/40    bg-teal-500/35',
-  Sold:             'border-rose-400/40    bg-rose-500/35',
-  Draft:            'border-slate-400/30   bg-slate-500/28',
+  'Under Approval':    'border-amber-400/40   bg-amber-500/35',
+  Active:               'border-emerald-400/40 bg-emerald-500/35',
+  Inactive:             'border-slate-400/30   bg-slate-500/28',
+  'Not Approved':       'border-rose-400/40    bg-rose-500/35',
+  'Under negotiation':  'border-violet-400/40  bg-violet-500/35',
+  'Received payment':   'border-purple-400/40  bg-purple-700/35',
+  Rented:               'border-blue-400/40    bg-blue-600/35',
+  Sold:                 'border-brand-crimson/40 bg-brand-crimson/35',
 }
 
 // Soft chip for content area — supporting role only
 const CHIP: Record<string, string> = {
-  Available:        'bg-brand-emerald-soft text-brand-emerald  border-brand-emerald/20',
-  Reserved:         'bg-amber-50           text-amber-700      border-amber-200',
-  Pending:          'bg-violet-50          text-violet-700     border-violet-200',
-  'Under Approval': 'bg-orange-50          text-orange-700     border-orange-200',
-  Rented:           'bg-brand-teal-soft    text-brand-teal     border-brand-teal/20',
-  Sold:             'bg-brand-crimson-soft text-brand-crimson  border-brand-crimson/20',
-  Draft:            'bg-secondary          text-muted-foreground border-border/60',
+  'Under Approval':    'bg-amber-50           text-amber-700      border-amber-200',
+  Active:               'bg-brand-emerald-soft text-brand-emerald  border-brand-emerald/20',
+  Inactive:             'bg-secondary          text-muted-foreground border-border/60',
+  'Not Approved':       'bg-rose-50            text-rose-700       border-rose-200',
+  'Under negotiation':  'bg-violet-50          text-violet-700     border-violet-200',
+  'Received payment':   'bg-purple-50          text-purple-800     border-purple-200',
+  Rented:               'bg-blue-50            text-blue-700       border-blue-200',
+  Sold:                 'bg-brand-crimson-soft text-brand-crimson  border-brand-crimson/20',
 }
 
 const FALLBACK_OVERLAY_TINT = 'border-white/10 bg-black/40'

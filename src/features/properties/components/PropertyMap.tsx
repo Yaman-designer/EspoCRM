@@ -33,8 +33,15 @@ function MapSkeleton() {
 }
 
 // ── Dynamic import (no SSR) ───────────────────────────────────────────────────
+//
+// Exported so other call sites that need the bare Leaflet map — not this
+// file's own fixed-height/rounded-24px wrapper div — can reuse this same
+// dynamic-import definition instead of each declaring their own (Architecture
+// Debt Rank #6). LocationIntelligenceCenter.tsx is the first such consumer:
+// it composes the map into a differently-shaped container as part of a
+// larger layout, so it imports LeafletMap directly rather than <PropertyMap>.
 
-const LeafletMap = dynamic<PropertyMapLeafletProps>(
+export const LeafletMap = dynamic<PropertyMapLeafletProps>(
   () => import('./PropertyMapLeaflet').then(m => m.PropertyMapLeaflet),
   { ssr: false, loading: MapSkeleton },
 )

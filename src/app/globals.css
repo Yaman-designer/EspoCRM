@@ -229,12 +229,6 @@
   display: none;
 }
 
-/* ── Stitch stripe-bg dot-grid pattern (used by FinancialIntelligenceOS) ── */
-.stripe-bg {
-  background-image: radial-gradient(#E3E8EF 1px, transparent 0);
-  background-size: 32px 32px;
-}
-
 /* ── Hide scrollbar utility (used by PropertySpecsBar overflow-x scroll) ── */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -404,4 +398,291 @@
 .app-sidebar nav {
   scrollbar-width: thin;
   scrollbar-color: rgba(227, 232, 239, 0.55) transparent;
+}
+
+/* ── Premium cartography — CARTO Positron contrast pass ───────────────────
+   Location Intelligence UI/UX audit (2026-07-19). Same tile source as
+   before (CARTO Positron, already the real premium monochrome basemap —
+   no engine or tile provider changed); the filter deepens road contrast
+   and pulls saturation toward pure grayscale so the basemap reads as a
+   considered architectural line drawing at street zoom, instead of the
+   "flat, empty canvas" the audit flagged. Applied to the tile pane only —
+   markers, popups, and controls stay unaffected. */
+.premium-cartography .leaflet-tile-pane {
+  filter: contrast(1.18) saturate(0.4) brightness(0.97);
+}
+
+/* ── Location Intelligence — interactive map marker (Interactive Map
+   Experience phase) ──────────────────────────────────────────────────── */
+
+@keyframes property-marker-drop {
+  0%   { opacity: 0; transform: translateY(-14px) scale(0.7); }
+  60%  { opacity: 1; transform: translateY(2px) scale(1.06); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.property-map-marker {
+  animation: property-marker-drop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transition: filter 0.15s ease;
+}
+.property-map-marker:hover,
+.property-map-marker:focus-visible {
+  filter: brightness(1.04);
+}
+.property-map-marker .property-marker-pin {
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.property-map-marker:hover .property-marker-pin,
+.property-map-marker:focus-visible .property-marker-pin {
+  transform: scale(1.08) translateY(-2px);
+}
+.property-map-marker.property-marker-active .property-marker-pin {
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: 0 6px 22px rgba(0, 97, 188, 0.6), 0 3px 10px rgba(0, 0, 0, 0.16);
+}
+.property-map-marker:focus-visible .property-marker-pin {
+  outline: 3px solid rgba(0, 97, 188, 0.45);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .property-map-marker {
+    animation: none;
+  }
+  .property-map-marker .property-marker-pin,
+  .property-map-marker:hover .property-marker-pin,
+  .property-map-marker:focus-visible .property-marker-pin {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ── Property marker — ambient pulse ring ─────────────────────────────────
+   Enterprise Geospatial pass (2026-07-19). A quiet "this is the live
+   subject" cue distinct from the one-shot entrance drop and the hover/
+   active elevation above — a soft ring that expands and fades, not a
+   color or size change on the pin itself, so it reads as ambient rather
+   than an alert. Positioned via an ::after pseudo-element on the pin so no
+   extra markup is needed in buildPropertyIcon(). */
+
+@keyframes property-marker-pulse {
+  0%   { transform: scale(0.9);  opacity: 0.45; }
+  70%  { transform: scale(1.9);  opacity: 0; }
+  100% { transform: scale(1.9);  opacity: 0; }
+}
+
+.property-map-marker .property-marker-pin::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(0, 97, 188, 0.35);
+  animation: property-marker-pulse 2.4s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .property-map-marker .property-marker-pin::after {
+    animation: none;
+    display: none;
+  }
+}
+
+/* ── Nearby-place (POI) marker — monochrome dot, blue only on hover ───────
+   Enterprise Geospatial pass (2026-07-19). Keeps the cartographic language
+   honest to the brief: blue is reserved for the property marker and the
+   active search radius, so ordinary POIs sit as quiet gray dots until a
+   reader actually engages one. */
+
+.poi-marker-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #667085;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(16, 24, 40, 0.18);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.poi-marker:hover .poi-marker-dot,
+.poi-marker:focus-visible .poi-marker-dot {
+  background: #0061BC;
+  transform: scale(1.25);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poi-marker-dot { transition: none; }
+}
+
+.poi-tooltip.leaflet-tooltip {
+  border: 1px solid #E4E7EC;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.1);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #344054;
+}
+
+/* ── Property popup — quick actions ──────────────────────────────────────── */
+
+.property-popup-primary-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; margin-top: 10px; padding: 8px 10px;
+  background: #0061BC; color: #fff; border-radius: 10px;
+  font-size: 11.5px; font-weight: 700; text-decoration: none;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+.property-popup-primary-btn:hover  { background: #004E99; }
+.property-popup-primary-btn:active { transform: scale(0.98); }
+.property-popup-primary-btn:focus-visible {
+  outline: 2px solid #0061BC; outline-offset: 2px;
+}
+
+.property-popup-icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; flex-shrink: 0;
+  border: none; border-radius: 8px;
+  background: transparent; color: #667085;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+}
+.property-popup-icon-btn:hover {
+  background: #F2F4F7; color: #0061BC;
+}
+.property-popup-icon-btn:focus-visible {
+  outline: 2px solid #0061BC; outline-offset: 1px;
+}
+.property-popup-icon-btn[data-done="true"] {
+  background: #E6F5EC; color: #1E8E5A;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .property-popup-primary-btn { transition: none; }
+  .property-popup-icon-btn    { transition: none; }
+}
+
+/* ── Property popup — card elevation, pointer, entrance ──────────────────
+   Location Intelligence popup redesign. Leaflet's default popup chrome
+   (flat white box, unstyled triangle tip, no elevation) didn't match the
+   redesigned card content — this replaces just the chrome, not Leaflet's
+   positioning/collision logic, which stays untouched. */
+
+@keyframes property-popup-in {
+  from { opacity: 0; transform: scale(0.95) translateY(3px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.property-popup .leaflet-popup-content-wrapper {
+  border-radius: 16px;
+  box-shadow: 0 14px 40px rgba(16, 24, 40, 0.16), 0 4px 14px rgba(16, 24, 40, 0.08);
+  padding: 14px 16px;
+  animation: property-popup-in 0.16s cubic-bezier(0, 0, 0.2, 1) both;
+}
+.property-popup .leaflet-popup-content {
+  margin: 0;
+  width: auto !important;
+}
+.property-popup .leaflet-popup-tip-container {
+  animation: property-popup-in 0.16s cubic-bezier(0, 0, 0.2, 1) both;
+}
+.property-popup .leaflet-popup-tip {
+  box-shadow: 3px 3px 8px rgba(16, 24, 40, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .property-popup .leaflet-popup-content-wrapper,
+  .property-popup .leaflet-popup-tip-container {
+    animation: none;
+  }
+}
+
+/* ── MapLibre popup — same executive-card chrome as the Leaflet popup ─────
+   MapTiler/MapLibre pass (2026-07-19). MapLibre's Popup uses its own DOM
+   structure (.maplibregl-popup-content / -tip), so the Leaflet overrides
+   above don't apply here — same visual target (rounded card, soft
+   elevation, entrance animation), reused via the same .property-popup
+   className and keyframe. */
+
+.property-popup .maplibregl-popup-content {
+  border-radius: 16px;
+  box-shadow: 0 14px 40px rgba(16, 24, 40, 0.16), 0 4px 14px rgba(16, 24, 40, 0.08);
+  padding: 14px 16px;
+  animation: property-popup-in 0.16s cubic-bezier(0, 0, 0.2, 1) both;
+}
+.property-popup .maplibregl-popup-tip {
+  box-shadow: 3px 3px 8px rgba(16, 24, 40, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .property-popup .maplibregl-popup-content { animation: none; }
+}
+
+/* Nearby-place hover tooltip (plain text, MapLibre Popup) — same visual
+   language as .poi-tooltip's Leaflet equivalent. */
+.poi-tooltip-libre .maplibregl-popup-content {
+  border: 1px solid #E4E7EC;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.1);
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #344054;
+}
+.poi-tooltip-libre .maplibregl-popup-tip { display: none; }
+
+/* MapLibre's own zoom control — restyled from the default gray square
+   button stack to match this app's control-cluster language (rounded
+   corners, soft border, dashboard shadow) instead of the library default. */
+.maplibregl-ctrl-group {
+  background: transparent !important;
+  box-shadow: none !important;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.maplibregl-ctrl-group button {
+  width: 34px !important; height: 34px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.06);
+  backdrop-filter: blur(6px);
+  transition: background-color 0.15s ease;
+}
+.maplibregl-ctrl-group button + button { margin-top: 0 !important; }
+.maplibregl-ctrl-group button:hover { background: #fff !important; }
+.maplibregl-ctrl-group button:focus-visible {
+  outline: 2px solid #0061BC; outline-offset: 2px;
+}
+
+.maplibregl-ctrl-attrib {
+  background: transparent !important;
+  font-size: 9px !important;
+  opacity: 0.6;
+}
+.maplibregl-ctrl-attrib a { color: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  .maplibregl-ctrl-group button { transition: none; }
+}
+
+/* ── Leaflet map controls (recenter / open in maps) ─────────────────────── */
+
+.property-map-control-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px;
+  background: rgba(255,255,255,0.95); color: #344054;
+  border: 1px solid rgba(0,0,0,0.08); border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.06);
+  backdrop-filter: blur(6px);
+  transition: background-color 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+}
+.property-map-control-btn:hover  { background: #fff; color: #0061BC; }
+.property-map-control-btn:active { transform: scale(0.94); }
+.property-map-control-btn:focus-visible {
+  outline: 2px solid #0061BC; outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .property-map-control-btn { transition: none; }
 }

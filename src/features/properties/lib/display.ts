@@ -7,21 +7,17 @@ import { formatCurrency, formatDate as baseFmtDate } from '@/lib/format'
 
 // ── Price formatting ──────────────────────────────────────────────────────────
 
-// Currency-compact Intl formatter — no equivalent in lib/format (different notation and decimals)
-const PRICE_FMT_COMPACT = new Intl.NumberFormat('en-US', {
-  style: 'currency',
-  currency: 'USD',
-  notation: 'compact',
-  maximumFractionDigits: 2,
-})
-
 /**
- * Formats a price as USD.
+ * Formats a property price in the app's operating currency (EUR — see
+ * lib/format.ts's APP_CURRENCY). Wave 4 (2026-07-14): this used to construct
+ * its own hardcoded-USD Intl.NumberFormat instances; now delegates entirely
+ * to the single centralized formatter so there is exactly one place currency
+ * formatting logic lives.
  * Pass compact=true in space-constrained contexts (e.g. detail sheet identity strip)
- * to use abbreviated notation for values ≥ $1M (e.g. $1.5M instead of $1,500,000).
+ * to use abbreviated notation for values ≥ €1M (e.g. €1.5M instead of €1,500,000).
  */
 export function fmtPrice(price: number, compact = false): string {
-  if (compact && price >= 1_000_000) return PRICE_FMT_COMPACT.format(price)
+  if (compact && price >= 1_000_000) return formatCurrency(price, undefined, { compact: true })
   return formatCurrency(price)
 }
 
