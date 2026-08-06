@@ -1,6 +1,7 @@
 'use client'
 
 import { ImageOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import type { DataCompleteness } from '../lib/data-completeness'
 
@@ -9,6 +10,7 @@ import type { DataCompleteness } from '../lib/data-completeness'
 // Ruled texture + diagonal hatch give paper-plan character without distracting.
 
 export function PropertyImagePlaceholder({ className }: { className?: string }) {
+  const { t } = useTranslation('properties')
   return (
     <div className={cn(
       'relative flex items-center justify-center overflow-hidden bg-muted/30',
@@ -40,7 +42,7 @@ export function PropertyImagePlaceholder({ className }: { className?: string }) 
           <ImageOff className="size-5 text-muted-foreground/25" strokeWidth={1.5} />
         </div>
         <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground/22">
-          No photo available
+          {t('placeholders.noPhotoAvailable')}
         </span>
       </div>
     </div>
@@ -119,11 +121,25 @@ export function SectionPlaceholder({
 //   showcase → primary — photography + all fields, showcase-ready
 
 const LEVEL = {
-  minimal:  { track: 'bg-rose-400/70',    text: 'text-rose-500',    label: 'Incomplete' },
-  partial:  { track: 'bg-amber-400/80',   text: 'text-amber-600',   label: 'Partial'    },
-  complete: { track: 'bg-emerald-500/70', text: 'text-emerald-600', label: 'Complete'   },
-  showcase: { track: 'bg-primary/80',     text: 'text-primary',     label: 'Showcase'   },
+  minimal:  { track: 'bg-rose-400/70',    text: 'text-rose-500',    labelKey: 'minimal'  },
+  partial:  { track: 'bg-amber-400/80',   text: 'text-amber-600',   labelKey: 'partial'  },
+  complete: { track: 'bg-emerald-500/70', text: 'text-emerald-600', labelKey: 'complete' },
+  showcase: { track: 'bg-primary/80',     text: 'text-primary',     labelKey: 'showcase' },
 } as const
+
+// English identifiers data-completeness.ts's `missing` array uses internally
+// (also the MISSING_TO_STEP lookup key in ReviewStep.tsx) — translated only
+// at display time, here and in ReviewStep, so the underlying identifiers
+// never change.
+const MISSING_FIELD_KEY: Record<string, string> = {
+  Photos: 'photos',
+  Price: 'price',
+  Location: 'location',
+  Specifications: 'specifications',
+  Description: 'description',
+  Agent: 'agent',
+  'Property type': 'propertyType',
+}
 
 export function CompletenessBar({
   completeness,
@@ -132,16 +148,21 @@ export function CompletenessBar({
   completeness: DataCompleteness
   className?: string
 }) {
+  const { t } = useTranslation('properties')
   const s = LEVEL[completeness.level]
+
+  const translatedMissing = completeness.missing.map(
+    label => t(`wizard.review.missingFields.${MISSING_FIELD_KEY[label] ?? label}`),
+  )
 
   return (
     <div className={cn('space-y-1.5', className)}>
       <div className="flex items-center justify-between gap-2">
         <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/55">
-          Listing Quality
+          {t('placeholders.listingQuality')}
         </span>
         <div className="flex items-center gap-1.5">
-          <span className={cn('text-[10.5px] font-bold', s.text)}>{s.label}</span>
+          <span className={cn('text-[10.5px] font-bold', s.text)}>{t(`placeholders.levels.${s.labelKey}`)}</span>
           <span className="text-[10px] tabular-nums text-muted-foreground/50">
             {completeness.score}%
           </span>
@@ -161,12 +182,12 @@ export function CompletenessBar({
       </div>
 
       {/* Missing field hint — shows up to 3 labels, then "+N more" */}
-      {completeness.missing.length > 0 && (
+      {translatedMissing.length > 0 && (
         <p className="text-[10px] leading-relaxed text-muted-foreground/48">
-          Missing:{' '}
+          {t('placeholders.missing')}{' '}
           <span className="font-medium text-muted-foreground/60">
-            {completeness.missing.slice(0, 3).join(', ')}
-            {completeness.missing.length > 3 ? ` +${completeness.missing.length - 3}` : ''}
+            {translatedMissing.slice(0, 3).join(', ')}
+            {translatedMissing.length > 3 ? ` +${translatedMissing.length - 3}` : ''}
           </span>
         </p>
       )}

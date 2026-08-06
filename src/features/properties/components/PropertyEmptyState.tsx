@@ -1,6 +1,7 @@
 'use client'
 
 import { Building2, SearchX, Plus, Heart, Filter, WifiOff, RotateCcw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -65,6 +66,7 @@ export function PropertyEmptyState({
 // ── API / network error ───────────────────────────────────────────────────────
 
 function ErrorEmptyState({ onRetry }: { onRetry?: () => void }) {
+  const { t } = useTranslation('properties')
   return (
     <>
       <div className={cn(
@@ -78,17 +80,17 @@ function ErrorEmptyState({ onRetry }: { onRetry?: () => void }) {
 
       <div className="flex flex-col gap-2">
         <h3 className="text-[17px] font-semibold text-foreground">
-          Unable to load properties
+          {t('emptyState.error.title')}
         </h3>
         <p className="max-w-xs text-[13px] leading-relaxed text-muted-foreground">
-          There was a problem fetching your listings. Check your connection and try again.
+          {t('emptyState.error.description')}
         </p>
       </div>
 
       {onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry} className="gap-1.5">
           <RotateCcw className="size-3.5" />
-          Try again
+          {t('emptyState.error.retry')}
         </Button>
       )}
     </>
@@ -98,6 +100,7 @@ function ErrorEmptyState({ onRetry }: { onRetry?: () => void }) {
 // ── No saved properties ───────────────────────────────────────────────────────
 
 function SavedEmptyState({ onClearFilters }: { onClearFilters?: () => void }) {
+  const { t } = useTranslation('properties')
   return (
     <>
       <div className="relative">
@@ -122,16 +125,10 @@ function SavedEmptyState({ onClearFilters }: { onClearFilters?: () => void }) {
 
       <div className="flex flex-col gap-2">
         <h3 className="text-[17px] font-semibold text-foreground">
-          No saved properties yet
+          {t('emptyState.saved.title')}
         </h3>
         <p className="mx-auto max-w-67 text-[13px] leading-relaxed text-muted-foreground">
-          Tap the{' '}
-          <Heart
-            aria-hidden
-            className="inline size-3 align-[-1px] text-rose-400"
-            style={{ fill: 'rgba(251,113,133,0.7)', strokeWidth: 1.5 }}
-          />{' '}
-          heart on any listing to save it. Your collection will appear here.
+          {t('emptyState.saved.description')}
         </p>
       </div>
 
@@ -141,7 +138,7 @@ function SavedEmptyState({ onClearFilters }: { onClearFilters?: () => void }) {
         onClick={onClearFilters}
         className="rounded-xl border-rose-200/70 text-rose-600 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700"
       >
-        Browse all properties
+        {t('emptyState.saved.browseAll')}
       </Button>
     </>
   )
@@ -158,6 +155,7 @@ function SearchEmptyState({
   onClearFilters?: () => void
   onAddProperty?: () => void
 }) {
+  const { t } = useTranslation('properties')
   return (
     <>
       <div className={cn(
@@ -169,21 +167,20 @@ function SearchEmptyState({
 
       <div className="flex flex-col gap-2">
         <h3 className="text-[17px] font-semibold text-foreground">
-          No results for{' '}
-          <span className="text-foreground">&ldquo;{query}&rdquo;</span>
+          {t('emptyState.search.title', { query })}
         </h3>
         <p className="max-w-xs text-[13px] leading-relaxed text-muted-foreground">
-          Check the spelling or try a broader search term — reference ID, location, or property type.
+          {t('emptyState.search.description')}
         </p>
       </div>
 
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={onClearFilters}>
-          Clear search
+          {t('emptyState.search.clearSearch')}
         </Button>
         <Button size="sm" className="gap-1.5" onClick={onAddProperty}>
           <Plus className="size-3.5" />
-          Add property
+          {t('emptyState.search.addProperty')}
         </Button>
       </div>
     </>
@@ -199,6 +196,7 @@ function FilterEmptyState({
   onClearFilters?: () => void
   onAddProperty?: () => void
 }) {
+  const { t } = useTranslation('properties')
   return (
     <>
       <div className={cn(
@@ -210,20 +208,20 @@ function FilterEmptyState({
 
       <div className="flex flex-col gap-2">
         <h3 className="text-[17px] font-semibold text-foreground">
-          No matching properties
+          {t('emptyState.filtered.title')}
         </h3>
         <p className="max-w-xs text-[13px] leading-relaxed text-muted-foreground">
-          No properties match your active filters. Try adjusting your criteria or clear all filters to browse everything.
+          {t('emptyState.filtered.description')}
         </p>
       </div>
 
       <div className="flex items-center gap-2">
         <Button variant="outline" size="sm" onClick={onClearFilters}>
-          Clear all filters
+          {t('emptyState.filtered.clearFilters')}
         </Button>
         <Button size="sm" className="gap-1.5" onClick={onAddProperty}>
           <Plus className="size-3.5" />
-          Add property
+          {t('emptyState.filtered.addProperty')}
         </Button>
       </div>
     </>
@@ -233,6 +231,7 @@ function FilterEmptyState({
 // ── No properties at all ──────────────────────────────────────────────────────
 
 function BlankEmptyState({ onAddProperty }: { onAddProperty?: () => void }) {
+  const { t } = useTranslation('properties')
   return (
     <>
       <div className="relative">
@@ -249,16 +248,16 @@ function BlankEmptyState({ onAddProperty }: { onAddProperty?: () => void }) {
 
       <div className="flex flex-col gap-2">
         <h3 className="text-[17px] font-semibold text-foreground">
-          No properties yet
+          {t('emptyState.blank.title')}
         </h3>
         <p className="max-w-xs text-[13px] leading-relaxed text-muted-foreground">
-          Your portfolio is empty. Add your first listing to start managing properties and tracking your real estate pipeline.
+          {t('emptyState.blank.description')}
         </p>
       </div>
 
       <Button size="sm" className="gap-1.5" onClick={onAddProperty}>
         <Plus className="size-3.5" />
-        Add your first property
+        {t('emptyState.blank.addFirstProperty')}
       </Button>
     </>
   )

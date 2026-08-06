@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +22,8 @@ import { presentApiError } from '@/lib/errors/presentApiError'
 import { deleteProperty } from '../repositories/property.repository'
 import { PropertyDetailView } from '../components/PropertyDetailView'
 import { usePropertyDeletePermission } from '../hooks/usePropertyDeletePermission'
+import { getDisplayName } from '../lib/display'
+import { buildEntitySlug } from '@/shared/detail-view'
 import { getWebAssetUrl, resolvePropertyImageId } from '@/lib/image-url'
 import type { RealEstateProperty } from '../types/property.types'
 
@@ -29,6 +32,7 @@ interface PropertyDetailPageProps {
 }
 
 export function PropertyDetailPage({ property: initialProperty }: PropertyDetailPageProps) {
+  const { t } = useTranslation('properties')
   const router = useRouter()
 
   // Local copy so edits reflect immediately without a full page reload
@@ -39,8 +43,7 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
   // Edit now navigates to the shared Property wizard in edit mode (per the
   // approved Wizard-for-both ADR) instead of opening the legacy dialog.
   const handleEdit = () => {
-    const slug = (property.propertyCode ?? property.id).toLowerCase()
-    router.push(`/properties/${encodeURIComponent(slug)}/edit`)
+    router.push(`/properties/${encodeURIComponent(buildEntitySlug(property.propertyCode, property.id))}/edit`)
   }
 
   // Permission policy: shared with PropertyListRenderer.tsx's delete action
@@ -49,16 +52,23 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
   const { denied: deleteDenied } = usePropertyDeletePermission()
   const handleDeleteRequest = () => {
     if (deleteDenied) {
-      toast.error("You don't have permission to delete properties.")
+      toast.error(t('deleteDialog.noPermission'))
       return
     }
     setDeleteOpen(true)
   }
 
+  // Deliberately not shared with CRMResourcePage's generic list-delete
+  // mutation: this one redirects away on success and has no list cache to
+  // touch, while that one optimistically updates cached list queries and
+  // stays in place. The two things they do share — the ACL check and the
+  // delete API call — already live in one place each (usePropertyDeletePermission,
+  // deleteProperty()). See the note above CRMResourcePage's deleteMutation
+  // for the full reasoning against merging these.
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteProperty(id),
     onSuccess: () => {
-      toast.success('Property deleted')
+      toast.success(t('deleteDialog.deletedSuccess'))
       router.push('/properties')
       router.refresh()
     },
@@ -67,7 +77,7 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
         entityLabel: 'property',
         onRetry: () => deleteMutation.mutate(property.id),
         onRecover: () => router.push('/properties'),
-        recoveryLabel: 'Back to properties',
+        recoveryLabel: t('deleteDialog.backToProperties'),
       })
     },
   })
@@ -75,7 +85,7 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
   const imgSrc = getWebAssetUrl(
     resolvePropertyImageId(property.mainImageId, property.imagesIds),
   )
-  const displayName = property.title || property.name
+  const displayName = getDisplayName(property)
 
   return (
     <>
@@ -95,7 +105,7 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
               <div className="relative h-12 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
                 <Image
                   src={imgSrc}
-                  alt={displayName || 'Property'}
+                  alt={displayName || t('common.propertyFallback')}
                   fill
                   unoptimized
                   className="object-cover"
@@ -104,11 +114,11 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-foreground">
-                  {displayName || 'Untitled Property'}
+                  {displayName || t('deleteDialog.untitledProperty')}
                 </p>
                 {property.propertyCode && (
                   <p className="text-[11px] tabular-nums text-muted-foreground/60">
-                    Ref #{property.propertyCode}
+                    {t('deleteDialog.refCode', { code: property.propertyCode })}
                   </p>
                 )}
               </div>
@@ -117,14 +127,13 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
             <AlertDialogMedia className="bg-destructive/10 text-destructive">
               <Trash2 />
             </AlertDialogMedia>
-            <AlertDialogTitle>Delete Property</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteDialog.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to permanently delete this property?
-              This action cannot be undone.
+              {t('deleteDialog.description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setDeleteOpen(false)}>{t('deleteDialog.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               disabled={deleteMutation.isPending || deleteDenied}
@@ -133,7 +142,7 @@ export function PropertyDetailPage({ property: initialProperty }: PropertyDetail
                 deleteMutation.mutate(property.id)
               }}
             >
-              {deleteMutation.isPending ? 'Deleting…' : 'Delete Property'}
+              {deleteMutation.isPending ? t('deleteDialog.deleting') : t('deleteDialog.title')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

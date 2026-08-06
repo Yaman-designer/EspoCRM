@@ -1,14 +1,16 @@
 'use client'
 
 import { Controller } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { FieldWrapper } from '../FieldWrapper'
 import { buildRules } from '../ValidationEngine'
-import { getFieldId } from '../utils'
+import { getFieldId, getFieldDescribedBy } from '../utils'
 import type { FieldComponentProps, NumberField as Schema } from '../types'
 
 export function NumberField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
   return (
     <Controller
       control={form.control}
@@ -27,7 +29,7 @@ export function NumberField({ schema, form, disabled, readOnly }: FieldComponent
               id={getFieldId(schema.key)}
               value={field.value ?? ''}
               type="number"
-              placeholder={schema.placeholder}
+              placeholder={schema.placeholderKey ? t(schema.placeholderKey) : undefined}
               disabled={disabled}
               readOnly={readOnly}
               min={schema.min}
@@ -35,6 +37,7 @@ export function NumberField({ schema, form, disabled, readOnly }: FieldComponent
               step={schema.step ?? (schema.precision ? Math.pow(10, -schema.precision) : 1)}
               inputMode="numeric"
               aria-invalid={!!fieldState.error}
+              aria-describedby={getFieldDescribedBy(schema, fieldState.error?.message)}
               onChange={e => {
                 const val = e.target.value
                 field.onChange(val === '' ? undefined : Number(val))

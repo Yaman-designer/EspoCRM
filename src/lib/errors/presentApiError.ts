@@ -38,7 +38,18 @@ const ENTITY_MESSAGE: Partial<Record<ApiErrorKind, (entity: string) => string>> 
  */
 export function presentApiError(error: unknown, options: ApiErrorPresentationOptions): ClassifiedApiError {
   const classified = classifyApiError(error)
-  const message = ENTITY_MESSAGE[classified.kind]?.(options.entityLabel) ?? classified.message
+  const baseMessage = ENTITY_MESSAGE[classified.kind]?.(options.entityLabel) ?? classified.message
+  // 'validation' is the one kind where the server's own reason (EspoCRM's
+  // X-Status-Reason header, or a reason/field in the response body — see
+  // classifyApiError's devDetail) is genuinely actionable for the user, not
+  // just for the console: e.g. a propertyCode uniqueness race (passes the
+  // client-side async check, then a second user claims it before this
+  // user's own submit lands) previously surfaced only the generic "some of
+  // the submitted information was rejected," with no way to tell which
+  // field or why. Every other kind keeps its existing message unchanged.
+  const message = classified.kind === 'validation' && classified.devDetail
+    ? `${baseMessage} (${classified.devDetail})`
+    : baseMessage
 
   if (classified.logLevel === 'error') {
     console.error('[api-error]', classified.kind, classified.httpStatus, classified.devDetail, error)

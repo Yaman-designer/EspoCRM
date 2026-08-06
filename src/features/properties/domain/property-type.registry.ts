@@ -14,6 +14,7 @@ import {
   Building2, Home, Warehouse, Store, Trees, LandPlot,
   type LucideIcon,
 } from 'lucide-react'
+import { createLabelResolver } from './label-resolution'
 
 export type PropertyTypeCategory = 'residential' | 'commercial' | 'land'
 
@@ -124,6 +125,54 @@ const TYPE_VALUES_BY_CATEGORY: Record<'Residential' | 'Commercial' | 'Land' | 'O
 function titleCaseTypeLabel(value: string): string {
   return value.replace(/\w\S*/g, word => word[0].toUpperCase() + word.slice(1))
 }
+
+// value → i18n key for the 16 canonical types in PROPERTY_TYPE_META above.
+// Deliberately separate from TYPE_VALUES_BY_CATEGORY's ~35 raw catalogue
+// values below, which that table's own comment forbids translating without
+// a confirmed source — this only covers the smaller, audited registry used
+// for list-page filter/display labels, never the wizard's Category→Type
+// dropdown values.
+const PROPERTY_TYPE_LABEL_KEYS: Record<string, string> = {
+  Apartment: 'apartment',
+  House: 'house',
+  Detached: 'detached',
+  Villa: 'villa',
+  Maisonette: 'maisonette',
+  Townhouse: 'townhouse',
+  Studio: 'studio',
+  Office: 'office',
+  Store: 'store',
+  Warehouse: 'warehouse',
+  Land: 'land',
+  Plot: 'plot',
+  plot: 'plot',
+  parcel: 'parcel',
+  island: 'island',
+  'other land': 'otherLand',
+}
+
+// Raw `type` values whose full label is too long for the property card's
+// single-line type chip (e.g. Greek "Συγκρότημα Κατοικιών") — only these
+// have a dedicated short `types.compact.*` override; every other value falls
+// back to the same full label used everywhere else in the app.
+const COMPACT_TYPE_OVERRIDE_KEYS: ReadonlySet<string> = new Set(['townhouse'])
+
+/**
+ * Single public entry point for displaying a raw property `type` value —
+ * translates the 16 canonical values above via properties.json's `types.*`
+ * keys (or `types.compact.*` when `{ compact: true }` resolves to a key with
+ * an override), and falls back to a plain title-cased reading of the raw
+ * value for anything else (e.g. the wizard's own Category-scoped catalogue).
+ * Callers never need to know which namespace backs the result.
+ * `t` is the i18next translate function for the 'properties' namespace.
+ */
+export const getPropertyTypeLabel = createLabelResolver({
+  namespace: 'types',
+  compactNamespace: 'types.compact',
+  keyMap: PROPERTY_TYPE_LABEL_KEYS,
+  compactOverrideKeys: COMPACT_TYPE_OVERRIDE_KEYS,
+  fallback: titleCaseTypeLabel,
+})
 
 /**
  * Category → Type conditional option loader (PDF business rule): returns the

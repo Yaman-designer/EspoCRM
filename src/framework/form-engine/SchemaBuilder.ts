@@ -15,14 +15,18 @@ import type {
 class FieldBuilder<T extends FieldSchema> {
   protected _s: Partial<T>
 
-  constructor(type: T['type'], key: string, label: string) {
-    this._s = { type, key, label } as Partial<T>
+  /** `labelKey` is a semantic i18n key, not literal display text — see BaseField.labelKey. */
+  constructor(type: T['type'], key: string, labelKey: string) {
+    this._s = { type, key, labelKey } as Partial<T>
   }
 
   span(span: GridSpan) { this._s.span = span; return this }
   full()    { return this.span({ xs: 12 }) }
-  half()    { return this.span({ xs: 12, lg: 6 }) }
-  third()   { return this.span({ xs: 12, md: 6, lg: 4 }) }
+  /** 1 col → 2 cols once the section card itself has ≥ ~448px to work with. */
+  half()    { return this.span({ xs: 12, sm: 6 }) }
+  /** 1 → 2 → 3 cols — each step only once the card can fit it at ≥ ~208px/column. */
+  third()   { return this.span({ xs: 12, sm: 6, md: 4 }) }
+  /** 1 → 2 → 4 cols — 4-up only once the card is genuinely wide (~896px+). */
   quarter() { return this.span({ xs: 12, sm: 6, lg: 3 }) }
 
   required(msg?: string) {
@@ -33,10 +37,10 @@ class FieldBuilder<T extends FieldSchema> {
 
   optional() { this._s.required = false; return this }
 
-  placeholder(text: string) { this._s.placeholder = text; return this }
-  description(text: string) { this._s.description = text; return this }
-  helperText(text: string)  { this._s.helperText = text; return this }
-  tooltip(text: string)     { this._s.tooltip = text; return this }
+  placeholder(key: string) { this._s.placeholderKey = key; return this }
+  description(key: string) { this._s.descriptionKey = key; return this }
+  helperText(key: string)  { this._s.helperTextKey = key; return this }
+  tooltip(key: string)     { this._s.tooltipKey = key; return this }
 
   disabled(v: boolean | ((values: Record<string, unknown>) => boolean) = true) {
     this._s.disabled = v; return this
@@ -144,20 +148,20 @@ class TimeBuilder extends FieldBuilder<TimeField> {
 }
 
 class CheckboxBuilder extends FieldBuilder<CheckboxField> {
-  checkboxLabel(t: string) { (this._s as CheckboxField).checkboxLabel = t; return this }
+  checkboxLabel(key: string) { (this._s as CheckboxField).checkboxLabelKey = key; return this }
 }
 
 class SwitchBuilder extends FieldBuilder<SwitchField> {
-  labels(on: string, off: string) {
+  labels(onKey: string, offKey: string) {
     const s = this._s as SwitchField
-    s.onLabel = on; s.offLabel = off
+    s.onLabelKey = onKey; s.offLabelKey = offKey
     return this
   }
 }
 
 class RadioBuilder extends FieldBuilder<RadioField> {
-  constructor(type: RadioField['type'], key: string, label: string, opts: FieldOption[]) {
-    super(type, key, label)
+  constructor(type: RadioField['type'], key: string, labelKey: string, opts: FieldOption[]) {
+    super(type, key, labelKey)
     ;(this._s as RadioField).options = opts
   }
   layout(l: RadioField['layout']) { (this._s as RadioField).layout = l; return this }
@@ -184,8 +188,8 @@ class SearchableSelectBuilder extends FieldBuilder<SearchableSelectField> {
 }
 
 class AsyncSelectBuilder extends FieldBuilder<AsyncSelectField> {
-  constructor(type: AsyncSelectField['type'], key: string, label: string, loader: OptionsLoader) {
-    super(type, key, label)
+  constructor(type: AsyncSelectField['type'], key: string, labelKey: string, loader: OptionsLoader) {
+    super(type, key, labelKey)
     ;(this._s as AsyncSelectField).loadOptions = loader
   }
   debounce(ms: number)  { (this._s as AsyncSelectField).debounce = ms; return this }
@@ -194,8 +198,8 @@ class AsyncSelectBuilder extends FieldBuilder<AsyncSelectField> {
 }
 
 class RelationBuilder extends FieldBuilder<RelationField> {
-  constructor(type: RelationField['type'], key: string, label: string, entity: string) {
-    super(type, key, label)
+  constructor(type: RelationField['type'], key: string, labelKey: string, entity: string) {
+    super(type, key, labelKey)
     ;(this._s as RelationField).entity = entity
   }
   displayField(f: string) { (this._s as RelationField).displayField = f; return this }
@@ -244,34 +248,34 @@ class AddressBuilder extends FieldBuilder<AddressField> {
 /* ─── Field factory  ─────────────────────────────────────────────── */
 
 export const field = {
-  text:            (key: string, label: string) => new TextBuilder('text', key, label),
-  textarea:        (key: string, label: string) => new TextareaBuilder('textarea', key, label),
-  number:          (key: string, label: string) => new NumberBuilder('number', key, label),
-  currency:        (key: string, label: string) => new CurrencyBuilder('currency', key, label),
-  percentage:      (key: string, label: string) => new PercentageBuilder('percentage', key, label),
-  email:           (key: string, label: string) => new EmailBuilder('email', key, label),
-  phone:           (key: string, label: string) => new PhoneBuilder('phone', key, label),
-  url:             (key: string, label: string) => new UrlBuilder('url', key, label),
-  password:        (key: string, label: string) => new PasswordBuilder('password', key, label),
-  date:            (key: string, label: string) => new DateBuilder('date', key, label),
-  datetime:        (key: string, label: string) => new DateTimeBuilder('datetime', key, label),
-  time:            (key: string, label: string) => new TimeBuilder('time', key, label),
-  checkbox:        (key: string, label: string) => new CheckboxBuilder('checkbox', key, label),
-  switch:          (key: string, label: string) => new SwitchBuilder('switch', key, label),
-  radio:           (key: string, label: string, opts: FieldOption[]) => new RadioBuilder('radio', key, label, opts),
-  select:          (key: string, label: string) => new SelectBuilder('select', key, label),
-  multiSelect:     (key: string, label: string) => new MultiSelectBuilder('multi-select', key, label),
-  searchableSelect:(key: string, label: string) => new SearchableSelectBuilder('searchable-select', key, label),
-  asyncSelect:     (key: string, label: string, loader: OptionsLoader) => new AsyncSelectBuilder('async-select', key, label, loader),
-  relation:        (key: string, label: string, entity: string) => new RelationBuilder('relation', key, label, entity),
-  tags:            (key: string, label: string) => new TagsBuilder('tags', key, label),
-  richText:        (key: string, label: string) => new RichTextBuilder('rich-text', key, label),
-  image:           (key: string, label: string) => new ImageBuilder('image', key, label),
-  multiImage:      (key: string, label: string) => new MultiImageBuilder('multi-image', key, label),
-  file:            (key: string, label: string) => new FileBuilder('file', key, label),
-  coordinates:     (key: string, label: string) => new FieldBuilder<CoordinatesField>('coordinates', key, label),
-  address:         (key: string, label: string) => new AddressBuilder('address', key, label),
-  hidden:          (key: string, value?: unknown): HiddenField => ({ type: 'hidden', key, label: '', value }),
+  text:            (key: string, labelKey: string) => new TextBuilder('text', key, labelKey),
+  textarea:        (key: string, labelKey: string) => new TextareaBuilder('textarea', key, labelKey),
+  number:          (key: string, labelKey: string) => new NumberBuilder('number', key, labelKey),
+  currency:        (key: string, labelKey: string) => new CurrencyBuilder('currency', key, labelKey),
+  percentage:      (key: string, labelKey: string) => new PercentageBuilder('percentage', key, labelKey),
+  email:           (key: string, labelKey: string) => new EmailBuilder('email', key, labelKey),
+  phone:           (key: string, labelKey: string) => new PhoneBuilder('phone', key, labelKey),
+  url:             (key: string, labelKey: string) => new UrlBuilder('url', key, labelKey),
+  password:        (key: string, labelKey: string) => new PasswordBuilder('password', key, labelKey),
+  date:            (key: string, labelKey: string) => new DateBuilder('date', key, labelKey),
+  datetime:        (key: string, labelKey: string) => new DateTimeBuilder('datetime', key, labelKey),
+  time:            (key: string, labelKey: string) => new TimeBuilder('time', key, labelKey),
+  checkbox:        (key: string, labelKey: string) => new CheckboxBuilder('checkbox', key, labelKey),
+  switch:          (key: string, labelKey: string) => new SwitchBuilder('switch', key, labelKey),
+  radio:           (key: string, labelKey: string, opts: FieldOption[]) => new RadioBuilder('radio', key, labelKey, opts),
+  select:          (key: string, labelKey: string) => new SelectBuilder('select', key, labelKey),
+  multiSelect:     (key: string, labelKey: string) => new MultiSelectBuilder('multi-select', key, labelKey),
+  searchableSelect:(key: string, labelKey: string) => new SearchableSelectBuilder('searchable-select', key, labelKey),
+  asyncSelect:     (key: string, labelKey: string, loader: OptionsLoader) => new AsyncSelectBuilder('async-select', key, labelKey, loader),
+  relation:        (key: string, labelKey: string, entity: string) => new RelationBuilder('relation', key, labelKey, entity),
+  tags:            (key: string, labelKey: string) => new TagsBuilder('tags', key, labelKey),
+  richText:        (key: string, labelKey: string) => new RichTextBuilder('rich-text', key, labelKey),
+  image:           (key: string, labelKey: string) => new ImageBuilder('image', key, labelKey),
+  multiImage:      (key: string, labelKey: string) => new MultiImageBuilder('multi-image', key, labelKey),
+  file:            (key: string, labelKey: string) => new FileBuilder('file', key, labelKey),
+  coordinates:     (key: string, labelKey: string) => new FieldBuilder<CoordinatesField>('coordinates', key, labelKey),
+  address:         (key: string, labelKey: string) => new AddressBuilder('address', key, labelKey),
+  hidden:          (key: string, value?: unknown): HiddenField => ({ type: 'hidden', key, labelKey: '', value }),
 }
 
 /* ─── Section factory ────────────────────────────────────────────── */

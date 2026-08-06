@@ -36,6 +36,10 @@ export function useDependencyEngine(
   schema: StepSchema,
   form: UseFormReturn<any>,
   setFieldOptions: (key: string, options: FieldOption[]) => void,
+  // Optional so every pre-existing caller keeps compiling unchanged; callers
+  // that don't pass it simply don't get the loading-state fix below (none
+  // currently omit it — see DynamicForm.tsx and the 3 bespoke step views).
+  setFieldOptionsLoading?: (key: string, loading: boolean) => void,
 ) {
   const watchedValues = useWatch({ control: form.control }) as Record<string, unknown>
   const prevRef = useRef<Record<string, unknown>>({})
@@ -53,17 +57,34 @@ export function useDependencyEngine(
         form.setValue(change.fieldKey, undefined, { shouldDirty: true })
       } else if (change.action === 'reload-options' && change.loader) {
         const parentVal = watchedValues[findDependencyOn(schema, change.fieldKey, 'reload-options')]
-        change.loader(parentVal).then(opts => {
-          setFieldOptions(change.fieldKey, opts)
-          // Reload can fire from an external form.reset() (e.g. draft restore,
-          // edit prefill) where the field's current value was set together
-          // with its parent, not by the user changing the parent — only clear
-          // it if it's actually absent from the freshly loaded option set.
-          const currentValue = form.getValues(change.fieldKey)
-          if (!isEmptyValue(currentValue) && !opts.some(o => o.value === currentValue)) {
-            form.setValue(change.fieldKey, undefined, { shouldDirty: true })
-          }
-        })
+        // C2 fix (Enterprise Production Certification, Critical): this field
+        // was previously left interactive (readOnlyWhen only checks the
+        // parent's own value, not whether ITS options have finished loading)
+        // for the whole duration of this async call — live-measured at
+        // 1.5-3s against the real EspoCRM API. A user who opened the
+        // dropdown in that window saw a false "No options found" for a
+        // parent that genuinely has children. Marking it loading lets
+        // GridEngine keep the field disabled until real data arrives,
+        // instead of the field lying about having already checked.
+        setFieldOptionsLoading?.(change.fieldKey, true)
+        change.loader(parentVal)
+          .then(opts => {
+            setFieldOptions(change.fieldKey, opts)
+            // Reload can fire from an external form.reset() (e.g. draft restore,
+            // edit prefill) where the field's current value was set together
+            // with its parent, not by the user changing the parent — only clear
+            // it if it's actually absent from the freshly loaded option set.
+            const currentValue = form.getValues(change.fieldKey)
+            if (!isEmptyValue(currentValue) && !opts.some(o => o.value === currentValue)) {
+              form.setValue(change.fieldKey, undefined, { shouldDirty: true })
+            }
+          })
+          // No .catch(): a rejected loader previously left the field's
+          // options simply unchanged with no visible handling — that
+          // behavior is unaffected here (still surfaces as an unhandled
+          // rejection, same as before this fix). Only .finally() is new,
+          // and only to guarantee the loading flag can never get stuck on.
+          .finally(() => setFieldOptionsLoading?.(change.fieldKey, false))
       } else if (change.action === 'update-validation') {
         form.trigger(change.fieldKey)
       } else if (change.action === 'auto-derive' && change.deriver) {

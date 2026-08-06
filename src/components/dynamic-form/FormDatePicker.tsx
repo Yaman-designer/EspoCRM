@@ -4,9 +4,9 @@ import { useState } from 'react'
 import type { ControllerRenderProps, FieldValues } from 'react-hook-form'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ComboboxTrigger } from '@/components/ui/combobox-trigger'
 import type { FieldConfig } from './types'
 
 // ── Date utilities (no date-fns dependency) ────────────────────────────────────
@@ -47,18 +47,19 @@ export function FormDatePicker({ field, config }: FormDatePickerProps) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          disabled={config.disabled}
-          className={cn(
-            'h-10 w-full justify-start border-border/60 bg-background text-left text-sm font-normal shadow-none transition-colors hover:border-border hover:bg-muted/30',
-            !date ? 'text-muted-foreground/70' : 'text-foreground',
-            (config.disabled || config.readOnly) && 'pointer-events-none opacity-60',
-          )}
+        <ComboboxTrigger
+          disabled={config.disabled || config.readOnly}
+          open={open}
+          showChevron={false}
         >
-          <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-          {date ? formatDisplay(field.value) : (config.placeholder ?? 'Pick a date…')}
-        </Button>
+          <CalendarIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+          {/* min-w-0 truncate: see form-engine/fields/SelectField.tsx's
+              identical fix — ComboboxTrigger's own wrapper truncate can't
+              ellipsize overflow coming from a nested child's own box. */}
+          <span className={cn('min-w-0 truncate', !date ? 'text-muted-foreground/50' : 'text-foreground')}>
+            {date ? formatDisplay(field.value) : (config.placeholder ?? 'Pick a date…')}
+          </span>
+        </ComboboxTrigger>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 shadow-lg" align="start">
         <Calendar

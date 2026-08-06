@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Controller } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ChevronDown } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -31,6 +32,7 @@ const COUNTRIES = [
 ]
 
 export function PhoneField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
   const defaultCountry = COUNTRIES.find(c => c.code === (schema.defaultCountry ?? 'SA')) ?? COUNTRIES[0]
   const [country, setCountry] = useState(defaultCountry)
   const [open, setOpen] = useState(false)
@@ -63,9 +65,9 @@ export function PhoneField({ schema, form, disabled, readOnly }: FieldComponentP
               </PopoverTrigger>
               <PopoverContent className="p-0 w-64" align="start">
                 <Command>
-                  <CommandInput placeholder="Search country…" />
+                  <CommandInput placeholder={t('wizard.common.searchCountry')} />
                   <CommandList>
-                    <CommandEmpty>No country found.</CommandEmpty>
+                    <CommandEmpty>{t('wizard.common.noCountryFound')}</CommandEmpty>
                     <CommandGroup>
                       {COUNTRIES.map(c => (
                         <CommandItem
@@ -91,7 +93,7 @@ export function PhoneField({ schema, form, disabled, readOnly }: FieldComponentP
               id={getFieldId(schema.key)}
               value={field.value ?? ''}
               type="tel"
-              placeholder={schema.placeholder ?? '5xx xxx xxxx'}
+              placeholder={schema.placeholderKey ? t(schema.placeholderKey) : '5xx xxx xxxx'}
               disabled={disabled}
               readOnly={readOnly}
               inputMode="tel"

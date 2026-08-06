@@ -6,7 +6,7 @@ describe('computeDependencyChanges', () => {
   it('emits a clear action when the controlling field changes and no guard blocks it', () => {
     const schema: StepSchema = {
       fields: [
-        { key: 'type', type: 'text', label: 'Type', dependencies: [{ on: 'category', action: 'clear' }] },
+        { key: 'type', type: 'text', labelKey: 'Type', dependencies: [{ on: 'category', action: 'clear' }] },
       ],
     }
     const changes = computeDependencyChanges(schema, { category: 'Residential' }, { category: 'Commercial' })
@@ -16,7 +16,7 @@ describe('computeDependencyChanges', () => {
   it('emits nothing when the controlling field is unchanged', () => {
     const schema: StepSchema = {
       fields: [
-        { key: 'type', type: 'text', label: 'Type', dependencies: [{ on: 'category', action: 'clear' }] },
+        { key: 'type', type: 'text', labelKey: 'Type', dependencies: [{ on: 'category', action: 'clear' }] },
       ],
     }
     const changes = computeDependencyChanges(schema, { category: 'Residential' }, { category: 'Residential' })
@@ -28,7 +28,7 @@ describe('computeDependencyChanges', () => {
       fields: [{
         key: 'exchangeSchemePercentage',
         type: 'text',
-        label: 'Percentage',
+        labelKey: 'Percentage',
         dependencies: [{ on: 'exchangeScheme', action: 'clear', when: { field: 'exchangeScheme', operator: 'eq', value: false } }],
       }],
     }
@@ -39,7 +39,7 @@ describe('computeDependencyChanges', () => {
   it('emits reload-options with a loader bound to the current parent value + full form snapshot', async () => {
     const loadOptions = vi.fn().mockResolvedValue([{ value: 'apartment', label: 'Apartment' }])
     const schema: StepSchema = {
-      fields: [{ key: 'type', type: 'text', label: 'Type', dependencies: [{ on: 'category', action: 'reload-options', loadOptions }] }],
+      fields: [{ key: 'type', type: 'text', labelKey: 'Type', dependencies: [{ on: 'category', action: 'reload-options', loadOptions }] }],
     }
     const currValues = { category: 'Residential', title: 'X' }
     const [change] = computeDependencyChanges(schema, { category: '' }, currValues)
@@ -52,7 +52,7 @@ describe('computeDependencyChanges', () => {
   it('emits auto-derive with a deriver bound to the parent value + full form snapshot', () => {
     const derive = vi.fn().mockReturnValue('Simple')
     const schema: StepSchema = {
-      fields: [{ key: 'cAssignment', type: 'text', label: 'Assignment', dependencies: [{ on: 'category', action: 'auto-derive', derive }] }],
+      fields: [{ key: 'cAssignment', type: 'text', labelKey: 'Assignment', dependencies: [{ on: 'category', action: 'auto-derive', derive }] }],
     }
     const currValues = { category: 'Residential' }
     const [change] = computeDependencyChanges(schema, { category: '' }, currValues)
@@ -64,7 +64,7 @@ describe('computeDependencyChanges', () => {
 
   it('emits update-validation with no loader/deriver', () => {
     const schema: StepSchema = {
-      fields: [{ key: 'floorKey', type: 'text', label: 'Floor Key', dependencies: [{ on: 'category', action: 'update-validation' }] }],
+      fields: [{ key: 'floorKey', type: 'text', labelKey: 'Floor Key', dependencies: [{ on: 'category', action: 'update-validation' }] }],
     }
     const changes = computeDependencyChanges(schema, { category: 'Land' }, { category: 'Residential' })
     expect(changes).toEqual([{ fieldKey: 'floorKey', action: 'update-validation' }])
@@ -76,7 +76,7 @@ describe('computeDependencyChanges', () => {
         fields: [{
           key: 'cFurnitureElectricalAppliances',
           type: 'text',
-          label: 'Furniture',
+          labelKey: 'Furniture',
           clearWhenHidden: true,
           visibility: { field: 'furnished', operator: 'not_empty' },
         }],
@@ -90,7 +90,7 @@ describe('computeDependencyChanges', () => {
         fields: [{
           key: 'cFurnitureElectricalAppliances',
           type: 'text',
-          label: 'Furniture',
+          labelKey: 'Furniture',
           clearWhenHidden: true,
           visibility: { field: 'furnished', operator: 'not_empty' },
         }],
@@ -101,7 +101,7 @@ describe('computeDependencyChanges', () => {
 
     it('does nothing for a field without clearWhenHidden even if visibility flips', () => {
       const schema: StepSchema = {
-        fields: [{ key: 'x', type: 'text', label: 'X', visibility: { field: 'flag', operator: 'eq', value: true } }],
+        fields: [{ key: 'x', type: 'text', labelKey: 'X', visibility: { field: 'flag', operator: 'eq', value: true } }],
       }
       const changes = computeDependencyChanges(schema, { flag: true }, { flag: false })
       expect(changes).toEqual([])
@@ -111,7 +111,7 @@ describe('computeDependencyChanges', () => {
   it('reads fields from `sections` as well as the flat `fields` shorthand', () => {
     const schema: StepSchema = {
       sections: [{ fields: [
-        { key: 'type', type: 'text', label: 'Type', dependencies: [{ on: 'category', action: 'clear' }] },
+        { key: 'type', type: 'text', labelKey: 'Type', dependencies: [{ on: 'category', action: 'clear' }] },
       ] } as never],
     }
     const changes = computeDependencyChanges(schema, { category: 'A' }, { category: 'B' })

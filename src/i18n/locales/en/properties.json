@@ -1,0 +1,1527 @@
+{
+  "common": {
+    "for": "For",
+    "yes": "Yes",
+    "no": "No",
+    "notProvided": "Not provided",
+    "copied": "Copied",
+    "propertyFallback": "Property",
+    "sqmUnit": "m²"
+  },
+  "detail": {
+    "goBack": "Go back",
+    "breadcrumb": "Breadcrumb",
+    "breadcrumbProperties": "Properties",
+    "breadcrumbFallback": "Property Details"
+  },
+  "nav": {
+    "overview": "Overview",
+    "financial": "Financial",
+    "location": "Location",
+    "specifications": "Specifications",
+    "media": "Media",
+    "contacts": "Contacts",
+    "timeline": "Timeline",
+    "sectionNavigation": "Section navigation",
+    "more": "More",
+    "moreSections": "More sections",
+    "sectionMenu": "{{label}}, section menu"
+  },
+  "hero": {
+    "viewPhotosFullScreen": "View {{title}} photos full screen — {{count}} images",
+    "viewPhotoFullScreen": "View {{title}} photo full screen",
+    "viewFullScreen": "View full screen",
+    "previousImage": "Previous image",
+    "nextImage": "Next image"
+  },
+  "briefing": {
+    "eyebrow": "Executive Intelligence Brief"
+  },
+  "description": {
+    "title": "Listing Description",
+    "readMore": "Read more",
+    "showLess": "Show less"
+  },
+  "operations": {
+    "eyebrow": "Operations",
+    "title": "Command Hub",
+    "sections": {
+      "propertyStatus": "Property Status",
+      "propertyInformation": "Property Information",
+      "listingInformation": "Listing Information",
+      "assignedAgent": "Assigned Agent",
+      "activity": "Activity",
+      "quickActions": "Quick Actions"
+    },
+    "noAgentAssigned": "No agent assigned",
+    "listingAgent": "Listing Agent",
+    "noActivityLogged": "No activity logged yet",
+    "calls": "Calls",
+    "meetings": "Meetings",
+    "tasks": "Tasks",
+    "officeNotes": "Office Notes",
+    "aiEvaluator": "AI Property Evaluator",
+    "completeness": "Completeness",
+    "completenessMissing": "Missing {{fields}}",
+    "completenessComplete": "All {{count}} fields complete",
+    "copyPropertyCode": "Copy property code {{code}}",
+    "propertyCodeCopied": "Property code copied",
+    "editProperty": "Edit Property",
+    "commandHubStatusSub": {
+      "Active": "Open for offers",
+      "Under negotiation": "Hold placed",
+      "Received payment": "Awaiting completion",
+      "Under Approval": "In approval",
+      "Not Approved": "Needs revision",
+      "Sold": "Transaction complete",
+      "Rented": "Lease active",
+      "Inactive": "Not currently published"
+    },
+    "listingInfo": {
+      "availableFrom": "Available From",
+      "nextUpdate": "Next Update",
+      "keysHeld": "Keys Held",
+      "sold": "Sold",
+      "ownerAccount": "Owner Account",
+      "teams": "Teams"
+    }
+  },
+  "financial": {
+    "pricingTitle": "Property Pricing",
+    "pricingSubtitle": "Asking price, price per m² and listing freshness",
+    "title": "Financial Intelligence OS",
+    "subtitle": "Property financial overview · listing data",
+    "askingPrice": "Asking Price",
+    "priceCopied": "Price copied",
+    "copyAskingPrice": "Copy asking price",
+    "noHistoricalTitle": "No historical price trend available",
+    "noHistoricalDesc": "Price history isn't part of the current listing data — there's nothing to chart yet.",
+    "listed": "Listed",
+    "updated": "Updated",
+    "financialDetail": "Financial Detail",
+    "clusters": {
+      "negotiationRange": "Negotiation Range",
+      "taxFees": "Tax & Fees",
+      "conditionalTerms": "Conditional Terms"
+    },
+    "rows": {
+      "initialPrice": "Initial Price",
+      "objectiveValue": "Objective Value",
+      "lowerPriceLimit": "Lower Price Limit",
+      "vat": "VAT",
+      "vatApplicable": "Applicable",
+      "vatNotApplicable": "Not applicable",
+      "remuneration": "Remuneration",
+      "investmentOpportunity": "Investment Opportunity",
+      "investmentYes": "Yes",
+      "investmentYesRent": "Yes · Expected rent {{price}}",
+      "utilitiesIncluded": "Utilities Included",
+      "utilitiesYesAvg": "Yes · Avg. {{price}}/mo",
+      "exchangeScheme": "Exchange Scheme",
+      "exchangeSchemeYesPct": "Yes · {{pct}}%",
+      "underConsideration": "Under Consideration",
+      "underConsiderationFactor": "Yes · Factor {{factor}}"
+    }
+  },
+  "specs": {
+    "fullSpecifications": "Full Specifications",
+    "noSpecsRecorded": "No additional specifications recorded for this listing.",
+    "items": {
+      "bedrooms": { "value": "{{count}} Bedrooms", "sub": "Living Space" },
+      "bathrooms": { "value": "{{count}} Baths", "sub": "Sanitary" },
+      "area": { "sub": "Interior Area" },
+      "floorOfTotal": "Floor {{floor}} of {{total}}",
+      "floorOnly": "Floor {{floor}}",
+      "floorsTotal": "{{count}} Floors",
+      "floor": { "sub": "Building" },
+      "yearBuilt": { "sub": "Vintage" },
+      "energyClass": { "sub": "Efficiency" },
+      "condition": { "value": "{{value}} / 5", "sub": "Condition" }
+    },
+    "groups": {
+      "dimensions": "Dimensions",
+      "rooms": "Rooms",
+      "buildingConstruction": "Building & Construction",
+      "parking": "Parking"
+    },
+    "rows": {
+      "plotArea": "Plot Area",
+      "balconyArea": "Balcony Area",
+      "facadeLength": "Facade Length",
+      "livingRooms": "Living Rooms",
+      "additionalLivingRooms": "Additional Living Rooms",
+      "kitchens": "Kitchens",
+      "masterRooms": "Master Rooms",
+      "livingKitchens": "Living Kitchens",
+      "halfBathrooms": "WC / Half Bathrooms",
+      "floorKey": "Floor Key",
+      "lastFloor": "Last Floor",
+      "penthouse": "Penthouse",
+      "parkingSpaces": "Parking Spaces"
+    }
+  },
+  "assets": {
+    "title": "Asset Management System",
+    "subtitle": "High-fidelity visual documentation and legal stack",
+    "categoryLabel": "Asset category",
+    "tabs": {
+      "photos": "Photos",
+      "legal": "Legal"
+    },
+    "photosTab": {
+      "emptyTitle": "No Photos Uploaded",
+      "emptyDesc": "Upload professional photography to attract buyers.",
+      "primaryPhoto": "Primary Photo",
+      "viewPrimaryPhoto": "View primary photo — open full gallery",
+      "viewPhoto": "View photo {{index}} — open full gallery",
+      "assetStack": "Asset Stack",
+      "viewAllPhotos": "View all {{count}} photos"
+    },
+    "legalTab": {
+      "title": "Active Compliance Document Stack",
+      "count_one": "{{count}} Document",
+      "count_other": "{{count}} Documents",
+      "emptyTitle": "No Legal Documents Attached",
+      "emptyDesc": "Attach title deeds, permits, and compliance certificates to build buyer confidence.",
+      "documentAssignment": "Document Assignment",
+      "assignedDocumentFallback": "Assigned Document",
+      "documentFallback": "Document",
+      "viewImage": "View {{title}} image",
+      "download": "Download {{title}}",
+      "downloadAssigned": "Download assigned document",
+      "downloadNamed": "Download {{name}}",
+      "downloadUnavailable": "{{label}} — no file available"
+    }
+  },
+  "mediaLightbox": {
+    "categoryPhotos": "Photos",
+    "categoryLegal": "Legal"
+  },
+  "location": {
+    "title": "Location Intelligence Center",
+    "subtitle": "Real nearby amenities, geocoded from OpenStreetMap",
+    "categoryFilterLabel": "Nearby place category",
+    "tabs": {
+      "education": "Education",
+      "medical": "Medical",
+      "transit": "Transit",
+      "walk": "Walk"
+    },
+    "radiusLabels": {
+      "education": "Schools within 2km",
+      "medical": "Medical within 2km",
+      "transit": "Transit within 2km",
+      "walk": "Dining & shops within 2km"
+    },
+    "mapUnavailable": "Map unavailable",
+    "mapUnavailableDesc": "This property doesn't have coordinates or a resolvable location name yet.",
+    "searchGoogleMaps": "Search on Google Maps",
+    "locatingProperty": "Locating property…",
+    "closeFullscreenMap": "Close fullscreen map",
+    "fullscreenMapTitle": "{{property}} — Location map, fullscreen",
+    "areaFallback": "Area Location",
+    "overview": "Overview",
+    "noIntelTitle": "No location intelligence available",
+    "noIntelWithData": "No schools, medical, transit, dining, or shopping were found within 2km of this property.",
+    "noIntelNoCoords": "This property doesn't have coordinates or a resolvable location yet.",
+    "overviewCurrentlyPrefix": ", currently",
+    "propertyTypeFallback": "property",
+    "addressCoordinates": {
+      "title": "Address & Coordinates",
+      "subtitle": "Exact address, stored coordinates, and distances",
+      "address": "Address",
+      "coordinates": "Coordinates",
+      "openInGoogleMaps": "Open in Google Maps",
+      "copyCoordinates": "Copy Coordinates",
+      "distances": "Distances",
+      "additionalDetails": "Additional Details",
+      "km": "km",
+      "distanceRows": {
+        "fromSea": "From Sea",
+        "fromCity": "From City",
+        "fromVillage": "From Village",
+        "fromAirport": "From Airport"
+      },
+      "factRows": {
+        "zoningBelt": "Zoning Belt",
+        "view": "View",
+        "closeTo": "Close To",
+        "withinCityPlan": "Within City Plan"
+      }
+    }
+  },
+  "construction": {
+    "title": "Construction & Systems",
+    "subtitle": "Construction condition, climate systems, and building materials",
+    "constructionCondition": "Construction Condition",
+    "climateSystems": "Climate Systems",
+    "buildingMaterials": "Building Materials",
+    "structuralFeatures": "Structural Features",
+    "doubleGlass": "Double Glass",
+    "electricalDevicesIncluded": "Electrical Devices Included",
+    "badges": {
+      "needsRenovation": "Needs Renovation",
+      "renovated": "Renovated",
+      "renovatedInYear": "Renovated in {{year}}",
+      "underConstruction": "Under Construction"
+    },
+    "rows": {
+      "furnished": "Furnished",
+      "heatingMedium": "Heating Medium",
+      "heatingType": "Heating Type",
+      "frames": "Frames",
+      "door": "Door",
+      "floorType": "Floor Type",
+      "bedroomsFloorType": "Bedrooms Floor Type",
+      "warehouse": "Warehouse",
+      "parkingType": "Parking Type"
+    }
+  },
+  "land": {
+    "title": "Land Details",
+    "subtitle": "Zoning and parcel facts specific to this Land listing",
+    "slope": "Slope",
+    "rows": {
+      "buildingBlocks": "Building Blocks",
+      "frontLength": "Front Length",
+      "heightFactor": "Height Factor",
+      "remainingBuild": "Remaining Build",
+      "buildingFactor": "Building Factor",
+      "coverageFactor": "Coverage Factor",
+      "structureFactor": "Structure Factor"
+    },
+    "flags": {
+      "cityPlan": "City Plan",
+      "residentialArea": "Residential Area",
+      "facade": "Facade",
+      "buildingPermit": "Building Permit",
+      "agriculturalUse": "Agricultural Use",
+      "containsBuilding": "Contains Building"
+    }
+  },
+  "features": {
+    "title": "Features & Amenities",
+    "subtitle": "Outdoor space, building amenities, and lifestyle fit",
+    "orientation": "Orientation",
+    "buildingAmenities": "Building Amenities",
+    "accessibility": "Accessibility",
+    "energySustainability": "Energy & Sustainability",
+    "disabledAccess": "Disabled Access",
+    "propertyPlacement": "Property Placement",
+    "suitability": "Suitability",
+    "outdoorFeatures": "Outdoor Features",
+    "lifestyleFeatures": "Lifestyle Features",
+    "garage": "Garage",
+    "garageWithType": "Garage — {{type}}",
+    "buildingElevator": "Building Elevator",
+    "elevatorInRooms": "Elevator in Rooms",
+    "internalElevator": "Internal Elevator",
+    "idealForStudents": "Ideal for Students",
+    "idealForEmployees": "Ideal for Employees",
+    "balcony": "Balcony",
+    "swimmingPool": "Swimming Pool",
+    "accessFrom": "Access From"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "subtitle": "People related to this listing",
+    "view": "View",
+    "openInContactsList": "Open in Contacts list"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "event_one": "{{count}} event",
+    "event_other": "{{count}} events",
+    "showFewerEvents": "Show fewer events",
+    "showAllEvents": "Show all {{count}} events",
+    "activityScopeNotice": "Real activity (calls, meetings, tasks) shown here is scoped to what you have access to — a colleague's activity on this listing may not appear.",
+    "roles": {
+      "listingAgent": "Listing Agent",
+      "call": "Call",
+      "meeting": "Meeting",
+      "task": "Task",
+      "mediaPublished": "Media Published",
+      "listingCreated": "Listing Created"
+    },
+    "titles": {
+      "listingMedia": "Listing Media",
+      "propertyRegistry": "Property Registry"
+    },
+    "meta": {
+      "askingPrice": "Asking Price",
+      "photoCount": "Photo Count",
+      "propertyCode": "Property Code",
+      "photo_one": "{{count}} photo",
+      "photo_other": "{{count}} photos"
+    },
+    "content": {
+      "agentManaging": "{{name}} is managing this listing as the primary agent.",
+      "currentStatus": " Current status: {{status}}.",
+      "galleryAttached": "{{photos}} attached to this listing. Gallery is ready for buyer review.",
+      "registryCreated": "Property record created and indexed.",
+      "dueDate": "Due {{date}}"
+    }
+  },
+  "related": {
+    "similarProperties": "Similar Properties",
+    "inPortfolio_one": "{{count}} {{type}} in portfolio",
+    "inPortfolio_other": "{{count}} {{type}} in portfolio",
+    "propertyFallback": "property",
+    "propertiesFallback": "properties",
+    "browseAll": "Browse all"
+  },
+  "deleteDialog": {
+    "noPermission": "You don't have permission to delete properties.",
+    "deletedSuccess": "Property deleted",
+    "backToProperties": "Back to properties",
+    "title": "Delete Property",
+    "description": "Are you sure you want to permanently delete this property? This action cannot be undone.",
+    "cancel": "Cancel",
+    "deleting": "Deleting…",
+    "refCode": "Ref #{{code}}",
+    "untitledProperty": "Untitled Property"
+  },
+  "wizard": {
+    "common": {
+      "readOnly": "Read-only",
+      "moreInfoAbout": "More info about {{label}}",
+      "sectionComplete": "Section complete",
+      "fieldCount_one": "{{count}} field",
+      "fieldCount_other": "{{count}} fields",
+      "collapseSection": "Collapse {{title}}",
+      "sectionFallback": "section",
+      "internalOnly": "Internal Only",
+      "selectPlaceholder": "Select {{label}}…",
+      "searchPlaceholder": "Search {{label}}…",
+      "pickDate": "Pick a date…",
+      "selectedCount_one": "{{count}} selected",
+      "selectedCount_other": "{{count}} selected",
+      "on": "On",
+      "off": "Off",
+      "noResultsFound": "No results found.",
+      "noSearchEndpoint": "No search endpoint configured.",
+      "noOptionsFound": "No options found.",
+      "loadingOptions": "Loading options…",
+      "noCountryFound": "No country found.",
+      "searchCountry": "Search country…",
+      "clearSelection": "— Clear —",
+      "clearFieldSelection": "Clear {{label}}",
+      "removeOption": "Remove {{label}}",
+      "createOption": "Create \"{{value}}\"",
+      "strengthWeak": "Weak",
+      "strengthFair": "Fair",
+      "strengthGood": "Good",
+      "strengthStrong": "Strong",
+      "showPassword": "Show password",
+      "hidePassword": "Hide password",
+      "typeAndPressEnter": "Type and press Enter…",
+      "tagCount": "{{count}}/{{max}} tags"
+    },
+    "steps": {
+      "pricingTerms": {
+        "sections": {
+          "pricing": {
+            "title": "Public Pricing",
+            "description": "The figures a buyer sees.",
+            "groups": {
+              "comparison": "Comparison",
+              "characteristics": "Financial Characteristics"
+            },
+            "fields": {
+              "price": { "label": "Asking Price" },
+              "investment": { "label": "Investment" },
+              "cRentalprice": { "label": "Rental price" },
+              "withinMonthlyUtilities": { "label": "Within Monthly Utilities" },
+              "cAverageMonthlyUtilities": { "label": "Average Monthly Utilities" },
+              "initialPrice": { "label": "Initial Price" },
+              "objectiveValue": { "label": "Objective Value" },
+              "vat": {
+                "label": "VAT",
+                "tooltip": "The sale of a property, by a natural or legal person exercising an economic activity, is subject to VAT of 24% on the sale price, as long as the transfer includes a new building. Any building that is transferred before its first use is generally considered new, as long as its building permit was issued or revised from January 1, 2006 onwards. In case the property is not new (i.e., it has already been used or transferred) or in any case where the seller does not carry out an economic activity, the buyer is charged with Real Estate Transfer Tax (VAT) of 3.09% on the greater of the objective value and the market price. Natural persons can, under certain conditions and up to an amount, be exempt from paying VAT or FMA, if they buy a first home."
+              }
+            }
+          },
+          "negotiation": {
+            "title": "Internal Negotiation",
+            "description": "Internal financial levers, never shown to a buyer.",
+            "groups": {
+              "floor": "Negotiation Floor",
+              "compensation": "Compensation"
+            },
+            "floorBelowAsking": "{{percent}}% below the asking price",
+            "floorNeedsPrice": "Add an Asking Price above to compare",
+            "fields": {
+              "lowerPriceLimit": { "label": "Lower Price Limit" },
+              "exchangeScheme": { "label": "Exchange Scheme" },
+              "exchangeSchemePercentage": {
+                "label": "Exchange Scheme Percentage",
+                "helperText": "Only applies when Exchange Scheme is enabled."
+              },
+              "cRemuneration": { "label": "Remuneration (in € or %)" },
+              "cCompensationFactor": { "label": "Compensation Factor" }
+            }
+          }
+        }
+      },
+      "sizeRoomsStructure": {
+        "sections": {
+          "sizeRooms": {
+            "title": "Size & Rooms",
+            "groups": {
+              "dimensions": "Dimensions",
+              "roomCounts": "Room Counts"
+            },
+            "fields": {
+              "square": { "label": "Total Area" },
+              "plotArea": { "label": "Plot Area" },
+              "balconyArea": { "label": "Balcony Area" },
+              "facadeLength": { "label": "Facade Length" },
+              "bedroomCount": { "label": "Bedrooms" },
+              "bathroomCount": { "label": "Bathrooms" },
+              "cHalfBathrooms": { "label": "WC" },
+              "livingRooms": { "label": "Living Rooms" },
+              "additionalLivingRooms": { "label": "Additional Living Rooms" },
+              "kitchens": { "label": "Kitchens" },
+              "cMasterrooms": { "label": "Master Rooms" },
+              "cLivingkitchens": { "label": "Living Kitchens" }
+            }
+          },
+          "buildingPosition": {
+            "title": "Building Position",
+            "fields": {
+              "parkingSpaces": { "label": "Parking Spaces" },
+              "floor": { "label": "Floor Number" },
+              "floorCount": { "label": "Floor Count" },
+              "floorKey": {
+                "label": "Floor Key",
+                "placeholder": "Select floor…",
+                "options": {
+                  "basement": "Basement",
+                  "semiBasement": "Semi-basement",
+                  "groundFloor": "Ground floor",
+                  "mezzanine": "Mezzanine",
+                  "floor1": "1st Floor",
+                  "floor1Superlative": "1st superlative",
+                  "floor2": "2nd Floor",
+                  "floor3": "3rd Floor",
+                  "floor4": "4th Floor",
+                  "floor5": "5th Floor",
+                  "floor6": "6th Floor",
+                  "floor7": "7th Floor",
+                  "floor8": "8th Floor",
+                  "floor9": "9th Floor",
+                  "floor10": "10th Floor",
+                  "floor11": "11th Floor",
+                  "floor12": "12th Floor",
+                  "floor13": "13th Floor",
+                  "floor14": "14th Floor",
+                  "floor15": "15th Floor",
+                  "floor16": "16th Floor",
+                  "floor17": "17th Floor",
+                  "floor18": "18th Floor",
+                  "floor19": "19th Floor",
+                  "floor20": "20th Floor"
+                }
+              },
+              "lastFloor": { "label": "Last Floor" },
+              "yearBuilt": { "label": "Year Built" },
+              "penthouse": { "label": "Penthouse" },
+              "cCondition": { "label": "Condition", "placeholder": "Rate condition…" }
+            }
+          }
+        }
+      },
+      "constructionSystems": {
+        "sections": {
+          "condition": {
+            "title": "Condition",
+            "fields": {
+              "cUnderConstriction": { "label": "Under Construction" },
+              "itNeedsRenovation": { "label": "Needs Renovation" },
+              "renovated": { "label": "Renovated" },
+              "yearOfRenovation": { "label": "Year of Renovation" },
+              "furnished": {
+                "label": "Furnished",
+                "placeholder": "Select furnished status…",
+                "options": {
+                  "furnished": "Furnished",
+                  "no": "No",
+                  "halfFurnished": "Half Furnished",
+                  "fullyFurnished": "Fully Furnished",
+                  "half": "Half",
+                  "full": "Full"
+                }
+              },
+              "cFurnitureElectricalAppliances": {
+                "label": "Furniture & Electrical Appliances",
+                "options": {
+                  "wardrobe": "Wardrobe",
+                  "livingRoomTable": "Living Room Table",
+                  "kitchenTable": "Kitchen Table",
+                  "sofa": "Sofa",
+                  "hallFurniture": "Hall Furniture",
+                  "office": "Office",
+                  "washingMachine": "Washing Machine",
+                  "dishwasher": "Dishwasher",
+                  "builtInOven": "Built-in Oven",
+                  "normalOven": "Normal Oven",
+                  "refrigerator": "Refrigerator"
+                }
+              }
+            }
+          },
+          "energyHeating": {
+            "title": "Energy & Heating",
+            "fields": {
+              "energyClass": {
+                "label": "Energy Class",
+                "options": { "notRequired": "Not required", "inProgress": "In progress" }
+              },
+              "cHeatingMedium": {
+                "label": "Heating Medium",
+                "options": {
+                  "petrol": "Petrol",
+                  "naturalGas": "Natural Gas",
+                  "gas": "Gas",
+                  "current": "Electric",
+                  "stove": "Wood Stove",
+                  "thermalAccumulator": "Thermal Accumulator",
+                  "pellet": "Pellet",
+                  "infrared": "Infrared",
+                  "fanCoil": "Fan Coil",
+                  "wood": "Wood",
+                  "teleheating": "District Heating",
+                  "geothermalEnergy": "Geothermal",
+                  "thermopompos": "Heat Pump (Thermopompos)",
+                  "heatpump": "Heat Pump"
+                }
+              },
+              "cHeatingController": {
+                "label": "Heating Controller",
+                "options": {
+                  "automic": "Individual Heating",
+                  "autonomus": "Autonomous Heating",
+                  "central": "Central Heating",
+                  "withoutheating": "Without Heating"
+                }
+              },
+              "cAdditionalheating": {
+                "label": "Additional heating",
+                "options": {
+                  "airConditioning": "Air Conditioning",
+                  "underfloor": "Under floor",
+                  "fireplace": "Fire place"
+                }
+              }
+            }
+          },
+          "windowsDoorsFinishes": {
+            "title": "Windows, Doors & Finishes",
+            "fields": {
+              "frames": {
+                "label": "Frames",
+                "options": { "wooden": "Wooden", "aluminium": "Aluminium", "synthetic": "Synthetic" }
+              },
+              "door": {
+                "label": "Door",
+                "options": { "security": "Security", "simple": "Simple", "yes": "Yes", "no": "No" }
+              },
+              "doubleGlass": { "label": "Double Glass" },
+              "floorType": {
+                "label": "Floor Type",
+                "options": {
+                  "marble": "Marble",
+                  "wood": "Wood",
+                  "stone": "Stone",
+                  "laminate": "Laminate",
+                  "ceramicTiles": "Ceramic tiles",
+                  "mosaicTiles": "Mosaic tiles",
+                  "woodAndMarble": "Wood and marble",
+                  "marbleAndTile": "Marble and tile",
+                  "woodAndStone": "Wood and stone",
+                  "stoneAndMarble": "Stone and marble",
+                  "woodAndTile": "Wood and tile",
+                  "woodAndMosaic": "Wood and mosaic",
+                  "industrial": "Industrial",
+                  "mousamas": "Mousamas"
+                }
+              },
+              "bedroomsFloorType": {
+                "label": "Bedrooms Floor Type",
+                "options": {
+                  "marble": "Marble",
+                  "wood": "Wood",
+                  "petra": "Petra",
+                  "tile": "Tile",
+                  "mosaic": "Mosaic",
+                  "laminate": "Laminate",
+                  "marbleWood": "Marble - Wood",
+                  "marbleTile": "Marble - Tile",
+                  "stoneWood": "Stone - Wood",
+                  "stoneMarble": "Stone - Marble",
+                  "tileWood": "Tile - Wood",
+                  "mosaicWood": "Mosaic - Wood",
+                  "industrialFlooring": "Industrial flooring"
+                }
+              },
+              "cStorageSpace": {
+                "label": "Warehouse",
+                "options": { "external": "External", "interior": "Interior", "no": "No", "yes": "Yes" }
+              },
+              "cGarage": {
+                "label": "Parking Type",
+                "helperText": "Type/location of parking. See also \"Garage\" in the Outdoor, Building & Amenities step later in this wizard.",
+                "options": { "interior": "Interior", "external": "External" }
+              },
+              "hasElectricalDevices": { "label": "Electrical Devices" }
+            }
+          }
+        }
+      },
+      "outdoorBuildingAmenities": {
+        "sections": {
+          "outdoorSpace": {
+            "title": "Outdoor Space",
+            "fields": {
+              "balcony": { "label": "Balcony" },
+              "swimmingPool": {
+                "label": "Swimming Pool",
+                "options": { "no": "No", "external": "External", "interior": "Interior", "indoors": "Indoors" }
+              },
+              "accessFrom": {
+                "label": "Access From",
+                "options": {
+                  "road": "Road",
+                  "pedestrian": "Pedestrian",
+                  "paved": "Paved",
+                  "dirtRoad": "Dirt road",
+                  "sea": "Sea",
+                  "noAccess": "No access",
+                  "other": "Other"
+                }
+              }
+            }
+          },
+          "positionExposure": {
+            "title": "Position & Exposure",
+            "fields": {
+              "cOrientation": {
+                "label": "Orientation",
+                "options": {
+                  "e": "East",
+                  "ew": "East-West",
+                  "em": "East-Meridional",
+                  "n": "North",
+                  "ne": "Northeast",
+                  "w": "West",
+                  "nw": "Northwest",
+                  "wm": "West-Meridional",
+                  "m": "Meridional",
+                  "s": "South",
+                  "se": "Southeast",
+                  "sw": "Southwest"
+                }
+              },
+              "cPlacement": {
+                "label": "Placement",
+                "options": {
+                  "airy": "Airy",
+                  "painted": "Painted",
+                  "corner": "Corner",
+                  "facade": "Facade",
+                  "interior": "Interior",
+                  "forCommercialUse": "For Commercial Use",
+                  "side": "Side",
+                  "bright": "Bright",
+                  "threeSided": "Three-Sided",
+                  "fourSided": "Four-Sided"
+                }
+              }
+            }
+          },
+          "building": {
+            "title": "Building",
+            "fields": {
+              "garage": {
+                "label": "Garage",
+                "helperText": "Existence/size of a parking spot. See also \"Parking Type\" in the Construction & Systems step.",
+                "options": { "yes": "Yes", "no": "No", "double": "Double" }
+              },
+              "buildingElevator": { "label": "Building Elevator" },
+              "buildingElevatorRooms": { "label": "Elevator in Rooms" },
+              "internalElevator": { "label": "Internal Elevator" },
+              "hasDisabledAccess": { "label": "Disabled Access" }
+            }
+          },
+          "amenities": {
+            "title": "Amenities",
+            "fields": {
+              "features": {
+                "label": "Features",
+                "options": {
+                  "veranda": "Veranda",
+                  "petsAllowed": "Pets Allowed",
+                  "solarWaterHeating": "Solar Water Heating",
+                  "garden": "Garden",
+                  "nightPower": "Night Power",
+                  "luxHome": "Lux Home",
+                  "inACentralPoint": "In a central point",
+                  "alarm": "Alarm",
+                  "playroom": "Playroom",
+                  "painted": "Painted",
+                  "forProfessionalUse": "For professional use",
+                  "forEmployees": "For employees",
+                  "familyHome": "Family Home",
+                  "forStudents": "For students",
+                  "sewerNetwork": "Sewer network",
+                  "preserved": "Preserved",
+                  "satelliteReceiver": "Satellite Receiver",
+                  "holidayHome": "Holiday Home",
+                  "internalStairs": "Internal Stairs",
+                  "unfinished": "Unfinished",
+                  "cableReady": "Cable Ready",
+                  "equipped": "Equipped",
+                  "neoclassic": "Neoclassic",
+                  "residentialArea": "Residential area",
+                  "awning": "Awning",
+                  "pestNet": "Pest Net",
+                  "furredCeiling": "Furred Ceiling",
+                  "tent": "Tent",
+                  "falseCeiling": "False ceiling",
+                  "attic": "Attic",
+                  "accessibility": "Access For People with Disabilities",
+                  "funnel": "Funnel",
+                  "forSanitaryUse": "For sanitary use",
+                  "securityRollers": "Security rollers",
+                  "freightElevator": "Freight elevator",
+                  "unloadingRamp": "Unloading ramp",
+                  "structuredCabling": "Structured cabling",
+                  "suitableForMedicalOffice": "Suitable for medical office",
+                  "buildingElevator": "Building elevator"
+                }
+              },
+              "additionalBenefits": {
+                "label": "Additional Benefits",
+                "options": {
+                  "bbq": "BBQ",
+                  "independentEntrance": "Independent entrance"
+                }
+              },
+              "idealForStudents": { "label": "Ideal for Students" },
+              "idealForEmployees": { "label": "Ideal for Employees" }
+            }
+          }
+        }
+      },
+      "marketingMedia": {
+        "sections": {
+          "listingQuality": {
+            "title": "Listing Quality",
+            "fields": {
+              "isFeatured": { "label": "Featured" },
+              "isVerified": { "label": "Verified" },
+              "isPremium": { "label": "Premium" },
+              "isNewListing": { "label": "New Listing" }
+            }
+          },
+          "listingCopy": {
+            "title": "Listing Copy",
+            "fields": {
+              "description": { "label": "Description" },
+              "cDescriptionGr": { "label": "Description (Greek) 🇬🇷" }
+            }
+          },
+          "internalOnly": {
+            "title": "Internal Only",
+            "description": "Agent/back-office text — never shown on the public listing.",
+            "fields": {
+              "cOfficeNotes": { "label": "Office Notes" },
+              "cPropertyEvaluatorAI": { "label": "Automatic Property Evaluator (AI)" }
+            }
+          },
+          "media": {
+            "title": "Media",
+            "fields": {
+              "cBanner": {
+                "label": "Banner",
+                "tooltip": "Posting a banner ensures 100% commission."
+              },
+              "cBannerphoto": { "label": "Banner Photo" },
+              "imagesIds": {
+                "label": "Property Photos",
+                "helperText": "The first photo becomes the cover image."
+              }
+            }
+          },
+          "documents": {
+            "title": "Documents",
+            "description": "Contracts, floor plans, certificates — attached to this listing, not shown publicly.",
+            "fields": {
+              "documents": { "label": "Documents", "helperText": "Uploaded when you save." },
+              "cDocumentassignment": { "label": "Assignment Document" }
+            }
+          }
+        }
+      },
+      "identityGovernance": {
+        "sections": {
+          "classification": {
+            "title": "Classification",
+            "description": "What kind of asset is this, and what is it for?",
+            "fields": {
+              "title": {
+                "label": "Title",
+                "placeholder": "e.g. Skyline Corporate Plaza",
+                "helperText": "EspoCRM replaces this with the Reference Code below when the listing is saved."
+              },
+              "propertyCode": {
+                "label": "Reference Code",
+                "placeholder": "Auto-generated if left empty",
+                "helperText": "Short internal reference code, e.g. REF-001."
+              },
+              "category": {
+                "label": "Category",
+                "placeholder": "Select category…",
+                "options": {
+                  "residential": "Residential",
+                  "commercial": "Commercial",
+                  "land": "Land",
+                  "other": "Other"
+                }
+              },
+              "type": { "label": "Property Type", "placeholder": "Select type…" },
+              "requestType": {
+                "label": "Request Type",
+                "placeholder": "Select request type…",
+                "options": { "rent": "Rent", "sale": "Sale" }
+              }
+            }
+          },
+          "governance": {
+            "title": "Governance",
+            "description": "Lifecycle, ownership, and scheduling.",
+            "fields": {
+              "cAssignment": {
+                "label": "Assignment",
+                "placeholder": "Select assignment…",
+                "options": { "simple": "Simple", "exclusive": "Exclusive" }
+              },
+              "status": { "label": "Listing Status" },
+              "assignedUserId": { "label": "Assigned Agent", "placeholder": "Select agent…" },
+              "cAvailableFrom": { "label": "Available from", "placeholder": "Pick a date…" },
+              "nextUpdate": { "label": "Next Update", "placeholder": "Pick a date…" }
+            }
+          },
+          "officeUse": {
+            "title": "Office Use",
+            "description": "Back-office bookkeeping, rarely touched at listing time.",
+            "fields": {
+              "keys": { "label": "Keys" },
+              "cSold": { "label": "Sold" },
+              "cConsideration": { "label": "Consideration" }
+            }
+          }
+        }
+      },
+      "locationZoning": {
+        "sections": {
+          "location": {
+            "title": "Location",
+            "description": "Broadest area first, narrowing down to the specific district.",
+            "groups": {
+              "narrowing": "Geographic area",
+              "address": "Address"
+            },
+            "fields": {
+              "regionLocationId": { "label": "Region", "placeholder": "Select region…", "helperText": "Wider area or region." },
+              "subRegionLocationId": { "label": "Sub-Region", "placeholder": "Select sub-region…" },
+              "locationId": { "label": "District / Area", "placeholder": "Select location…" },
+              "addressStreet": { "label": "Street", "placeholder": "e.g. 12 Syntagma Square" },
+              "addressCity": { "label": "City", "placeholder": "e.g. Athens" },
+              "addressState": { "label": "State / County", "placeholder": "e.g. Attica" },
+              "addressPostalCode": { "label": "Postal Code", "placeholder": "e.g. 12345" },
+              "addressCountry": { "label": "Country", "placeholder": "e.g. Greece" },
+              "closeTo": { "label": "Close to", "placeholder": "e.g. Metro station, school" }
+            }
+          },
+          "zoningDataQuality": {
+            "title": "Zoning & Data Quality",
+            "description": "Legal/zoning facts and geocode confidence.",
+            "groups": {
+              "classification": "Classification",
+              "coordinates": "Coordinates & Geocode"
+            },
+            "fields": {
+              "belt": {
+                "label": "Belt",
+                "placeholder": "Select belt…",
+                "options": {
+                  "agricultural": "Agricultural",
+                  "commercial": "Commercial",
+                  "industrial": "Industrial",
+                  "recreational": "Recreational",
+                  "residential": "Residential",
+                  "unincorporated": "Unincorporated"
+                }
+              },
+              "withinCityPlan": { "label": "Within City Plan" },
+              "addressLatitude": {
+                "label": "Latitude",
+                "placeholder": "e.g. 37.975500",
+                "helperText": "Optional. Enter manually if known — no automatic lookup yet."
+              },
+              "addressLongitude": {
+                "label": "Longitude",
+                "placeholder": "e.g. 23.734800",
+                "helperText": "Optional. Enter manually if known — no automatic lookup yet."
+              },
+              "addressGeocodeType": {
+                "label": "Accuracy of property location",
+                "placeholder": "Select accuracy…",
+                "options": { "exact": "Exact", "approximate": "Approximate" }
+              }
+            }
+          },
+          "proximityViews": {
+            "title": "Proximity & Views",
+            "description": "What the property looks out on, and how far it sits from key landmarks.",
+            "groups": {
+              "distances": "Distances"
+            },
+            "fields": {
+              "view": {
+                "label": "View",
+                "placeholder": "Select view…",
+                "options": {
+                  "sea": "Sea",
+                  "mountain": "Mountain",
+                  "town": "Town",
+                  "park": "Park",
+                  "open": "Open",
+                  "field": "Field",
+                  "forest": "Forest",
+                  "square": "Square",
+                  "yes": "Yes",
+                  "no": "No"
+                }
+              },
+              "distanceFromSea": { "label": "Distance from Sea" },
+              "distanceFromCity": { "label": "Distance from City" },
+              "distanceFromVillage": { "label": "Distance from Village" },
+              "distanceFromAirport": { "label": "Distance from Airport" }
+            }
+          },
+          "landDetails": {
+            "title": "Land Details",
+            "description": "Zoning and parcel facts specific to Land listings.",
+            "fields": {
+              "cBuildingBlocks": { "label": "Building Blocks" },
+              "cFrontLength": { "label": "Front Length" },
+              "cHeightFactor": { "label": "Height Factor" },
+              "cRemainingBuild": { "label": "Remaining Build" },
+              "cBuildingFactor": { "label": "Building Factor" },
+              "cCoverageFactor": { "label": "Coverage Factor" },
+              "cStructureFactor": { "label": "Structure Factor" },
+              "cCityplan": { "label": "City Plan" },
+              "cResidentialArea": { "label": "Residential Area" },
+              "cFacade": { "label": "Facade" },
+              "cBuildingPermit": { "label": "Building Permit" },
+              "cAgriculturalUse": { "label": "Agricultural Use" },
+              "cContainsBuilding": { "label": "Contains Building" },
+              "cSlope": {
+                "label": "Slope",
+                "placeholder": "Select slope…",
+                "options": {
+                  "plane": "Plane",
+                  "inclining": "Inclining",
+                  "amphitheatric": "Amphitheatric"
+                }
+              }
+            }
+          },
+          "contacts": {
+            "title": "Contacts",
+            "description": "Landlord, tenant, buyer, or property manager associated with this listing.",
+            "fields": {
+              "contactsIds": {
+                "label": "Contacts",
+                "placeholder": "Select contacts…",
+                "helperText": "At least one contact is required to save this listing."
+              }
+            }
+          }
+        }
+      }
+    },
+    "review": {
+      "dataCompleteness": "Data Completeness",
+      "listingHealth": "Listing Health",
+      "gradeBadge": "Grade {{grade}} · {{label}}",
+      "scoreOutOf100": "/ 100",
+      "missingInformation": "Missing information",
+      "requiredFieldsNotFilled": "Required fields not yet filled",
+      "needsAttention": "Needs attention",
+      "readyToPublish": "Ready to publish — all required information is complete.",
+      "edit": "Edit",
+      "notSet": "Not set",
+      "editStep": "Edit {{step}}",
+      "stepFallback": "step",
+      "untitledProperty": "Untitled property",
+      "executiveSummary": {
+        "title": "Executive Summary",
+        "description": "What you're about to create — pulled from every step so far."
+      },
+      "publishDecision": {
+        "title": "Publish Decision",
+        "description": "Final approval before this listing goes live.",
+        "readyMessage": "This listing is ready — publishing will make it visible to your team.",
+        "notReadyMessage_one": "You can still publish, but {{count}} item above could use attention first.",
+        "notReadyMessage_other": "You can still publish, but {{count}} items above could use attention first.",
+        "createSubmit": "Create {{entity}}"
+      },
+      "fields": {
+        "askingPrice": "Asking price",
+        "totalArea": "Total area",
+        "region": "Region",
+        "district": "District",
+        "bedShort": "{{count}} bed",
+        "bathShort": "{{count}} bath",
+        "street": "Street",
+        "agent": "Agent",
+        "status": "Status",
+        "ref": "Ref.",
+        "built": "Built",
+        "vat": "VAT",
+        "investment": "Investment",
+        "completion": "Completion",
+        "health": "Health",
+        "propertyType": "Property type",
+        "category": "Category",
+        "request": "Request",
+        "heating": "Heating",
+        "energyClass": "Energy class",
+        "balcony": "Balcony",
+        "pool": "Pool",
+        "garage": "Garage",
+        "featured": "Featured",
+        "photos": "Photos",
+        "description": "Description",
+        "descriptionCompleted": "Completed",
+        "descriptionMissing": "Missing"
+      },
+      "confidence": {
+        "listingComplete": "Listing complete",
+        "readyForPublication": "Ready for publication",
+        "validationPassed": "Validation passed",
+        "buyerReady": "Buyer ready",
+        "searchReady": "Search ready"
+      },
+      "metrics": {
+        "buyerReadiness": "Buyer readiness",
+        "searchVisibility": "Search visibility"
+      },
+      "buyerReadinessLevels": {
+        "high": "High",
+        "good": "Good",
+        "fair": "Fair",
+        "low": "Low"
+      },
+      "missingFields": {
+        "photos": "Photos",
+        "price": "Price",
+        "location": "Location",
+        "specifications": "Specifications",
+        "description": "Description",
+        "agent": "Agent",
+        "propertyType": "Property type"
+      },
+      "health": {
+        "grade": {
+          "excellent": "Excellent",
+          "good": "Good",
+          "fair": "Fair",
+          "poor": "Poor"
+        },
+        "factors": {
+          "media": {
+            "label": "Photography",
+            "noteZero": "No photos — required for buyer interest",
+            "noteFew_one": "{{count}} photo — add more for impact",
+            "noteFew_other": "{{count}} photos — add more for impact"
+          },
+          "price": {
+            "label": "Asking price",
+            "note": "Price required for buyer enquiries"
+          },
+          "specs": {
+            "label": "Specifications",
+            "note": "Add bedrooms, bathrooms, and area"
+          },
+          "description": {
+            "label": "Description",
+            "noteEmpty": "Write a property description",
+            "noteShort": "Description too short"
+          },
+          "agent": {
+            "label": "Agent assigned",
+            "note": "Assign a listing agent"
+          },
+          "location": {
+            "label": "Location",
+            "note": "Add location details"
+          }
+        }
+      },
+      "demand": {
+        "typeSegment": "{{type}} — high demand segment",
+        "pool": "Swimming pool — buyer premium",
+        "sea": "Sea access — rare inventory",
+        "energy": "Energy class {{energyClass}} — low running costs",
+        "newListing": "New to market — peak visibility window",
+        "featured": "Featured listing — 3× enquiry rate",
+        "oldBuild": "Pre-1975 build — renovation likely expected",
+        "level": {
+          "veryHigh": "Very High",
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low"
+        }
+      }
+    },
+    "page": {
+      "editTitle": "Edit Property Listing",
+      "createTitle": "New Property Listing",
+      "editSubtitle": "Update the listing details, location, and media for this asset.",
+      "createSubtitle": "Define the core identity, location, and media for this asset.",
+      "entityLabel": "Property",
+      "saveChanges": "Save Changes",
+      "breadcrumbProperties": "Properties",
+      "breadcrumbEdit": "Edit",
+      "breadcrumbNewProperty": "New Property",
+      "estTime_one": "{{count}} min",
+      "estTime_other": "{{count}} min",
+      "propertyUpdated": "Property updated",
+      "propertyCreated": "Property created",
+      "backToProperties": "Back to properties",
+      "draftSaved": "Draft saved",
+      "stepValidationErrors_one": "{{count}} field on this step needs attention",
+      "stepValidationErrors_other": "{{count}} fields on this step need attention",
+      "draftDiscarded": "Draft discarded",
+      "steps": {
+        "identity": {
+          "title": "Identity & Governance",
+          "description": "Classify the listing, then set ownership and lifecycle status."
+        },
+        "location": {
+          "title": "Location & Zoning",
+          "description": "Where is this property, broadest area to narrowest district, plus zoning notes."
+        },
+        "financial": {
+          "title": "Pricing & Terms",
+          "displayTitle": "Pricing & Financial Terms",
+          "description": "Asking price, and any investment or utilities terms."
+        },
+        "sizeRoomsStructure": {
+          "title": "Size, Rooms & Structure",
+          "description": "How big, how many rooms, and where in the building."
+        },
+        "constructionSystems": {
+          "title": "Construction & Systems",
+          "description": "Condition, energy rating, heating, and finishes."
+        },
+        "features": {
+          "title": "Outdoor, Building & Amenities",
+          "description": "What's around it, and what else does it offer?"
+        },
+        "media": {
+          "title": "Marketing & Media",
+          "description": "Badges, listing copy, banner, and photos - the last step before Review."
+        },
+        "review": {
+          "title": "Review",
+          "displayTitleEdit": "Review & Save",
+          "displayTitleCreate": "Review & Publish",
+          "description": "Check completeness and listing quality before saving."
+        }
+      }
+    },
+    "locationMap": {
+      "title": "Address & Map",
+      "description": "Preview the property location as you fill in the fields above, or search for an address directly.",
+      "locating": "Locating on map…",
+      "emptyState": "Search for an address above, or select a region, sub-region, or district, to preview the location."
+    }
+  },
+  "statuses": {
+    "underApproval": "Under Approval",
+    "active": "Active",
+    "inactive": "Inactive",
+    "notApproved": "Not Approved",
+    "underNegotiation": "Under Negotiation",
+    "receivedPayment": "Received Payment",
+    "rented": "Rented",
+    "sold": "Sold"
+  },
+  "statusesCompact": {
+    "underApproval": "Under Approval",
+    "active": "Active",
+    "inactive": "Inactive",
+    "notApproved": "Not Approved",
+    "underNegotiation": "Under Negotiation",
+    "receivedPayment": "Received Payment",
+    "rented": "Rented",
+    "sold": "Sold"
+  },
+  "types": {
+    "apartment": "Apartment",
+    "house": "House",
+    "detached": "Detached",
+    "villa": "Villa",
+    "maisonette": "Maisonette",
+    "townhouse": "Townhouse",
+    "studio": "Studio",
+    "office": "Office",
+    "store": "Store",
+    "warehouse": "Warehouse",
+    "land": "Land",
+    "plot": "Plot",
+    "parcel": "Parcel",
+    "island": "Island",
+    "otherLand": "Other Land",
+    "compact": {
+      "townhouse": "Townhouse"
+    }
+  },
+  "list": {
+    "title": "Properties",
+    "addProperty": "Add Property",
+    "savedCollectionSubtitle": "Your saved property collection",
+    "activeFiltersSubtitle_one": "{{count}} active filter applied",
+    "activeFiltersSubtitle_other": "{{count}} active filters applied",
+    "manageSubtitle": "Manage and monitor your real estate portfolio",
+    "searchPlaceholderShort": "Search properties…",
+    "searchPlaceholderFull": "Search by title, reference, or location…",
+    "searchAriaLabel": "Search properties",
+    "clearSearch": "Clear search",
+    "recentSearches": "Recent Searches",
+    "clear": "Clear",
+    "closeFilters": "Close filters",
+    "filters": "Filters",
+    "sortBy": "Sort By",
+    "sort": "Sort",
+    "sortPrefix": "Sort:",
+    "sortOptions": {
+      "newestFull": "Newest First",
+      "oldestFull": "Oldest First",
+      "priceHighFull": "Price: High–Low",
+      "priceLowFull": "Price: Low–High",
+      "newest": "Newest",
+      "oldest": "Oldest",
+      "priceHigh": "Price ↑",
+      "priceLow": "Price ↓"
+    },
+    "propertyType": "Property Type",
+    "allTypes": "All Types",
+    "type": "Type",
+    "searchTypePlaceholder": "Search type…",
+    "noTypeFound": "No type found.",
+    "savedProperties": "Saved Properties",
+    "showSavedOnly": "Show Saved Only",
+    "saved": "Saved",
+    "showingSaved": "Showing saved properties",
+    "showSaved": "Show saved properties",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "beds": "Beds",
+    "baths": "Baths",
+    "bedsSuffix": "{{count}}+ Beds",
+    "bathsSuffix": "{{count}}+ Baths",
+    "priceRange": "Price Range",
+    "price": "Price",
+    "minPrice": "Min Price",
+    "maxPrice": "Max Price",
+    "noMin": "No min",
+    "noMax": "No max",
+    "noLimit": "No Limit",
+    "apply": "Apply",
+    "reset": "Reset",
+    "showNProperties_one": "Show {{count}} Property",
+    "showNProperties_other": "Show {{count}} Properties",
+    "gridView": "Grid view",
+    "listView": "List view",
+    "viewMode": "View mode"
+  },
+  "emptyState": {
+    "error": {
+      "title": "Unable to load properties",
+      "description": "There was a problem fetching your listings. Check your connection and try again.",
+      "retry": "Try again"
+    },
+    "saved": {
+      "title": "No saved properties yet",
+      "description": "Tap the heart on any listing to save it. Your collection will appear here.",
+      "browseAll": "Browse all properties"
+    },
+    "search": {
+      "title": "No results for “{{query}}”",
+      "description": "Check the spelling or try a broader search term — reference ID, location, or property type.",
+      "clearSearch": "Clear search",
+      "addProperty": "Add property"
+    },
+    "filtered": {
+      "title": "No matching properties",
+      "description": "No properties match your active filters. Try adjusting your criteria or clear all filters to browse everything.",
+      "clearFilters": "Clear all filters",
+      "addProperty": "Add property"
+    },
+    "blank": {
+      "title": "No properties yet",
+      "description": "Your portfolio is empty. Add your first listing to start managing properties and tracking your real estate pipeline.",
+      "addFirstProperty": "Add your first property"
+    }
+  },
+  "card": {
+    "removeFromFavourites": "Remove from favourites",
+    "addToFavourites": "Add to favourites",
+    "viewPropertyDetails": "View property details",
+    "editProperty": "Edit property",
+    "deleteProperty": "Delete property",
+    "viewProperty": "View Property",
+    "priceOnRequest": "Price on request",
+    "beds": "Beds",
+    "baths": "Baths"
+  },
+  "indicators": {
+    "featured": "Featured",
+    "verified": "Verified",
+    "premium": "Premium",
+    "new": "New"
+  },
+  "pagination": {
+    "pagination": "Pagination",
+    "previous": "Prev",
+    "previousPage": "Previous page",
+    "next": "Next",
+    "nextPage": "Next page",
+    "page": "Page {{page}}",
+    "showing": "Showing",
+    "of": "of",
+    "property_one": "property",
+    "property_other": "properties",
+    "perPage": "{{count}} / page",
+    "perPageOption": "{{count}} per page"
+  },
+  "grid": {
+    "unableToLoad": "Unable to load properties.",
+    "unableToLoadSaved": "Unable to load saved properties.",
+    "savedError": "The saved properties filter could not complete. Check the browser console for the request duration and HTTP status.",
+    "genericError": "An error occurred while fetching properties. Please try again.",
+    "retry": "Retry"
+  },
+  "listPage": {
+    "savedPropertiesHeading": "Saved Properties",
+    "noSavedYet": "No properties saved yet",
+    "collectionCount_one": "{{count}} property in your collection",
+    "collectionCount_other": "{{count}} properties in your collection",
+    "browseAll": "Browse all →",
+    "resultsFor": "Results for",
+    "filteredResults": "Filtered results",
+    "property_one": "property",
+    "property_other": "properties"
+  },
+  "map": {
+    "close": "Close",
+    "propertyLocationFallback": "Property Location",
+    "locationDetailsFallback": "Property",
+    "locationDetailsAriaLabel": "{{name}} location details",
+    "copyAddress": "Copy address",
+    "copyCoordinates": "Copy coordinates",
+    "copied": "Copied",
+    "shareLocation": "Share location",
+    "locationLinkCopied": "Location link copied",
+    "getDirections": "Get directions",
+    "locateOnMap": "Locate on map",
+    "approximateLocation": "Approximate location",
+    "exactLocation": "Exact location",
+    "approximateTooltipWithType": "Estimated from the property's location name, not its own stored coordinates — accurate to roughly a 350m radius ({{geocodeType}}).",
+    "approximateTooltipPlain": "Estimated from the property's location name, not its own stored coordinates — accurate to roughly a 350m radius.",
+    "exactTooltip": "The property's own stored exact coordinates — not estimated.",
+    "updated": "Updated {{date}}",
+    "openInGoogleMaps": "Open in Google Maps",
+    "openLocationInGoogleMaps": "Open location in Google Maps",
+    "viewMapFullscreen": "View map fullscreen",
+    "fullscreen": "Fullscreen",
+    "recenterOnProperty": "Recenter on property",
+    "mapStyleUnavailable": "Map style unavailable",
+    "noApiKey": "No MapTiler API key is configured for this environment.",
+    "styleServiceUnreachable": "Couldn't reach the MapTiler style service — check your connection and try again.",
+    "viewPropertyLocation": "View property location",
+    "viewPropertyLocationNamed": "{{title}} — view property location"
+  },
+  "locationCard": {
+    "areaLabel": "Area",
+    "districtLabel": "District",
+    "regionLabel": "Region",
+    "cityLabel": "City",
+    "countryLabel": "Country",
+    "coordinatesLabel": "Coordinates",
+    "greeceFallback": "Greece",
+    "locationIntelligenceEyebrow": "Location Intelligence",
+    "locationDetailsOnRequest": "Location details available on request",
+    "copyCoordinates": "Copy Coordinates",
+    "copied": "Copied!"
+  },
+  "nearbyPlaces": {
+    "title": "Nearby Places",
+    "loadError": "Nearby places could not be loaded right now.",
+    "noneFound": "No nearby places found within 2 km",
+    "categories": {
+      "school": "Schools",
+      "hospital": "Healthcare",
+      "shopping": "Shopping",
+      "restaurant": "Cafes & Dining",
+      "metro": "Transit Stations"
+    }
+  },
+  "addressSearch": {
+    "placeholder": "Search for an address…",
+    "searching": "Searching…",
+    "typeMoreChars": "Type at least 3 characters…",
+    "noResults": "No results found."
+  },
+  "gallery": {
+    "propertyFallback": "Property",
+    "propertyGalleryFallback": "Property gallery",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "viewFullScreen": "View full screen",
+    "viewImageN": "View image {{index}}",
+    "viewAllPhotos": "View all photos",
+    "photoCount_one": "{{count}} Photo",
+    "photoCount_other": "{{count}} Photos"
+  },
+  "placeholders": {
+    "noPhotoAvailable": "No photo available",
+    "listingQuality": "Listing Quality",
+    "missing": "Missing:",
+    "levels": {
+      "minimal": "Incomplete",
+      "partial": "Partial",
+      "complete": "Complete",
+      "showcase": "Showcase"
+    }
+  },
+  "validation": {
+    "referenceCodeTaken": "This reference code is already in use.",
+    "typeNotValidForCategory": "Selected type is not valid for the chosen category",
+    "statusChangeNotAllowed": "This status change is not allowed.",
+    "agentRequiredForActive": "An active listing must have an assigned agent.",
+    "cityInvalidChars": "City contains invalid characters",
+    "stateInvalidChars": "State / County contains invalid characters",
+    "countryInvalidChars": "Country contains invalid characters",
+    "energyClassRequired": "Energy Class is required",
+    "heatingTypeRequired": "Heating type is required",
+    "floorKeyRequired": "Floor Key is required",
+    "yearBuiltRequired": "Year Built is required"
+  }
+}

@@ -1,6 +1,7 @@
 'use client'
 
 import { Controller } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { FieldWrapper } from '../FieldWrapper'
 import { buildRules } from '../ValidationEngine'
@@ -8,6 +9,7 @@ import { getFieldId } from '../utils'
 import type { FieldComponentProps, UrlField as Schema } from '../types'
 
 export function UrlField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
   return (
     <Controller
       control={form.control}
@@ -20,7 +22,7 @@ export function UrlField({ schema, form, disabled, readOnly }: FieldComponentPro
             id={getFieldId(schema.key)}
             value={field.value ?? ''}
             type="url"
-            placeholder={schema.placeholder ?? 'https://'}
+            placeholder={schema.placeholderKey ? t(schema.placeholderKey) : 'https://'}
             disabled={disabled}
             readOnly={readOnly}
             maxLength={schema.maxLength}

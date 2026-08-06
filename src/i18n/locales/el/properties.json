@@ -1,0 +1,1520 @@
+{
+  "common": {
+    "for": "Για",
+    "yes": "Ναι",
+    "no": "Όχι",
+    "notProvided": "Δεν έχει καταχωρηθεί",
+    "copied": "Αντιγράφηκε",
+    "propertyFallback": "Ακίνητο",
+    "sqmUnit": "τ.μ."
+  },
+  "detail": {
+    "goBack": "Πίσω",
+    "breadcrumb": "Διαδρομή πλοήγησης",
+    "breadcrumbProperties": "Ακίνητα",
+    "breadcrumbFallback": "Στοιχεία Ακινήτου"
+  },
+  "nav": {
+    "overview": "Επισκόπηση",
+    "financial": "Οικονομικά",
+    "location": "Τοποθεσία",
+    "specifications": "Προδιαγραφές",
+    "media": "Πολυμέσα",
+    "contacts": "Επαφές",
+    "timeline": "Χρονολόγιο",
+    "sectionNavigation": "Πλοήγηση ενοτήτων",
+    "more": "Περισσότερα",
+    "moreSections": "Περισσότερες ενότητες",
+    "sectionMenu": "{{label}}, μενού ενότητας"
+  },
+  "hero": {
+    "viewPhotosFullScreen": "Προβολή φωτογραφιών {{title}} σε πλήρη οθόνη — {{count}} εικόνες",
+    "viewPhotoFullScreen": "Προβολή φωτογραφίας {{title}} σε πλήρη οθόνη",
+    "viewFullScreen": "Προβολή σε πλήρη οθόνη",
+    "previousImage": "Προηγούμενη εικόνα",
+    "nextImage": "Επόμενη εικόνα"
+  },
+  "briefing": {
+    "eyebrow": "Επιτελική Ενημέρωση"
+  },
+  "description": {
+    "title": "Περιγραφή Καταχώρησης",
+    "readMore": "Περισσότερα",
+    "showLess": "Λιγότερα"
+  },
+  "operations": {
+    "eyebrow": "Λειτουργίες",
+    "title": "Κέντρο Διαχείρισης",
+    "sections": {
+      "propertyStatus": "Κατάσταση Ακινήτου",
+      "propertyInformation": "Στοιχεία Ακινήτου",
+      "listingInformation": "Στοιχεία Καταχώρησης",
+      "assignedAgent": "Υπεύθυνος Μεσίτης",
+      "activity": "Δραστηριότητα",
+      "quickActions": "Γρήγορες Ενέργειες"
+    },
+    "noAgentAssigned": "Δεν έχει οριστεί μεσίτης",
+    "listingAgent": "Υπεύθυνος Μεσίτης",
+    "noActivityLogged": "Δεν έχει καταγραφεί δραστηριότητα",
+    "calls": "Κλήσεις",
+    "meetings": "Συναντήσεις",
+    "tasks": "Εργασίες",
+    "officeNotes": "Σημειώσεις Γραφείου",
+    "aiEvaluator": "Αξιολόγηση AI Ακινήτου",
+    "completeness": "Πληρότητα",
+    "completenessMissing": "Λείπουν: {{fields}}",
+    "completenessComplete": "Όλα τα {{count}} πεδία συμπληρωμένα",
+    "copyPropertyCode": "Αντιγραφή κωδικού ακινήτου {{code}}",
+    "propertyCodeCopied": "Ο κωδικός ακινήτου αντιγράφηκε",
+    "editProperty": "Επεξεργασία Ακινήτου",
+    "commandHubStatusSub": {
+      "Active": "Ανοιχτό για προσφορές",
+      "Under negotiation": "Σε αναμονή",
+      "Received payment": "Αναμονή ολοκλήρωσης",
+      "Under Approval": "Υπό έγκριση",
+      "Not Approved": "Χρειάζεται αναθεώρηση",
+      "Sold": "Ολοκληρωμένη συναλλαγή",
+      "Rented": "Ενεργή μίσθωση",
+      "Inactive": "Δεν δημοσιεύεται αυτή τη στιγμή"
+    },
+    "listingInfo": {
+      "availableFrom": "Διαθέσιμο Από",
+      "nextUpdate": "Επόμενη Ενημέρωση",
+      "keysHeld": "Κλειδιά",
+      "sold": "Πωλήθηκε",
+      "ownerAccount": "Λογαριασμός Ιδιοκτήτη",
+      "teams": "Ομάδες"
+    }
+  },
+  "financial": {
+    "pricingTitle": "Τιμολόγηση Ακινήτου",
+    "pricingSubtitle": "Ζητούμενη τιμή, τιμή ανά τ.μ. και επικαιρότητα καταχώρησης",
+    "title": "Οικονομική Ευφυΐα",
+    "subtitle": "Οικονομική επισκόπηση ακινήτου · στοιχεία καταχώρησης",
+    "askingPrice": "Ζητούμενη Τιμή",
+    "priceCopied": "Η τιμή αντιγράφηκε",
+    "copyAskingPrice": "Αντιγραφή ζητούμενης τιμής",
+    "noHistoricalTitle": "Δεν υπάρχει ιστορικό τιμών",
+    "noHistoricalDesc": "Το ιστορικό τιμών δεν περιλαμβάνεται στα τρέχοντα στοιχεία καταχώρησης — δεν υπάρχει τίποτα για γράφημα ακόμα.",
+    "listed": "Καταχωρήθηκε",
+    "updated": "Ενημερώθηκε",
+    "financialDetail": "Οικονομικές Λεπτομέρειες",
+    "clusters": {
+      "negotiationRange": "Εύρος Διαπραγμάτευσης",
+      "taxFees": "Φόροι & Τέλη",
+      "conditionalTerms": "Υπό Όρους Όροι"
+    },
+    "rows": {
+      "initialPrice": "Αρχική Τιμή",
+      "objectiveValue": "Αντικειμενική Αξία",
+      "lowerPriceLimit": "Κατώτατο Όριο Τιμής",
+      "vat": "ΦΠΑ",
+      "vatApplicable": "Ισχύει",
+      "vatNotApplicable": "Δεν ισχύει",
+      "remuneration": "Αμοιβή",
+      "investmentOpportunity": "Επενδυτική Ευκαιρία",
+      "investmentYes": "Ναι",
+      "investmentYesRent": "Ναι · Αναμενόμενο ενοίκιο {{price}}",
+      "utilitiesIncluded": "Περιλαμβάνονται Κοινόχρηστα",
+      "utilitiesYesAvg": "Ναι · Μέσος όρος {{price}}/μήνα",
+      "exchangeScheme": "Πρόγραμμα Ανταλλαγής",
+      "exchangeSchemeYesPct": "Ναι · {{pct}}%",
+      "underConsideration": "Υπό Εξέταση",
+      "underConsiderationFactor": "Ναι · Συντελεστής {{factor}}"
+    }
+  },
+  "specs": {
+    "fullSpecifications": "Πλήρεις Προδιαγραφές",
+    "noSpecsRecorded": "Δεν έχουν καταχωρηθεί επιπλέον προδιαγραφές για αυτή την καταχώρηση.",
+    "items": {
+      "bedrooms": { "value": "{{count}} Υπνοδωμάτια", "sub": "Χώρος Διαβίωσης" },
+      "bathrooms": { "value": "{{count}} Μπάνια", "sub": "Είδη Υγιεινής" },
+      "area": { "sub": "Εσωτερικός Χώρος" },
+      "floorOfTotal": "Όροφος {{floor}} από {{total}}",
+      "floorOnly": "Όροφος {{floor}}",
+      "floorsTotal": "{{count}} Όροφοι",
+      "floor": { "sub": "Κτίριο" },
+      "yearBuilt": { "sub": "Έτος Κατασκευής" },
+      "energyClass": { "sub": "Ενεργειακή Απόδοση" },
+      "condition": { "value": "{{value}} / 5", "sub": "Κατάσταση" }
+    },
+    "groups": {
+      "dimensions": "Διαστάσεις",
+      "rooms": "Δωμάτια",
+      "buildingConstruction": "Κτίριο & Κατασκευή",
+      "parking": "Στάθμευση"
+    },
+    "rows": {
+      "plotArea": "Εμβαδόν Οικοπέδου",
+      "balconyArea": "Εμβαδόν Μπαλκονιού",
+      "facadeLength": "Μήκος Πρόσοψης",
+      "livingRooms": "Σαλόνια",
+      "additionalLivingRooms": "Επιπλέον Σαλόνια",
+      "kitchens": "Κουζίνες",
+      "masterRooms": "Master Δωμάτια",
+      "livingKitchens": "Κουζίνες-Σαλόνι",
+      "halfBathrooms": "WC / Μισά Μπάνια",
+      "floorKey": "Κλειδί Ορόφου",
+      "lastFloor": "Τελευταίος Όροφος",
+      "penthouse": "Ρετιρέ",
+      "parkingSpaces": "Θέσεις Στάθμευσης"
+    }
+  },
+  "assets": {
+    "title": "Σύστημα Διαχείρισης Αρχείων",
+    "subtitle": "Φωτογραφικό υλικό υψηλής πιστότητας και νομικός φάκελος",
+    "categoryLabel": "Κατηγορία αρχείων",
+    "tabs": {
+      "photos": "Φωτογραφίες",
+      "legal": "Νομικά"
+    },
+    "photosTab": {
+      "emptyTitle": "Δεν Έχουν Ανέβει Φωτογραφίες",
+      "emptyDesc": "Ανεβάστε επαγγελματικές φωτογραφίες για να προσελκύσετε αγοραστές.",
+      "primaryPhoto": "Κύρια Φωτογραφία",
+      "viewPrimaryPhoto": "Προβολή κύριας φωτογραφίας — άνοιγμα πλήρους γκαλερί",
+      "viewPhoto": "Προβολή φωτογραφίας {{index}} — άνοιγμα πλήρους γκαλερί",
+      "assetStack": "Στοίβα Αρχείων",
+      "viewAllPhotos": "Προβολή όλων των {{count}} φωτογραφιών"
+    },
+    "legalTab": {
+      "title": "Ενεργός Φάκελος Κανονιστικής Συμμόρφωσης",
+      "count_one": "{{count}} Έγγραφο",
+      "count_other": "{{count}} Έγγραφα",
+      "emptyTitle": "Δεν Έχουν Επισυναφθεί Νομικά Έγγραφα",
+      "emptyDesc": "Επισυνάψτε τίτλους ιδιοκτησίας, άδειες και πιστοποιητικά συμμόρφωσης για να ενισχύσετε την εμπιστοσύνη του αγοραστή.",
+      "documentAssignment": "Ανάθεση Εγγράφου",
+      "assignedDocumentFallback": "Ανατεθειμένο Έγγραφο",
+      "documentFallback": "Έγγραφο",
+      "viewImage": "Προβολή εικόνας {{title}}",
+      "download": "Λήψη {{title}}",
+      "downloadAssigned": "Λήψη ανατεθειμένου εγγράφου",
+      "downloadNamed": "Λήψη {{name}}",
+      "downloadUnavailable": "{{label}} — δεν υπάρχει διαθέσιμο αρχείο"
+    }
+  },
+  "mediaLightbox": {
+    "categoryPhotos": "Φωτογραφίες",
+    "categoryLegal": "Νομικά"
+  },
+  "location": {
+    "title": "Κέντρο Ευφυΐας Τοποθεσίας",
+    "subtitle": "Πραγματικές κοντινές ανέσεις, εντοπισμένες μέσω OpenStreetMap",
+    "categoryFilterLabel": "Κατηγορία κοντινών σημείων",
+    "tabs": {
+      "education": "Εκπαίδευση",
+      "medical": "Υγεία",
+      "transit": "Συγκοινωνίες",
+      "walk": "Διασκέδαση"
+    },
+    "radiusLabels": {
+      "education": "Σχολεία εντός 2χλμ",
+      "medical": "Υγεία εντός 2χλμ",
+      "transit": "Συγκοινωνίες εντός 2χλμ",
+      "walk": "Εστιατόρια & καταστήματα εντός 2χλμ"
+    },
+    "mapUnavailable": "Ο χάρτης δεν είναι διαθέσιμος",
+    "mapUnavailableDesc": "Αυτό το ακίνητο δεν διαθέτει συντεταγμένες ή αναγνωρίσιμη τοποθεσία ακόμα.",
+    "searchGoogleMaps": "Αναζήτηση στο Google Maps",
+    "locatingProperty": "Εντοπισμός ακινήτου…",
+    "closeFullscreenMap": "Κλείσιμο χάρτη πλήρους οθόνης",
+    "fullscreenMapTitle": "{{property}} — Χάρτης τοποθεσίας, πλήρης οθόνη",
+    "areaFallback": "Περιοχή",
+    "overview": "Επισκόπηση",
+    "noIntelTitle": "Δεν υπάρχουν διαθέσιμα στοιχεία τοποθεσίας",
+    "noIntelWithData": "Δεν βρέθηκαν σχολεία, υγεία, συγκοινωνίες, εστιατόρια ή καταστήματα εντός 2χλμ από αυτό το ακίνητο.",
+    "noIntelNoCoords": "Αυτό το ακίνητο δεν διαθέτει ακόμα συντεταγμένες ή αναγνωρίσιμη τοποθεσία.",
+    "overviewCurrentlyPrefix": ", αυτή τη στιγμή",
+    "propertyTypeFallback": "ακίνητο",
+    "addressCoordinates": {
+      "title": "Διεύθυνση & Συντεταγμένες",
+      "subtitle": "Ακριβής διεύθυνση, αποθηκευμένες συντεταγμένες και αποστάσεις",
+      "address": "Διεύθυνση",
+      "coordinates": "Συντεταγμένες",
+      "openInGoogleMaps": "Άνοιγμα στο Google Maps",
+      "copyCoordinates": "Αντιγραφή Συντεταγμένων",
+      "distances": "Αποστάσεις",
+      "additionalDetails": "Επιπλέον Στοιχεία",
+      "km": "χλμ",
+      "distanceRows": {
+        "fromSea": "Από τη Θάλασσα",
+        "fromCity": "Από την Πόλη",
+        "fromVillage": "Από το Χωριό",
+        "fromAirport": "Από το Αεροδρόμιο"
+      },
+      "factRows": {
+        "zoningBelt": "Ζώνη Πολεοδομίας",
+        "view": "Θέα",
+        "closeTo": "Κοντά Σε",
+        "withinCityPlan": "Εντός Σχεδίου Πόλης"
+      }
+    }
+  },
+  "construction": {
+    "title": "Κατασκευή & Συστήματα",
+    "subtitle": "Κατάσταση κατασκευής, συστήματα κλιματισμού και υλικά κτιρίου",
+    "constructionCondition": "Κατάσταση Κατασκευής",
+    "climateSystems": "Συστήματα Κλιματισμού",
+    "buildingMaterials": "Υλικά Κτιρίου",
+    "structuralFeatures": "Δομικά Χαρακτηριστικά",
+    "doubleGlass": "Διπλά Τζάμια",
+    "electricalDevicesIncluded": "Περιλαμβάνονται Ηλεκτρικές Συσκευές",
+    "badges": {
+      "needsRenovation": "Χρειάζεται Ανακαίνιση",
+      "renovated": "Ανακαινισμένο",
+      "renovatedInYear": "Ανακαινίστηκε το {{year}}",
+      "underConstruction": "Υπό Κατασκευή"
+    },
+    "rows": {
+      "furnished": "Επιπλωμένο",
+      "heatingMedium": "Μέσο Θέρμανσης",
+      "heatingType": "Τύπος Θέρμανσης",
+      "frames": "Κουφώματα",
+      "door": "Πόρτα",
+      "floorType": "Τύπος Δαπέδου",
+      "bedroomsFloorType": "Τύπος Δαπέδου Υπνοδωματίων",
+      "warehouse": "Αποθήκη",
+      "parkingType": "Τύπος Στάθμευσης"
+    }
+  },
+  "land": {
+    "title": "Στοιχεία Οικοπέδου",
+    "subtitle": "Πολεοδομικά και κτηματολογικά στοιχεία ειδικά για αυτή την καταχώρηση Οικοπέδου",
+    "slope": "Κλίση",
+    "rows": {
+      "buildingBlocks": "Οικοδομικά Τετράγωνα",
+      "frontLength": "Μήκος Πρόσοψης",
+      "heightFactor": "Συντελεστής Ύψους",
+      "remainingBuild": "Υπόλοιπο Δόμησης",
+      "buildingFactor": "Συντελεστής Δόμησης",
+      "coverageFactor": "Συντελεστής Κάλυψης",
+      "structureFactor": "Συντελεστής Όγκου"
+    },
+    "flags": {
+      "cityPlan": "Σχέδιο Πόλης",
+      "residentialArea": "Οικιστική Περιοχή",
+      "facade": "Πρόσοψη",
+      "buildingPermit": "Οικοδομική Άδεια",
+      "agriculturalUse": "Αγροτική Χρήση",
+      "containsBuilding": "Περιλαμβάνει Κτίσμα"
+    }
+  },
+  "features": {
+    "title": "Χαρακτηριστικά & Ανέσεις",
+    "subtitle": "Εξωτερικός χώρος, ανέσεις κτιρίου και καταλληλότητα διαβίωσης",
+    "orientation": "Προσανατολισμός",
+    "buildingAmenities": "Ανέσεις Κτιρίου",
+    "accessibility": "Προσβασιμότητα",
+    "energySustainability": "Ενέργεια & Βιωσιμότητα",
+    "disabledAccess": "Πρόσβαση ΑμεΑ",
+    "propertyPlacement": "Τοποθέτηση Ακινήτου",
+    "suitability": "Καταλληλότητα",
+    "outdoorFeatures": "Εξωτερικά Χαρακτηριστικά",
+    "lifestyleFeatures": "Χαρακτηριστικά Τρόπου Ζωής",
+    "garage": "Γκαράζ",
+    "garageWithType": "Γκαράζ — {{type}}",
+    "buildingElevator": "Ασανσέρ Κτιρίου",
+    "elevatorInRooms": "Ασανσέρ σε Δωμάτια",
+    "internalElevator": "Εσωτερικό Ασανσέρ",
+    "idealForStudents": "Ιδανικό για Φοιτητές",
+    "idealForEmployees": "Ιδανικό για Υπαλλήλους",
+    "balcony": "Μπαλκόνι",
+    "swimmingPool": "Πισίνα",
+    "accessFrom": "Πρόσβαση Από"
+  },
+  "contacts": {
+    "title": "Επαφές",
+    "subtitle": "Άτομα που σχετίζονται με αυτή την καταχώρηση",
+    "view": "Προβολή",
+    "openInContactsList": "Άνοιγμα στη λίστα Επαφών"
+  },
+  "timeline": {
+    "title": "Χρονολόγιο",
+    "event_one": "{{count}} συμβάν",
+    "event_other": "{{count}} συμβάντα",
+    "showFewerEvents": "Εμφάνιση λιγότερων συμβάντων",
+    "showAllEvents": "Εμφάνιση όλων των {{count}} συμβάντων",
+    "activityScopeNotice": "Η δραστηριότητα (κλήσεις, συναντήσεις, εργασίες) που εμφανίζεται εδώ περιορίζεται σε ό,τι έχετε πρόσβαση — η δραστηριότητα συναδέλφου σε αυτή την καταχώρηση ενδέχεται να μην εμφανίζεται.",
+    "roles": {
+      "listingAgent": "Υπεύθυνος Μεσίτης",
+      "call": "Κλήση",
+      "meeting": "Συνάντηση",
+      "task": "Εργασία",
+      "mediaPublished": "Δημοσίευση Πολυμέσων",
+      "listingCreated": "Δημιουργία Καταχώρησης"
+    },
+    "titles": {
+      "listingMedia": "Πολυμέσα Καταχώρησης",
+      "propertyRegistry": "Μητρώο Ακινήτου"
+    },
+    "meta": {
+      "askingPrice": "Ζητούμενη Τιμή",
+      "photoCount": "Αριθμός Φωτογραφιών",
+      "propertyCode": "Κωδικός Ακινήτου",
+      "photo_one": "{{count}} φωτογραφία",
+      "photo_other": "{{count}} φωτογραφίες"
+    },
+    "content": {
+      "agentManaging": "Ο/Η {{name}} διαχειρίζεται αυτή την καταχώρηση ως κύριος μεσίτης.",
+      "currentStatus": " Τρέχουσα κατάσταση: {{status}}.",
+      "galleryAttached": "{{photos}} επισυνάφθηκαν σε αυτή την καταχώρηση. Η γκαλερί είναι έτοιμη για επισκόπηση από αγοραστές.",
+      "registryCreated": "Η καταχώρηση του ακινήτου δημιουργήθηκε και καταχωρήθηκε στο μητρώο.",
+      "dueDate": "Προθεσμία {{date}}"
+    }
+  },
+  "related": {
+    "similarProperties": "Παρόμοια Ακίνητα",
+    "inPortfolio_one": "{{count}} {{type}} στο χαρτοφυλάκιο",
+    "inPortfolio_other": "{{count}} {{type}} στο χαρτοφυλάκιο",
+    "propertyFallback": "ακίνητο",
+    "propertiesFallback": "ακίνητα",
+    "browseAll": "Προβολή όλων"
+  },
+  "deleteDialog": {
+    "noPermission": "Δεν έχετε δικαίωμα διαγραφής ακινήτων.",
+    "deletedSuccess": "Το ακίνητο διαγράφηκε",
+    "backToProperties": "Επιστροφή στα ακίνητα",
+    "title": "Διαγραφή Ακινήτου",
+    "description": "Είστε σίγουροι ότι θέλετε να διαγράψετε οριστικά αυτό το ακίνητο; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.",
+    "cancel": "Ακύρωση",
+    "deleting": "Διαγραφή…",
+    "refCode": "Κωδ. #{{code}}",
+    "untitledProperty": "Ακίνητο Χωρίς Τίτλο"
+  },
+  "wizard": {
+    "common": {
+      "readOnly": "Μόνο για ανάγνωση",
+      "moreInfoAbout": "Περισσότερες πληροφορίες για {{label}}",
+      "sectionComplete": "Η ενότητα ολοκληρώθηκε",
+      "fieldCount_one": "{{count}} πεδίο",
+      "fieldCount_other": "{{count}} πεδία",
+      "collapseSection": "Σύμπτυξη {{title}}",
+      "sectionFallback": "ενότητα",
+      "internalOnly": "Εσωτερική Χρήση",
+      "selectPlaceholder": "Επιλέξτε {{label}}…",
+      "searchPlaceholder": "Αναζήτηση {{label}}…",
+      "pickDate": "Επιλέξτε ημερομηνία…",
+      "selectedCount_one": "{{count}} επιλεγμένο",
+      "selectedCount_other": "{{count}} επιλεγμένα",
+      "on": "Ενεργό",
+      "off": "Ανενεργό",
+      "noResultsFound": "Δεν βρέθηκαν αποτελέσματα.",
+      "noSearchEndpoint": "Δεν έχει ρυθμιστεί τελικό σημείο αναζήτησης.",
+      "noOptionsFound": "Δεν βρέθηκαν επιλογές.",
+      "loadingOptions": "Φόρτωση επιλογών…",
+      "noCountryFound": "Δεν βρέθηκε χώρα.",
+      "searchCountry": "Αναζήτηση χώρας…",
+      "clearSelection": "— Εκκαθάριση —",
+      "clearFieldSelection": "Εκκαθάριση {{label}}",
+      "removeOption": "Αφαίρεση {{label}}",
+      "createOption": "Δημιουργία \"{{value}}\"",
+      "strengthWeak": "Ασθενές",
+      "strengthFair": "Μέτριο",
+      "strengthGood": "Καλό",
+      "strengthStrong": "Ισχυρό",
+      "showPassword": "Εμφάνιση κωδικού",
+      "hidePassword": "Απόκρυψη κωδικού",
+      "typeAndPressEnter": "Πληκτρολογήστε και πατήστε Enter…",
+      "tagCount": "{{count}}/{{max}} ετικέτες"
+    },
+    "steps": {
+      "pricingTerms": {
+        "sections": {
+          "pricing": {
+            "title": "Δημόσια Τιμολόγηση",
+            "description": "Τα στοιχεία που βλέπει ο αγοραστής.",
+            "groups": {
+              "comparison": "Σύγκριση",
+              "characteristics": "Οικονομικά Χαρακτηριστικά"
+            },
+            "fields": {
+              "price": { "label": "Ζητούμενη Τιμή" },
+              "investment": { "label": "Επένδυση" },
+              "cRentalprice": { "label": "Τιμή Ενοικίασης" },
+              "withinMonthlyUtilities": { "label": "Εντός Μηνιαίων Κοινοχρήστων" },
+              "cAverageMonthlyUtilities": { "label": "Μέσα μηνιαία κοινόχρηστα" },
+              "initialPrice": { "label": "Αρχική Τιμή" },
+              "objectiveValue": { "label": "Αντικειμενική Αξία" },
+              "vat": {
+                "label": "ΦΠΑ",
+                "tooltip": "Η πώληση ακινήτου, από φυσικό ή νομικό πρόσωπο που ασκεί οικονομική δραστηριότητα, υπόκειται σε ΦΠΑ 24% επί της τιμής πώλησης, εφόσον η μεταβίβαση αφορά νεόδμητο κτίριο. Κάθε κτίριο που μεταβιβάζεται πριν από την πρώτη χρήση του θεωρείται γενικά νεόδμητο, εφόσον η οικοδομική του άδεια εκδόθηκε ή αναθεωρήθηκε από την 1η Ιανουαρίου 2006 και μετά. Σε περίπτωση που το ακίνητο δεν είναι νεόδμητο (δηλ. έχει ήδη χρησιμοποιηθεί ή μεταβιβαστεί) ή σε κάθε περίπτωση όπου ο πωλητής δεν ασκεί οικονομική δραστηριότητα, ο αγοραστής επιβαρύνεται με Φόρο Μεταβίβασης Ακινήτων (ΦΜΑ) 3,09% επί του μεγαλύτερου ποσού μεταξύ αντικειμενικής αξίας και τιμής αγοράς. Τα φυσικά πρόσωπα μπορούν, υπό προϋποθέσεις και έως ενός ποσού, να απαλλαγούν από την καταβολή ΦΠΑ ή ΦΜΑ, εφόσον αγοράζουν πρώτη κατοικία."
+              }
+            }
+          },
+          "negotiation": {
+            "title": "Εσωτερική Διαπραγμάτευση",
+            "description": "Εσωτερικοί οικονομικοί μοχλοί, δεν εμφανίζονται ποτέ στον αγοραστή.",
+            "groups": {
+              "floor": "Κατώτατο Όριο Διαπραγμάτευσης",
+              "compensation": "Αμοιβή"
+            },
+            "floorBelowAsking": "{{percent}}% κάτω από τη ζητούμενη τιμή",
+            "floorNeedsPrice": "Προσθέστε Ζητούμενη Τιμή παραπάνω για σύγκριση",
+            "fields": {
+              "lowerPriceLimit": { "label": "Κατώτατο Όριο Τιμής" },
+              "exchangeScheme": { "label": "Πρόγραμμα Ανταλλαγής" },
+              "exchangeSchemePercentage": {
+                "label": "Ποσοστό Προγράμματος Ανταλλαγής",
+                "helperText": "Ισχύει μόνο όταν είναι ενεργοποιημένο το Πρόγραμμα Ανταλλαγής."
+              },
+              "cRemuneration": { "label": "Αμοιβή (σε € ή %)" },
+              "cCompensationFactor": { "label": "Συντελεστής Αποζημίωσης" }
+            }
+          }
+        }
+      },
+      "sizeRoomsStructure": {
+        "sections": {
+          "sizeRooms": {
+            "title": "Μέγεθος & Δωμάτια",
+            "groups": {
+              "dimensions": "Διαστάσεις",
+              "roomCounts": "Αριθμός Δωματίων"
+            },
+            "fields": {
+              "square": { "label": "Συνολική Επιφάνεια" },
+              "plotArea": { "label": "Επιφάνεια Οικοπέδου" },
+              "balconyArea": { "label": "Επιφάνεια Μπαλκονιού" },
+              "facadeLength": { "label": "Μήκος Πρόσοψης" },
+              "bedroomCount": { "label": "Υπνοδωμάτια" },
+              "bathroomCount": { "label": "Μπάνια" },
+              "cHalfBathrooms": { "label": "WC" },
+              "livingRooms": { "label": "Σαλόνια" },
+              "additionalLivingRooms": { "label": "Επιπλέον Σαλόνια" },
+              "kitchens": { "label": "Κουζίνες" },
+              "cMasterrooms": { "label": "Master Δωμάτια" },
+              "cLivingkitchens": { "label": "Κουζίνες-Σαλόνια" }
+            }
+          },
+          "buildingPosition": {
+            "title": "Θέση Κτιρίου",
+            "fields": {
+              "parkingSpaces": { "label": "Θέσεις Στάθμευσης" },
+              "floor": { "label": "Αριθμός Ορόφου" },
+              "floorCount": { "label": "Αριθμός Ορόφων" },
+              "floorKey": {
+                "label": "Όροφος",
+                "placeholder": "Επιλέξτε όροφο…",
+                "options": {
+                  "basement": "Υπόγειο",
+                  "semiBasement": "Ημιυπόγειο",
+                  "groundFloor": "Ισόγειο",
+                  "mezzanine": "Ημιόροφος",
+                  "floor1": "1ος Όροφος",
+                  "floor1Superlative": "1ος Υπερυψωμένος",
+                  "floor2": "2ος Όροφος",
+                  "floor3": "3ος Όροφος",
+                  "floor4": "4ος Όροφος",
+                  "floor5": "5ος Όροφος",
+                  "floor6": "6ος Όροφος",
+                  "floor7": "7ος Όροφος",
+                  "floor8": "8ος Όροφος",
+                  "floor9": "9ος Όροφος",
+                  "floor10": "10ος Όροφος",
+                  "floor11": "11ος Όροφος",
+                  "floor12": "12ος Όροφος",
+                  "floor13": "13ος Όροφος",
+                  "floor14": "14ος Όροφος",
+                  "floor15": "15ος Όροφος",
+                  "floor16": "16ος Όροφος",
+                  "floor17": "17ος Όροφος",
+                  "floor18": "18ος Όροφος",
+                  "floor19": "19ος Όροφος",
+                  "floor20": "20ος Όροφος"
+                }
+              },
+              "lastFloor": { "label": "Τελευταίος Όροφος" },
+              "yearBuilt": { "label": "Έτος Κατασκευής" },
+              "penthouse": { "label": "Ρετιρέ" },
+              "cCondition": { "label": "Κατάσταση", "placeholder": "Βαθμολογήστε κατάσταση…" }
+            }
+          }
+        }
+      },
+      "constructionSystems": {
+        "sections": {
+          "condition": {
+            "title": "Κατάσταση",
+            "fields": {
+              "cUnderConstriction": { "label": "Υπό Κατασκευή" },
+              "itNeedsRenovation": { "label": "Χρειάζεται Ανακαίνιση" },
+              "renovated": { "label": "Ανακαινισμένο" },
+              "yearOfRenovation": { "label": "Έτος Ανακαίνισης" },
+              "furnished": {
+                "label": "Επιπλωμένο",
+                "placeholder": "Επιλέξτε κατάσταση επίπλωσης…",
+                "options": {
+                  "furnished": "Επιπλωμένο",
+                  "no": "Όχι",
+                  "halfFurnished": "Μισοεπιπλωμένο",
+                  "fullyFurnished": "Πλήρως Επιπλωμένο",
+                  "half": "Μισό",
+                  "full": "Πλήρες"
+                }
+              },
+              "cFurnitureElectricalAppliances": {
+                "label": "Έπιπλα & Ηλεκτρικές Συσκευές",
+                "options": {
+                  "wardrobe": "Ντουλάπα",
+                  "livingRoomTable": "Τραπέζι Σαλονιού",
+                  "kitchenTable": "Τραπέζι Κουζίνας",
+                  "sofa": "Καναπές",
+                  "hallFurniture": "Έπιπλα Χωλ",
+                  "office": "Γραφείο",
+                  "washingMachine": "Πλυντήριο",
+                  "dishwasher": "Πλυντήριο Πιάτων",
+                  "builtInOven": "Εντοιχισμένος Φούρνος",
+                  "normalOven": "Κανονικός Φούρνος",
+                  "refrigerator": "Ψυγείο"
+                }
+              }
+            }
+          },
+          "energyHeating": {
+            "title": "Ενέργεια & Θέρμανση",
+            "fields": {
+              "energyClass": {
+                "label": "Ενεργειακή Κλάση",
+                "options": { "notRequired": "Δεν απαιτείται", "inProgress": "Σε εξέλιξη" }
+              },
+              "cHeatingMedium": {
+                "label": "Μέσο Θέρμανσης",
+                "options": {
+                  "petrol": "Πετρέλαιο",
+                  "naturalGas": "Φυσικό Αέριο",
+                  "gas": "Αέριο",
+                  "current": "Ρεύμα",
+                  "stove": "Σόμπα Ξύλου",
+                  "thermalAccumulator": "Θερμοσυσσωρευτής",
+                  "pellet": "Πέλλετ",
+                  "infrared": "Υπέρυθρες",
+                  "fanCoil": "Fan Coil",
+                  "wood": "Ξύλο",
+                  "teleheating": "Τηλεθέρμανση",
+                  "geothermalEnergy": "Γεωθερμία",
+                  "thermopompos": "Αντλία Θερμότητας (Θερμοπομπός)",
+                  "heatpump": "Αντλία Θερμότητας"
+                }
+              },
+              "cHeatingController": {
+                "label": "Τύπος θέρμανσης (Heating Type)",
+                "options": {
+                  "automic": "Ατομική θέρμανση",
+                  "autonomus": "Αυτόνομη θέρμανση",
+                  "central": "Κεντρική θέρμανση",
+                  "withoutheating": "Χωρίς θέρμανση"
+                }
+              },
+              "cAdditionalheating": {
+                "label": "Επιπλέον Θέρμανση",
+                "options": {
+                  "airConditioning": "Κλιματισμός",
+                  "underfloor": "Ενδοδαπέδια Θέρμανση",
+                  "fireplace": "Τζάκι"
+                }
+              }
+            }
+          },
+          "windowsDoorsFinishes": {
+            "title": "Κουφώματα, Πόρτες & Φινιρίσματα",
+            "fields": {
+              "frames": {
+                "label": "Κουφώματα",
+                "options": { "wooden": "Ξύλινα", "aluminium": "Αλουμινίου", "synthetic": "Συνθετικά" }
+              },
+              "door": {
+                "label": "Πόρτα",
+                "options": { "security": "Ασφαλείας", "simple": "Απλή", "yes": "Ναι", "no": "Όχι" }
+              },
+              "doubleGlass": { "label": "Διπλά Τζάμια" },
+              "floorType": {
+                "label": "Τύπος Δαπέδου",
+                "options": {
+                  "marble": "Μάρμαρο",
+                  "wood": "Ξύλο",
+                  "stone": "Πέτρα",
+                  "laminate": "Laminate",
+                  "ceramicTiles": "Κεραμικά Πλακάκια",
+                  "mosaicTiles": "Μωσαϊκό",
+                  "woodAndMarble": "Ξύλο και μάρμαρο",
+                  "marbleAndTile": "Μάρμαρο και πλακάκι",
+                  "woodAndStone": "Ξύλο και πέτρα",
+                  "stoneAndMarble": "Πέτρα και μάρμαρο",
+                  "woodAndTile": "Ξύλο και πλακάκι",
+                  "woodAndMosaic": "Ξύλο και μωσαϊκό",
+                  "industrial": "Βιομηχανικό",
+                  "mousamas": "Μουσαμάς"
+                }
+              },
+              "bedroomsFloorType": {
+                "label": "Τύπος Δαπέδου Υπνοδωματίων",
+                "options": {
+                  "marble": "Μάρμαρο",
+                  "wood": "Ξύλο",
+                  "petra": "Πέτρα",
+                  "tile": "Πλακάκι",
+                  "mosaic": "Μωσαϊκό",
+                  "laminate": "Laminate",
+                  "marbleWood": "Μάρμαρο - Ξύλο",
+                  "marbleTile": "Μάρμαρο - Πλακάκι",
+                  "stoneWood": "Πέτρα - Ξύλο",
+                  "stoneMarble": "Πέτρα - Μάρμαρο",
+                  "tileWood": "Πλακάκι - Ξύλο",
+                  "mosaicWood": "Μωσαϊκό - Ξύλο",
+                  "industrialFlooring": "Βιομηχανικό Δάπεδο"
+                }
+              },
+              "cStorageSpace": {
+                "label": "Αποθήκη",
+                "options": { "external": "Εξωτερική", "interior": "Εσωτερική", "no": "Όχι", "yes": "Ναι" }
+              },
+              "cGarage": {
+                "label": "Τύπος Στάθμευσης",
+                "helperText": "Τύπος/τοποθεσία στάθμευσης. Δείτε επίσης «Γκαράζ» στο βήμα Εξωτερικός Χώρος, Κτίριο & Παροχές παρακάτω σε αυτόν τον οδηγό.",
+                "options": { "interior": "Εσωτερικός", "external": "Εξωτερικός" }
+              },
+              "hasElectricalDevices": { "label": "Ηλεκτρικές Συσκευές" }
+            }
+          }
+        }
+      },
+      "outdoorBuildingAmenities": {
+        "sections": {
+          "outdoorSpace": {
+            "title": "Εξωτερικός Χώρος",
+            "fields": {
+              "balcony": { "label": "Μπαλκόνι" },
+              "swimmingPool": {
+                "label": "Πισίνα",
+                "options": { "no": "Όχι", "external": "Εξωτερική", "interior": "Εσωτερική", "indoors": "Εσωτερικού χώρου" }
+              },
+              "accessFrom": {
+                "label": "Πρόσβαση Από",
+                "options": {
+                  "road": "Δρόμο",
+                  "pedestrian": "Πεζόδρομο",
+                  "paved": "Πλακόστρωτο",
+                  "dirtRoad": "Χωματόδρομο",
+                  "sea": "Θάλασσα",
+                  "noAccess": "Χωρίς πρόσβαση",
+                  "other": "Άλλο"
+                }
+              }
+            }
+          },
+          "positionExposure": {
+            "title": "Θέση & Προσανατολισμός",
+            "fields": {
+              "cOrientation": {
+                "label": "Προσανατολισμός",
+                "options": {
+                  "e": "Ανατολή",
+                  "ew": "Ανατολή-Δύση",
+                  "em": "Ανατολή-Μεσημβρία",
+                  "n": "Βορράς",
+                  "ne": "Βορειοανατολικά",
+                  "w": "Δύση",
+                  "nw": "Βορειοδυτικά",
+                  "wm": "Δύση-Μεσημβρία",
+                  "m": "Μεσημβρία",
+                  "s": "Νότος",
+                  "se": "Νοτιοανατολικά",
+                  "sw": "Νοτιοδυτικά"
+                }
+              },
+              "cPlacement": {
+                "label": "Χωροθέτηση",
+                "options": {
+                  "airy": "Διαμπερές",
+                  "painted": "Βαμμένο",
+                  "corner": "Γωνιακό",
+                  "facade": "Πρόσοψης",
+                  "interior": "Εσωτερικό",
+                  "forCommercialUse": "Για επαγγελματική χρήση",
+                  "side": "Πλαϊνό",
+                  "bright": "Φωτεινό",
+                  "threeSided": "Τριών Όψεων",
+                  "fourSided": "Τεσσάρων Όψεων"
+                }
+              }
+            }
+          },
+          "building": {
+            "title": "Κτίριο",
+            "fields": {
+              "garage": {
+                "label": "Γκαράζ",
+                "helperText": "Ύπαρξη/μέγεθος θέσης στάθμευσης. Δείτε επίσης «Τύπος Στάθμευσης» στο βήμα Κατασκευή & Συστήματα.",
+                "options": { "yes": "Ναι", "no": "Όχι", "double": "Διπλό" }
+              },
+              "buildingElevator": { "label": "Ανελκυστήρας Κτιρίου" },
+              "buildingElevatorRooms": { "label": "Ανελκυστήρας σε Δωμάτια" },
+              "internalElevator": { "label": "Εσωτερικός Ανελκυστήρας" },
+              "hasDisabledAccess": { "label": "Πρόσβαση ΑμεΑ" }
+            }
+          },
+          "amenities": {
+            "title": "Παροχές",
+            "fields": {
+              "features": {
+                "label": "Χαρακτηριστικά",
+                "options": {
+                  "veranda": "Βεράντα",
+                  "petsAllowed": "Επιτρέπονται Κατοικίδια",
+                  "solarWaterHeating": "Ηλιακός Θερμοσίφωνας",
+                  "garden": "Κήπος",
+                  "nightPower": "Νυχτερινό Ρεύμα",
+                  "luxHome": "Πολυτελής Κατοικία",
+                  "inACentralPoint": "Σε κεντρικό σημείο",
+                  "alarm": "Συναγερμός",
+                  "playroom": "Παιδικό Δωμάτιο",
+                  "painted": "Βαμμένο",
+                  "forProfessionalUse": "Για επαγγελματική χρήση",
+                  "forEmployees": "Για υπαλλήλους",
+                  "familyHome": "Οικογενειακή Κατοικία",
+                  "forStudents": "Για φοιτητές",
+                  "sewerNetwork": "Δίκτυο Αποχέτευσης",
+                  "preserved": "Διατηρητέο",
+                  "satelliteReceiver": "Δορυφορικός Δέκτης",
+                  "holidayHome": "Εξοχική Κατοικία",
+                  "internalStairs": "Εσωτερική Σκάλα",
+                  "unfinished": "Ημιτελές",
+                  "cableReady": "Έτοιμο για Καλωδίωση",
+                  "equipped": "Εξοπλισμένο",
+                  "neoclassic": "Νεοκλασικό",
+                  "residentialArea": "Οικιστική Περιοχή",
+                  "awning": "Τέντα",
+                  "pestNet": "Σίτα κατά Εντόμων",
+                  "furredCeiling": "Οροφή με Κασέτες",
+                  "tent": "Σκηνή",
+                  "falseCeiling": "Ψευδοροφή",
+                  "attic": "Σοφίτα",
+                  "accessibility": "Πρόσβαση για Άτομα με Αναπηρία",
+                  "funnel": "Καπνοδόχος",
+                  "forSanitaryUse": "Για υγειονομική χρήση",
+                  "securityRollers": "Ρολά Ασφαλείας",
+                  "freightElevator": "Ανελκυστήρας Φορτίων",
+                  "unloadingRamp": "Ράμπα Εκφόρτωσης",
+                  "structuredCabling": "Δομημένη Καλωδίωση",
+                  "suitableForMedicalOffice": "Κατάλληλο για Ιατρείο",
+                  "buildingElevator": "Ανελκυστήρας Κτιρίου"
+                }
+              },
+              "additionalBenefits": {
+                "label": "Επιπλέον Παροχές",
+                "options": { "bbq": "Μπάρμπεκιου", "independentEntrance": "Ανεξάρτητη Είσοδος" }
+              },
+              "idealForStudents": { "label": "Ιδανικό για Φοιτητές" },
+              "idealForEmployees": { "label": "Ιδανικό για Υπαλλήλους" }
+            }
+          }
+        }
+      },
+      "marketingMedia": {
+        "sections": {
+          "listingQuality": {
+            "title": "Ποιότητα Καταχώρησης",
+            "fields": {
+              "isFeatured": { "label": "Προτεινόμενο" },
+              "isVerified": { "label": "Επαληθευμένο" },
+              "isPremium": { "label": "Premium" },
+              "isNewListing": { "label": "Νέα Καταχώρηση" }
+            }
+          },
+          "listingCopy": {
+            "title": "Κείμενο Καταχώρησης",
+            "fields": {
+              "description": { "label": "Περιγραφή" },
+              "cDescriptionGr": { "label": "Περιγραφή (Ελληνικά) 🇬🇷" }
+            }
+          },
+          "internalOnly": {
+            "title": "Μόνο Εσωτερική Χρήση",
+            "description": "Κείμενο πράκτορα/γραφείου — δεν εμφανίζεται ποτέ στη δημόσια καταχώρηση.",
+            "fields": {
+              "cOfficeNotes": { "label": "Σημειώσεις Γραφείου" },
+              "cPropertyEvaluatorAI": { "label": "Αυτόματος Εκτιμητής Ακινήτου" }
+            }
+          },
+          "media": {
+            "title": "Πολυμέσα",
+            "fields": {
+              "cBanner": {
+                "label": "Banner",
+                "tooltip": "Η ανάρτηση πανό εξασφαλίζει την προμήθεια 100%."
+              },
+              "cBannerphoto": { "label": "Φωτογραφία Banner" },
+              "imagesIds": {
+                "label": "Φωτογραφίες Ακινήτου",
+                "helperText": "Η πρώτη φωτογραφία γίνεται η εικόνα εξωφύλλου."
+              }
+            }
+          },
+          "documents": {
+            "title": "Έγγραφα",
+            "description": "Συμβόλαια, κατόψεις, πιστοποιητικά — επισυνάπτονται σε αυτή την καταχώρηση, δεν εμφανίζονται δημόσια.",
+            "fields": {
+              "documents": { "label": "Έγγραφα", "helperText": "Ανεβαίνουν κατά την αποθήκευση." },
+              "cDocumentassignment": { "label": "Έγγραφο Ανάθεσης" }
+            }
+          }
+        }
+      },
+      "identityGovernance": {
+        "sections": {
+          "classification": {
+            "title": "Ταξινόμηση",
+            "description": "Τι είδους ακίνητο είναι αυτό και για ποιο σκοπό;",
+            "fields": {
+              "title": {
+                "label": "Τίτλος",
+                "placeholder": "π.χ. Skyline Corporate Plaza",
+                "helperText": "Το EspoCRM αντικαθιστά αυτό με τον Κωδικό Αναφοράς παρακάτω μόλις αποθηκευτεί η καταχώρηση."
+              },
+              "propertyCode": {
+                "label": "Κωδικός Αναφοράς",
+                "placeholder": "Δημιουργείται αυτόματα αν μείνει κενό",
+                "helperText": "Σύντομος εσωτερικός κωδικός αναφοράς, π.χ. REF-001."
+              },
+              "category": {
+                "label": "Κατηγορία",
+                "placeholder": "Επιλέξτε κατηγορία…",
+                "options": {
+                  "residential": "Οικιστικό",
+                  "commercial": "Επαγγελματικό",
+                  "land": "Γη",
+                  "other": "Άλλο"
+                }
+              },
+              "type": { "label": "Τύπος Ακινήτου", "placeholder": "Επιλέξτε τύπο…" },
+              "requestType": {
+                "label": "Τύπος Αιτήματος",
+                "placeholder": "Επιλέξτε τύπο αιτήματος…",
+                "options": { "rent": "Ενοικίαση", "sale": "Πώληση" }
+              }
+            }
+          },
+          "governance": {
+            "title": "Διαχείριση",
+            "description": "Κύκλος ζωής, ιδιοκτησία και προγραμματισμός.",
+            "fields": {
+              "cAssignment": {
+                "label": "Ανάθεση",
+                "placeholder": "Επιλέξτε ανάθεση…",
+                "options": { "simple": "Απλή", "exclusive": "Αποκλειστική" }
+              },
+              "status": { "label": "Κατάσταση Καταχώρησης" },
+              "assignedUserId": { "label": "Ανατεθειμένος Πράκτορας", "placeholder": "Επιλέξτε πράκτορα…" },
+              "cAvailableFrom": { "label": "Διαθέσιμο από", "placeholder": "Επιλέξτε ημερομηνία…" },
+              "nextUpdate": { "label": "Επόμενη Ενημέρωση", "placeholder": "Επιλέξτε ημερομηνία…" }
+            }
+          },
+          "officeUse": {
+            "title": "Χρήση Γραφείου",
+            "description": "Εσωτερική λογιστική γραφείου, σπάνια χρησιμοποιείται κατά την καταχώρηση.",
+            "fields": {
+              "keys": { "label": "Κλειδιά" },
+              "cSold": { "label": "Πουλήθηκε" },
+              "cConsideration": { "label": "Αντάλλαγμα" }
+            }
+          }
+        }
+      },
+      "locationZoning": {
+        "sections": {
+          "location": {
+            "title": "Τοποθεσία",
+            "description": "Πρώτα η ευρύτερη περιοχή, με στένεμα μέχρι τη συγκεκριμένη περιφέρεια.",
+            "groups": {
+              "narrowing": "Γεωγραφική περιοχή",
+              "address": "Διεύθυνση"
+            },
+            "fields": {
+              "regionLocationId": { "label": "Περιφέρεια", "placeholder": "Επιλέξτε περιφέρεια…", "helperText": "Ευρύτερη περιοχή ή περιφέρεια." },
+              "subRegionLocationId": { "label": "Υποπεριφέρεια", "placeholder": "Επιλέξτε υποπεριφέρεια…" },
+              "locationId": { "label": "Περιοχή / Δήμος", "placeholder": "Επιλέξτε περιοχή…" },
+              "addressStreet": { "label": "Οδός", "placeholder": "π.χ. 12 Syntagma Square" },
+              "addressCity": { "label": "Πόλη", "placeholder": "π.χ. Athens" },
+              "addressState": { "label": "Νομός / Περιφερειακή Ενότητα", "placeholder": "π.χ. Attica" },
+              "addressPostalCode": { "label": "Ταχυδρομικός Κώδικας", "placeholder": "π.χ. 12345" },
+              "addressCountry": { "label": "Χώρα", "placeholder": "π.χ. Greece" },
+              "closeTo": { "label": "Κοντά σε", "placeholder": "π.χ. Σταθμός μετρό, σχολείο" }
+            }
+          },
+          "zoningDataQuality": {
+            "title": "Πολεοδομία & Ποιότητα Δεδομένων",
+            "description": "Νομικά/πολεοδομικά στοιχεία και ακρίβεια γεωκωδικοποίησης.",
+            "groups": {
+              "classification": "Ταξινόμηση",
+              "coordinates": "Συντεταγμένες & Γεωκωδικοποίηση"
+            },
+            "fields": {
+              "belt": {
+                "label": "Ζώνη",
+                "placeholder": "Επιλέξτε ζώνη…",
+                "options": {
+                  "agricultural": "Αγροτική",
+                  "commercial": "Επαγγελματική",
+                  "industrial": "Βιομηχανική",
+                  "recreational": "Αναψυχής",
+                  "residential": "Οικιστική",
+                  "unincorporated": "Εκτός σχεδίου"
+                }
+              },
+              "withinCityPlan": { "label": "Εντός Σχεδίου Πόλης" },
+              "addressLatitude": {
+                "label": "Γεωγραφικό Πλάτος",
+                "placeholder": "π.χ. 37.975500",
+                "helperText": "Προαιρετικό. Εισάγετε χειροκίνητα αν είναι γνωστό — δεν υπάρχει ακόμα αυτόματη αναζήτηση."
+              },
+              "addressLongitude": {
+                "label": "Γεωγραφικό Μήκος",
+                "placeholder": "π.χ. 23.734800",
+                "helperText": "Προαιρετικό. Εισάγετε χειροκίνητα αν είναι γνωστό — δεν υπάρχει ακόμα αυτόματη αναζήτηση."
+              },
+              "addressGeocodeType": {
+                "label": "Ακρίβεια τοποθεσίας ακινήτου",
+                "placeholder": "Επιλέξτε ακρίβεια…",
+                "options": { "exact": "Ακριβής", "approximate": "Κατά προσέγγιση" }
+              }
+            }
+          },
+          "proximityViews": {
+            "title": "Εγγύτητα & Θέα",
+            "description": "Τι βλέπει το ακίνητο, και πόσο απέχει από βασικά σημεία αναφοράς.",
+            "groups": {
+              "distances": "Αποστάσεις"
+            },
+            "fields": {
+              "view": {
+                "label": "Θέα",
+                "placeholder": "Επιλέξτε θέα…",
+                "options": {
+                  "sea": "Θάλασσα",
+                  "mountain": "Βουνό",
+                  "town": "Πόλη",
+                  "park": "Πάρκο",
+                  "open": "Ανοιχτή",
+                  "field": "Χωράφι",
+                  "forest": "Δάσος",
+                  "square": "Πλατεία",
+                  "yes": "Ναι",
+                  "no": "Όχι"
+                }
+              },
+              "distanceFromSea": { "label": "Απόσταση από Θάλασσα" },
+              "distanceFromCity": { "label": "Απόσταση από Πόλη" },
+              "distanceFromVillage": { "label": "Απόσταση από Χωριό" },
+              "distanceFromAirport": { "label": "Απόσταση από Αεροδρόμιο" }
+            }
+          },
+          "landDetails": {
+            "title": "Στοιχεία Οικοπέδου",
+            "description": "Πολεοδομικά στοιχεία και στοιχεία οικοπέδου ειδικά για καταχωρήσεις τύπου Οικόπεδο.",
+            "fields": {
+              "cBuildingBlocks": { "label": "Οικοδομικά Τετράγωνα" },
+              "cFrontLength": { "label": "Μήκος Πρόσοψης" },
+              "cHeightFactor": { "label": "Συντελεστής Ύψους" },
+              "cRemainingBuild": { "label": "Υπολειπόμενη Δόμηση" },
+              "cBuildingFactor": { "label": "Συντελεστής Δόμησης" },
+              "cCoverageFactor": { "label": "Συντελεστής Κάλυψης" },
+              "cStructureFactor": { "label": "Συντελεστής Κατασκευής" },
+              "cCityplan": { "label": "Σχέδιο Πόλης" },
+              "cResidentialArea": { "label": "Οικιστική Περιοχή" },
+              "cFacade": { "label": "Πρόσοψη" },
+              "cBuildingPermit": { "label": "Οικοδομική Άδεια" },
+              "cAgriculturalUse": { "label": "Αγροτική Χρήση" },
+              "cContainsBuilding": { "label": "Περιέχει Κτίριο" },
+              "cSlope": {
+                "label": "Κλίση",
+                "placeholder": "Επιλέξτε κλίση…",
+                "options": { "plane": "Επίπεδη", "inclining": "Επικλινής", "amphitheatric": "Αμφιθεατρική" }
+              }
+            }
+          },
+          "contacts": {
+            "title": "Επαφές",
+            "description": "Ιδιοκτήτης, ενοικιαστής, αγοραστής ή διαχειριστής ακινήτου που σχετίζεται με αυτή την καταχώρηση.",
+            "fields": {
+              "contactsIds": {
+                "label": "Επαφές",
+                "placeholder": "Επιλέξτε επαφές…",
+                "helperText": "Απαιτείται τουλάχιστον μία επαφή για την αποθήκευση αυτής της καταχώρησης."
+              }
+            }
+          }
+        }
+      }
+    },
+    "review": {
+      "dataCompleteness": "Πληρότητα Δεδομένων",
+      "listingHealth": "Υγεία Καταχώρησης",
+      "gradeBadge": "Βαθμός {{grade}} · {{label}}",
+      "scoreOutOf100": "/ 100",
+      "missingInformation": "Λείπουν στοιχεία",
+      "requiredFieldsNotFilled": "Υποχρεωτικά πεδία που δεν έχουν συμπληρωθεί",
+      "needsAttention": "Χρειάζεται προσοχή",
+      "readyToPublish": "Έτοιμο για δημοσίευση — όλες οι απαιτούμενες πληροφορίες είναι πλήρεις.",
+      "edit": "Επεξεργασία",
+      "notSet": "Δεν έχει οριστεί",
+      "editStep": "Επεξεργασία {{step}}",
+      "stepFallback": "βήμα",
+      "untitledProperty": "Ακίνητο χωρίς τίτλο",
+      "executiveSummary": {
+        "title": "Επιτελική Σύνοψη",
+        "description": "Τι πρόκειται να δημιουργήσετε — συγκεντρωμένο από όλα τα βήματα μέχρι τώρα."
+      },
+      "publishDecision": {
+        "title": "Απόφαση Δημοσίευσης",
+        "description": "Τελική έγκριση πριν αυτή η καταχώρηση δημοσιευτεί.",
+        "readyMessage": "Αυτή η καταχώρηση είναι έτοιμη — η δημοσίευση θα την κάνει ορατή στην ομάδα σας.",
+        "notReadyMessage_one": "Μπορείτε να δημοσιεύσετε ούτως ή άλλως, αλλά {{count}} στοιχείο παραπάνω χρειάζεται προσοχή πρώτα.",
+        "notReadyMessage_other": "Μπορείτε να δημοσιεύσετε ούτως ή άλλως, αλλά {{count}} στοιχεία παραπάνω χρειάζονται προσοχή πρώτα.",
+        "createSubmit": "Δημιουργία {{entity}}"
+      },
+      "fields": {
+        "askingPrice": "Ζητούμενη τιμή",
+        "totalArea": "Συνολική επιφάνεια",
+        "region": "Περιφέρεια",
+        "district": "Δήμος",
+        "bedShort": "{{count}} υπν.",
+        "bathShort": "{{count}} μπάνιο",
+        "street": "Οδός",
+        "agent": "Μεσίτης",
+        "status": "Κατάσταση",
+        "ref": "Κωδ.",
+        "built": "Έτος κατασκευής",
+        "vat": "ΦΠΑ",
+        "investment": "Επένδυση",
+        "completion": "Πληρότητα",
+        "health": "Υγεία",
+        "propertyType": "Τύπος ακινήτου",
+        "category": "Κατηγορία",
+        "request": "Αίτημα",
+        "heating": "Θέρμανση",
+        "energyClass": "Ενεργειακή κλάση",
+        "balcony": "Μπαλκόνι",
+        "pool": "Πισίνα",
+        "garage": "Γκαράζ",
+        "featured": "Προτεινόμενο",
+        "photos": "Φωτογραφίες",
+        "description": "Περιγραφή",
+        "descriptionCompleted": "Συμπληρώθηκε",
+        "descriptionMissing": "Λείπει"
+      },
+      "confidence": {
+        "listingComplete": "Η καταχώρηση είναι πλήρης",
+        "readyForPublication": "Έτοιμο για δημοσίευση",
+        "validationPassed": "Η επικύρωση πέτυχε",
+        "buyerReady": "Έτοιμο για αγοραστές",
+        "searchReady": "Έτοιμο για αναζήτηση"
+      },
+      "metrics": {
+        "buyerReadiness": "Ετοιμότητα αγοραστή",
+        "searchVisibility": "Προβολή στην αναζήτηση"
+      },
+      "buyerReadinessLevels": {
+        "high": "Υψηλή",
+        "good": "Καλή",
+        "fair": "Μέτρια",
+        "low": "Χαμηλή"
+      },
+      "missingFields": {
+        "photos": "Φωτογραφίες",
+        "price": "Τιμή",
+        "location": "Τοποθεσία",
+        "specifications": "Προδιαγραφές",
+        "description": "Περιγραφή",
+        "agent": "Μεσίτης",
+        "propertyType": "Τύπος ακινήτου"
+      },
+      "health": {
+        "grade": {
+          "excellent": "Εξαιρετικό",
+          "good": "Καλό",
+          "fair": "Μέτριο",
+          "poor": "Ανεπαρκές"
+        },
+        "factors": {
+          "media": {
+            "label": "Φωτογραφίες",
+            "noteZero": "Δεν υπάρχουν φωτογραφίες — απαιτούνται για το ενδιαφέρον αγοραστών",
+            "noteFew_one": "{{count}} φωτογραφία — προσθέστε περισσότερες για μεγαλύτερη επίδραση",
+            "noteFew_other": "{{count}} φωτογραφίες — προσθέστε περισσότερες για μεγαλύτερη επίδραση"
+          },
+          "price": {
+            "label": "Ζητούμενη τιμή",
+            "note": "Απαιτείται τιμή για ερωτήσεις αγοραστών"
+          },
+          "specs": {
+            "label": "Προδιαγραφές",
+            "note": "Προσθέστε υπνοδωμάτια, μπάνια και εμβαδόν"
+          },
+          "description": {
+            "label": "Περιγραφή",
+            "noteEmpty": "Γράψτε μια περιγραφή ακινήτου",
+            "noteShort": "Η περιγραφή είναι πολύ σύντομη"
+          },
+          "agent": {
+            "label": "Ανάθεση μεσίτη",
+            "note": "Ορίστε έναν υπεύθυνο μεσίτη"
+          },
+          "location": {
+            "label": "Τοποθεσία",
+            "note": "Προσθέστε στοιχεία τοποθεσίας"
+          }
+        }
+      },
+      "demand": {
+        "typeSegment": "{{type}} — τμήμα υψηλής ζήτησης",
+        "pool": "Πισίνα — προσαύξηση αξίας",
+        "sea": "Πρόσβαση σε θάλασσα — σπάνιο απόθεμα",
+        "energy": "Ενεργειακή κλάση {{energyClass}} — χαμηλό κόστος λειτουργίας",
+        "newListing": "Νέο στην αγορά — περίοδος αυξημένης προβολής",
+        "featured": "Προτεινόμενη καταχώρηση — 3× ποσοστό ερωτήσεων",
+        "oldBuild": "Κατασκευή πριν το 1975 — πιθανή ανάγκη ανακαίνισης",
+        "level": {
+          "veryHigh": "Πολύ Υψηλή",
+          "high": "Υψηλή",
+          "medium": "Μέτρια",
+          "low": "Χαμηλή"
+        }
+      }
+    },
+    "page": {
+      "editTitle": "Επεξεργασία Καταχώρησης Ακινήτου",
+      "createTitle": "Νέα Καταχώρηση Ακινήτου",
+      "editSubtitle": "Ενημερώστε τα στοιχεία καταχώρησης, την τοποθεσία και τα πολυμέσα για αυτό το ακίνητο.",
+      "createSubtitle": "Ορίστε τη βασική ταυτότητα, τοποθεσία και πολυμέσα για αυτό το ακίνητο.",
+      "entityLabel": "Ακίνητο",
+      "saveChanges": "Αποθήκευση Αλλαγών",
+      "breadcrumbProperties": "Ακίνητα",
+      "breadcrumbEdit": "Επεξεργασία",
+      "breadcrumbNewProperty": "Νέο Ακίνητο",
+      "estTime_one": "{{count}} λεπτό",
+      "estTime_other": "{{count}} λεπτά",
+      "propertyUpdated": "Το ακίνητο ενημερώθηκε",
+      "propertyCreated": "Το ακίνητο δημιουργήθηκε",
+      "backToProperties": "Επιστροφή στα ακίνητα",
+      "draftSaved": "Το προσχέδιο αποθηκεύτηκε",
+      "stepValidationErrors_one": "{{count}} πεδίο σε αυτό το βήμα χρειάζεται προσοχή",
+      "stepValidationErrors_other": "{{count}} πεδία σε αυτό το βήμα χρειάζονται προσοχή",
+      "draftDiscarded": "Το προσχέδιο απορρίφθηκε",
+      "steps": {
+        "identity": {
+          "title": "Ταυτότητα & Διαχείριση",
+          "description": "Ταξινομήστε την καταχώρηση, μετά ορίστε ιδιοκτησία και κατάσταση κύκλου ζωής."
+        },
+        "location": {
+          "title": "Τοποθεσία & Πολεοδομία",
+          "description": "Πού βρίσκεται το ακίνητο, από την ευρύτερη περιοχή έως τη στενότερη περιφέρεια, συν πολεοδομικές σημειώσεις."
+        },
+        "financial": {
+          "title": "Τιμολόγηση & Όροι",
+          "displayTitle": "Τιμολόγηση & Οικονομικοί Όροι",
+          "description": "Ζητούμενη τιμή, και τυχόν όροι επένδυσης ή κοινοχρήστων."
+        },
+        "sizeRoomsStructure": {
+          "title": "Μέγεθος, Δωμάτια & Δομή",
+          "description": "Πόσο μεγάλο, πόσα δωμάτια, και πού μέσα στο κτίριο."
+        },
+        "constructionSystems": {
+          "title": "Κατασκευή & Συστήματα",
+          "description": "Κατάσταση, ενεργειακή κλάση, θέρμανση και φινιρίσματα."
+        },
+        "features": {
+          "title": "Εξωτερικός Χώρος, Κτίριο & Παροχές",
+          "description": "Τι υπάρχει γύρω του, και τι άλλο προσφέρει;"
+        },
+        "media": {
+          "title": "Προβολή & Πολυμέσα",
+          "description": "Ετικέτες, κείμενο καταχώρησης, banner και φωτογραφίες - το τελευταίο βήμα πριν την Επισκόπηση."
+        },
+        "review": {
+          "title": "Επισκόπηση",
+          "displayTitleEdit": "Επισκόπηση & Αποθήκευση",
+          "displayTitleCreate": "Επισκόπηση & Δημοσίευση",
+          "description": "Ελέγξτε την πληρότητα και την ποιότητα της καταχώρησης πριν την αποθήκευση."
+        }
+      }
+    },
+    "locationMap": {
+      "title": "Διεύθυνση & Χάρτης",
+      "description": "Προεπισκοπήστε την τοποθεσία του ακινήτου καθώς συμπληρώνετε τα παραπάνω πεδία, ή αναζητήστε μια διεύθυνση απευθείας.",
+      "locating": "Εντοπισμός στον χάρτη…",
+      "emptyState": "Αναζητήστε μια διεύθυνση παραπάνω, ή επιλέξτε περιφέρεια, υποπεριφέρεια ή περιοχή, για προεπισκόπηση της τοποθεσίας."
+    }
+  },
+  "statuses": {
+    "underApproval": "Υπό Έγκριση",
+    "active": "Ενεργό",
+    "inactive": "Ανενεργό",
+    "notApproved": "Μη Εγκεκριμένο",
+    "underNegotiation": "Υπό Διαπραγμάτευση",
+    "receivedPayment": "Έγινε Πληρωμή",
+    "rented": "Μισθωμένο",
+    "sold": "Πωλήθηκε"
+  },
+  "statusesCompact": {
+    "underApproval": "Υπό Έγκριση",
+    "active": "Ενεργό",
+    "inactive": "Ανενεργό",
+    "notApproved": "Μη Εγκεκρ.",
+    "underNegotiation": "Διαπραγμ.",
+    "receivedPayment": "Πληρώθηκε",
+    "rented": "Μισθωμένο",
+    "sold": "Πωλήθηκε"
+  },
+  "types": {
+    "apartment": "Διαμέρισμα",
+    "house": "Κατοικία",
+    "detached": "Μονοκατοικία",
+    "villa": "Βίλα",
+    "maisonette": "Μεζονέτα",
+    "townhouse": "Συγκρότημα Κατοικιών",
+    "studio": "Στούντιο",
+    "office": "Γραφείο",
+    "store": "Κατάστημα",
+    "warehouse": "Αποθήκη",
+    "land": "Γη",
+    "plot": "Οικόπεδο",
+    "parcel": "Αγροτεμάχιο",
+    "island": "Νησί",
+    "otherLand": "Άλλη Γη",
+    "compact": {
+      "townhouse": "Συγκρότημα"
+    }
+  },
+  "list": {
+    "title": "Ακίνητα",
+    "addProperty": "Προσθήκη Ακινήτου",
+    "savedCollectionSubtitle": "Η συλλογή αποθηκευμένων ακινήτων σας",
+    "activeFiltersSubtitle_one": "{{count}} ενεργό φίλτρο",
+    "activeFiltersSubtitle_other": "{{count}} ενεργά φίλτρα",
+    "manageSubtitle": "Διαχειριστείτε και παρακολουθήστε το χαρτοφυλάκιο ακινήτων σας",
+    "searchPlaceholderShort": "Αναζήτηση ακινήτων…",
+    "searchPlaceholderFull": "Αναζήτηση με τίτλο, κωδικό αναφοράς ή τοποθεσία…",
+    "searchAriaLabel": "Αναζήτηση ακινήτων",
+    "clearSearch": "Καθαρισμός αναζήτησης",
+    "recentSearches": "Πρόσφατες Αναζητήσεις",
+    "clear": "Καθαρισμός",
+    "closeFilters": "Κλείσιμο φίλτρων",
+    "filters": "Φίλτρα",
+    "sortBy": "Ταξινόμηση Κατά",
+    "sort": "Ταξινόμηση",
+    "sortPrefix": "Ταξινόμηση:",
+    "sortOptions": {
+      "newestFull": "Νεότερα Πρώτα",
+      "oldestFull": "Παλαιότερα Πρώτα",
+      "priceHighFull": "Τιμή: Υψηλή–Χαμηλή",
+      "priceLowFull": "Τιμή: Χαμηλή–Υψηλή",
+      "newest": "Νεότερα",
+      "oldest": "Παλαιότερα",
+      "priceHigh": "Τιμή ↑",
+      "priceLow": "Τιμή ↓"
+    },
+    "propertyType": "Τύπος Ακινήτου",
+    "allTypes": "Όλοι οι Τύποι",
+    "type": "Τύπος",
+    "searchTypePlaceholder": "Αναζήτηση τύπου…",
+    "noTypeFound": "Δεν βρέθηκε τύπος.",
+    "savedProperties": "Αποθηκευμένα Ακίνητα",
+    "showSavedOnly": "Εμφάνιση Μόνο Αποθηκευμένων",
+    "saved": "Αποθηκευμένα",
+    "showingSaved": "Εμφάνιση αποθηκευμένων ακινήτων",
+    "showSaved": "Εμφάνιση αποθηκευμένων ακινήτων",
+    "bedrooms": "Υπνοδωμάτια",
+    "bathrooms": "Μπάνια",
+    "beds": "Υπνοδωμάτια",
+    "baths": "Μπάνια",
+    "bedsSuffix": "{{count}}+ Υπνοδωμάτια",
+    "bathsSuffix": "{{count}}+ Μπάνια",
+    "priceRange": "Εύρος Τιμής",
+    "price": "Τιμή",
+    "minPrice": "Ελάχιστη Τιμή",
+    "maxPrice": "Μέγιστη Τιμή",
+    "noMin": "Χωρίς ελάχιστο",
+    "noMax": "Χωρίς μέγιστο",
+    "noLimit": "Χωρίς Όριο",
+    "apply": "Εφαρμογή",
+    "reset": "Επαναφορά",
+    "showNProperties_one": "Εμφάνιση {{count}} Ακινήτου",
+    "showNProperties_other": "Εμφάνιση {{count}} Ακινήτων",
+    "gridView": "Προβολή πλέγματος",
+    "listView": "Προβολή λίστας",
+    "viewMode": "Λειτουργία προβολής"
+  },
+  "emptyState": {
+    "error": {
+      "title": "Δεν ήταν δυνατή η φόρτωση των ακινήτων",
+      "description": "Παρουσιάστηκε πρόβλημα κατά την ανάκτηση των καταχωρήσεών σας. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.",
+      "retry": "Δοκιμάστε ξανά"
+    },
+    "saved": {
+      "title": "Δεν υπάρχουν ακόμα αποθηκευμένα ακίνητα",
+      "description": "Πατήστε την καρδιά σε οποιαδήποτε καταχώρηση για να την αποθηκεύσετε. Η συλλογή σας θα εμφανιστεί εδώ.",
+      "browseAll": "Περιήγηση σε όλα τα ακίνητα"
+    },
+    "search": {
+      "title": "Δεν βρέθηκαν αποτελέσματα για «{{query}}»",
+      "description": "Ελέγξτε την ορθογραφία ή δοκιμάστε έναν ευρύτερο όρο αναζήτησης — κωδικό αναφοράς, τοποθεσία ή τύπο ακινήτου.",
+      "clearSearch": "Καθαρισμός αναζήτησης",
+      "addProperty": "Προσθήκη ακινήτου"
+    },
+    "filtered": {
+      "title": "Δεν βρέθηκαν αντίστοιχα ακίνητα",
+      "description": "Κανένα ακίνητο δεν ταιριάζει με τα ενεργά φίλτρα σας. Δοκιμάστε να προσαρμόσετε τα κριτήρια σας ή καθαρίστε όλα τα φίλτρα για να δείτε τα πάντα.",
+      "clearFilters": "Καθαρισμός όλων των φίλτρων",
+      "addProperty": "Προσθήκη ακινήτου"
+    },
+    "blank": {
+      "title": "Δεν υπάρχουν ακόμα ακίνητα",
+      "description": "Το χαρτοφυλάκιό σας είναι άδειο. Προσθέστε την πρώτη σας καταχώρηση για να ξεκινήσετε τη διαχείριση ακινήτων και την παρακολούθηση της ροής εργασιών σας.",
+      "addFirstProperty": "Προσθέστε το πρώτο σας ακίνητο"
+    }
+  },
+  "card": {
+    "removeFromFavourites": "Αφαίρεση από τα αγαπημένα",
+    "addToFavourites": "Προσθήκη στα αγαπημένα",
+    "viewPropertyDetails": "Προβολή στοιχείων ακινήτου",
+    "editProperty": "Επεξεργασία ακινήτου",
+    "deleteProperty": "Διαγραφή ακινήτου",
+    "viewProperty": "Προβολή Ακινήτου",
+    "priceOnRequest": "Τιμή κατόπιν αιτήματος",
+    "beds": "Υπν.",
+    "baths": "Μπ."
+  },
+  "indicators": {
+    "featured": "Προτεινόμενο",
+    "verified": "Επιβεβαιωμένο",
+    "premium": "Premium",
+    "new": "Νέο"
+  },
+  "pagination": {
+    "pagination": "Σελιδοποίηση",
+    "previous": "Προηγ.",
+    "previousPage": "Προηγούμενη σελίδα",
+    "next": "Επόμ.",
+    "nextPage": "Επόμενη σελίδα",
+    "page": "Σελίδα {{page}}",
+    "showing": "Εμφάνιση",
+    "of": "από",
+    "property_one": "ακίνητο",
+    "property_other": "ακίνητα",
+    "perPage": "{{count}} / σελίδα",
+    "perPageOption": "{{count}} ανά σελίδα"
+  },
+  "grid": {
+    "unableToLoad": "Δεν ήταν δυνατή η φόρτωση των ακινήτων.",
+    "unableToLoadSaved": "Δεν ήταν δυνατή η φόρτωση των αποθηκευμένων ακινήτων.",
+    "savedError": "Το φίλτρο αποθηκευμένων ακινήτων δεν ολοκληρώθηκε. Ελέγξτε την κονσόλα του browser για τη διάρκεια και την κατάσταση HTTP του αιτήματος.",
+    "genericError": "Παρουσιάστηκε σφάλμα κατά την ανάκτηση ακινήτων. Δοκιμάστε ξανά.",
+    "retry": "Επανάληψη"
+  },
+  "listPage": {
+    "savedPropertiesHeading": "Αποθηκευμένα Ακίνητα",
+    "noSavedYet": "Δεν έχουν αποθηκευτεί ακίνητα ακόμα",
+    "collectionCount_one": "{{count}} ακίνητο στη συλλογή σας",
+    "collectionCount_other": "{{count}} ακίνητα στη συλλογή σας",
+    "browseAll": "Περιήγηση σε όλα →",
+    "resultsFor": "Αποτελέσματα για",
+    "filteredResults": "Φιλτραρισμένα αποτελέσματα",
+    "property_one": "ακίνητο",
+    "property_other": "ακίνητα"
+  },
+  "map": {
+    "close": "Κλείσιμο",
+    "propertyLocationFallback": "Τοποθεσία Ακινήτου",
+    "locationDetailsFallback": "Ακίνητο",
+    "locationDetailsAriaLabel": "Στοιχεία τοποθεσίας {{name}}",
+    "copyAddress": "Αντιγραφή διεύθυνσης",
+    "copyCoordinates": "Αντιγραφή συντεταγμένων",
+    "copied": "Αντιγράφηκε",
+    "shareLocation": "Κοινοποίηση τοποθεσίας",
+    "locationLinkCopied": "Ο σύνδεσμος τοποθεσίας αντιγράφηκε",
+    "getDirections": "Λήψη οδηγιών",
+    "locateOnMap": "Εντοπισμός στον χάρτη",
+    "approximateLocation": "Κατά προσέγγιση τοποθεσία",
+    "exactLocation": "Ακριβής τοποθεσία",
+    "approximateTooltipWithType": "Εκτιμάται από το όνομα τοποθεσίας του ακινήτου, όχι από τις δικές του αποθηκευμένες συντεταγμένες — με ακρίβεια περίπου 350 μέτρων ({{geocodeType}}).",
+    "approximateTooltipPlain": "Εκτιμάται από το όνομα τοποθεσίας του ακινήτου, όχι από τις δικές του αποθηκευμένες συντεταγμένες — με ακρίβεια περίπου 350 μέτρων.",
+    "exactTooltip": "Οι δικές του αποθηκευμένες ακριβείς συντεταγμένες του ακινήτου — όχι εκτίμηση.",
+    "updated": "Ενημερώθηκε {{date}}",
+    "openInGoogleMaps": "Άνοιγμα στους Χάρτες Google",
+    "openLocationInGoogleMaps": "Άνοιγμα τοποθεσίας στους Χάρτες Google",
+    "viewMapFullscreen": "Προβολή χάρτη σε πλήρη οθόνη",
+    "fullscreen": "Πλήρης οθόνη",
+    "recenterOnProperty": "Επανακεντράρισμα στο ακίνητο",
+    "mapStyleUnavailable": "Το στυλ χάρτη δεν είναι διαθέσιμο",
+    "noApiKey": "Δεν έχει διαμορφωθεί κλειδί API MapTiler για αυτό το περιβάλλον.",
+    "styleServiceUnreachable": "Δεν ήταν δυνατή η πρόσβαση στην υπηρεσία στυλ MapTiler — ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.",
+    "viewPropertyLocation": "Προβολή τοποθεσίας ακινήτου",
+    "viewPropertyLocationNamed": "{{title}} — προβολή τοποθεσίας ακινήτου"
+  },
+  "locationCard": {
+    "areaLabel": "Περιοχή",
+    "districtLabel": "Δήμος",
+    "regionLabel": "Περιφέρεια",
+    "cityLabel": "Πόλη",
+    "countryLabel": "Χώρα",
+    "coordinatesLabel": "Συντεταγμένες",
+    "greeceFallback": "Ελλάδα",
+    "locationIntelligenceEyebrow": "Ευφυΐα Τοποθεσίας",
+    "locationDetailsOnRequest": "Στοιχεία τοποθεσίας διαθέσιμα κατόπιν αιτήματος",
+    "copyCoordinates": "Αντιγραφή Συντεταγμένων",
+    "copied": "Αντιγράφηκε!"
+  },
+  "nearbyPlaces": {
+    "title": "Κοντινά Σημεία",
+    "loadError": "Δεν ήταν δυνατή η φόρτωση κοντινών σημείων αυτή τη στιγμή.",
+    "noneFound": "Δεν βρέθηκαν κοντινά σημεία εντός 2 χλμ",
+    "categories": {
+      "school": "Σχολεία",
+      "hospital": "Υγειονομική Περίθαλψη",
+      "shopping": "Αγορές",
+      "restaurant": "Καφέ & Εστίαση",
+      "metro": "Σταθμοί Μετρό"
+    }
+  },
+  "addressSearch": {
+    "placeholder": "Αναζήτηση διεύθυνσης…",
+    "searching": "Αναζήτηση…",
+    "typeMoreChars": "Πληκτρολογήστε τουλάχιστον 3 χαρακτήρες…",
+    "noResults": "Δεν βρέθηκαν αποτελέσματα."
+  },
+  "gallery": {
+    "propertyFallback": "Ακίνητο",
+    "propertyGalleryFallback": "Γκαλερί ακινήτου",
+    "previousImage": "Προηγούμενη εικόνα",
+    "nextImage": "Επόμενη εικόνα",
+    "viewFullScreen": "Προβολή σε πλήρη οθόνη",
+    "viewImageN": "Προβολή εικόνας {{index}}",
+    "viewAllPhotos": "Προβολή όλων των φωτογραφιών",
+    "photoCount_one": "{{count}} Φωτογραφία",
+    "photoCount_other": "{{count}} Φωτογραφίες"
+  },
+  "placeholders": {
+    "noPhotoAvailable": "Δεν υπάρχει διαθέσιμη φωτογραφία",
+    "listingQuality": "Ποιότητα Καταχώρησης",
+    "missing": "Λείπουν:",
+    "levels": {
+      "minimal": "Ελλιπές",
+      "partial": "Μερικό",
+      "complete": "Πλήρες",
+      "showcase": "Προθήκη"
+    }
+  },
+  "validation": {
+    "referenceCodeTaken": "Αυτός ο κωδικός αναφοράς χρησιμοποιείται ήδη.",
+    "typeNotValidForCategory": "Ο επιλεγμένος τύπος δεν είναι έγκυρος για την επιλεγμένη κατηγορία",
+    "statusChangeNotAllowed": "Αυτή η αλλαγή κατάστασης δεν επιτρέπεται.",
+    "agentRequiredForActive": "Μια ενεργή καταχώρηση πρέπει να έχει έναν καθορισμένο μεσίτη.",
+    "cityInvalidChars": "Η πόλη περιέχει μη έγκυρους χαρακτήρες",
+    "stateInvalidChars": "Η Πολιτεία / Νομός περιέχει μη έγκυρους χαρακτήρες",
+    "countryInvalidChars": "Η χώρα περιέχει μη έγκυρους χαρακτήρες",
+    "energyClassRequired": "Η Ενεργειακή Κλάση είναι υποχρεωτική",
+    "heatingTypeRequired": "Ο τύπος θέρμανσης είναι υποχρεωτικός",
+    "floorKeyRequired": "Το Κλειδί Ορόφου είναι υποχρεωτικό",
+    "yearBuiltRequired": "Το Έτος Κατασκευής είναι υποχρεωτικό"
+  }
+}

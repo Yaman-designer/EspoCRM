@@ -16,9 +16,13 @@ import { createRoot, type Root } from 'react-dom/client'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import {
-  Copy, Navigation, Share2, LocateFixed, ExternalLink, Check, Maximize2, X, HelpCircle,
+  Copy, Navigation, Share2, LocateFixed, ExternalLink, Check, Maximize2, X, HelpCircle, WifiOff,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n/config'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
+import { getPropertyTypeLabel } from '../domain/property-type.registry'
+import { getStatusLabel } from './PropertyStatusBadge'
 import { buildGoogleMapsUrl, buildGoogleDirectionsUrl } from '../services/geocoding.service'
 import type { NearbyPlace } from '../services/geocoding.service'
 
@@ -54,9 +58,13 @@ function applyPremiumOverrides(map: maplibregl.Map) {
   setPaint('Water shadow', 'fill-color', 'hsl(205, 16%, 82%)')
   setPaint('River', 'line-color', 'hsl(208, 18%, 84%)')
 
-  // Buildings — extremely subtle
-  setPaint('Building', 'fill-opacity', 0.55)
-  setPaint('Building top', 'fill-opacity', 0.4)
+  // Buildings — Product Polish pass (2026-07-20): nudged up from 0.55/0.4.
+  // The original values read as flat/empty at rest, per the brief's own
+  // "should not feel empty... improve depth through building visibility."
+  // Still the same real MapTiler layer, same subtle intent — just enough
+  // presence that the built environment reads as a place, not a void.
+  setPaint('Building', 'fill-opacity', 0.65)
+  setPaint('Building top', 'fill-opacity', 0.5)
 
   // Parks / forest — muted, desaturated green (was near-invisible neutral gray)
   setPaint('Forest', 'fill-color', 'hsla(140, 14%, 85%, 0.55)')
@@ -110,7 +118,9 @@ function createMarkerElement(title: string | undefined): HTMLElement {
   wrap.className = 'property-map-marker'
   wrap.setAttribute('role', 'button')
   wrap.setAttribute('tabindex', '0')
-  wrap.setAttribute('aria-label', title ? `${title} — view property location` : 'View property location')
+  wrap.setAttribute('aria-label', title
+    ? i18n.t('properties:map.viewPropertyLocationNamed', { title })
+    : i18n.t('properties:map.viewPropertyLocation'))
 
   const pin = document.createElement('div')
   pin.className = 'property-marker-pin'
@@ -162,6 +172,7 @@ function PopupCard({
   onClose:        () => void
   onCenter:       () => void
 }) {
+  const { t } = useTranslation('properties')
   const { copied, copy } = useCopyToClipboard()
   const [shared, setShared] = useState(false)
 
@@ -180,7 +191,7 @@ function PopupCard({
     const shareUrl = mapsUrl ?? `https://www.google.com/maps?q=${latitude},${longitude}`
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: title || 'Property Location', url: shareUrl })
+        await navigator.share({ title: title || t('map.propertyLocationFallback'), url: shareUrl })
       } catch { /* user cancelled — no-op */ }
       return
     }
@@ -199,39 +210,43 @@ function PopupCard({
     ? new Date(lastUpdated).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     : null
 
-  const divider = <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F0F2F4' }} />
+  const divider = <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #F0F2F4' }} />
 
   return (
-    <div role="dialog" aria-label={`${title || 'Property'} location details`} style={{ minWidth: 268, padding: '4px 2px', fontFamily: 'var(--font-sans, system-ui)' }}>
+    <div role="dialog" aria-label={t('map.locationDetailsAriaLabel', { name: title || t('map.locationDetailsFallback') })} style={{ position: 'relative', width: 'min(280px, calc(100vw - 72px))', fontFamily: 'var(--font-sans, system-ui)' }}>
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close"
+        aria-label={t('map.close')}
         style={{
-          position: 'absolute', top: 4, right: 2,
+          position: 'absolute', top: -2, right: -4,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 22, height: 22, border: 'none', borderRadius: 6,
+          width: 24, height: 24, border: 'none', borderRadius: 7,
           background: 'transparent', color: '#98A2B3', cursor: 'pointer',
         }}
       >
         <X size={14} />
       </button>
 
-      <div style={{ paddingRight: 22 }}>
+      <div style={{ paddingRight: 24 }}>
         {title && (
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#101828', lineHeight: 1.3 }}>
+          // Product Polish pass: 800 rather than 700 — this is the card's
+          // one "identity" headline, the same role Command Hub's agent
+          // name and Financial's KPI values play elsewhere at font-black;
+          // it was reading one step lighter than that established convention.
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#101828', lineHeight: 1.3, letterSpacing: '-0.01em' }}>
             {title}
             {propertyCode && <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 600, color: '#98A2B3' }}>#{propertyCode}</span>}
           </p>
         )}
         {(propertyType || status) && (
-          <p style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '4px 0 0', fontSize: 11.5, fontWeight: 600, color: '#475467' }}>
-            {propertyType && <span style={{ textTransform: 'capitalize' }}>{propertyType}</span>}
+          <p style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '5px 0 0', fontSize: 11.5, fontWeight: 600, color: '#475467' }}>
+            {propertyType && <span style={{ textTransform: 'capitalize' }}>{getPropertyTypeLabel(propertyType, t)}</span>}
             {propertyType && status && <span style={{ color: '#D0D5DD' }}>·</span>}
             {status && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: status === 'Active' ? '#12B76A' : '#98A2B3' }} />
-                {status}
+                {getStatusLabel(status, t)}
               </span>
             )}
           </p>
@@ -250,18 +265,25 @@ function PopupCard({
         </p>
       </div>
 
-      <div>
+      {/* Approximate/Exact + Updated metadata — collapsed below `lg`, where
+          the map itself is short (mobile/tablet: h-95, vs. h-150 at lg+).
+          Real content, not removed: it's just secondary relative to the
+          property/address/coordinates/action content above and below, so
+          it's the first to go when there isn't room for everything without
+          the popup clipping against the map card's rounded-corner
+          overflow-hidden. */}
+      <div className="hidden lg:block">
         {divider}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, fontSize: 10.5, color: '#98A2B3' }}>
           <span title={isApproximate
-            ? `Estimated from the property's location name, not its own stored coordinates — accurate to roughly a 350m radius${geocodeType ? ` (${geocodeType})` : ''}.`
-            : "The property's own stored exact coordinates — not estimated."}
+            ? (geocodeType ? t('map.approximateTooltipWithType', { geocodeType }) : t('map.approximateTooltipPlain'))
+            : t('map.exactTooltip')}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'default', fontWeight: 600 }}
           >
-            {isApproximate ? 'Approximate location' : 'Exact location'}
+            {isApproximate ? t('map.approximateLocation') : t('map.exactLocation')}
             <HelpCircle size={10} style={{ opacity: 0.6 }} />
           </span>
-          {lastUpdatedLabel && <span>Updated {lastUpdatedLabel}</span>}
+          {lastUpdatedLabel && <span>{t('map.updated', { date: lastUpdatedLabel })}</span>}
         </div>
       </div>
 
@@ -270,24 +292,28 @@ function PopupCard({
           {divider}
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="property-popup-primary-btn" style={{ marginTop: 0 }}>
             <ExternalLink size={13} />
-            Open in Google Maps
+            {t('map.openInGoogleMaps')}
           </a>
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-        <button type="button" aria-label={copied ? 'Copied' : addressText ? 'Copy address' : 'Copy coordinates'} data-done={copied} className="property-popup-icon-btn" onClick={handleCopy}>
+      {/* Secondary quick actions — same reasoning as the metadata row
+          above: Copy/Share/Directions/Locate are conveniences, not the
+          primary action (Open in Google Maps, always shown). Collapsed
+          below `lg` for the same short-map-height reason. */}
+      <div className="hidden lg:flex lg:justify-between" style={{ marginTop: 10 }}>
+        <button type="button" aria-label={copied ? t('map.copied') : addressText ? t('map.copyAddress') : t('map.copyCoordinates')} data-done={copied} className="property-popup-icon-btn" onClick={handleCopy}>
           {copied ? <Check size={14} /> : <Copy size={14} />}
         </button>
-        <button type="button" aria-label={shared ? 'Location link copied' : 'Share location'} data-done={shared} className="property-popup-icon-btn" onClick={handleShare}>
+        <button type="button" aria-label={shared ? t('map.locationLinkCopied') : t('map.shareLocation')} data-done={shared} className="property-popup-icon-btn" onClick={handleShare}>
           {shared ? <Check size={14} /> : <Share2 size={14} />}
         </button>
         {directionsUrl && (
-          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" aria-label="Get directions" className="property-popup-icon-btn">
+          <a href={directionsUrl} target="_blank" rel="noopener noreferrer" aria-label={t('map.getDirections')} className="property-popup-icon-btn">
             <Navigation size={14} />
           </a>
         )}
-        <button type="button" aria-label="Locate on map" className="property-popup-icon-btn" onClick={onCenter}>
+        <button type="button" aria-label={t('map.locateOnMap')} className="property-popup-icon-btn" onClick={onCenter}>
           <LocateFixed size={14} />
         </button>
       </div>
@@ -320,6 +346,7 @@ const RADIUS_FILL_ID   = 'search-radius-fill'
 const RADIUS_LINE_ID   = 'search-radius-line'
 
 export function PropertyMapLibre(props: PropertyMapLibreProps) {
+  const { t } = useTranslation('properties')
   const { latitude, longitude, title, onFullscreenClick, nearbyPlaces, searchRadiusM } = props
 
   const containerRef  = useRef<HTMLDivElement>(null)
@@ -351,6 +378,13 @@ export function PropertyMapLibre(props: PropertyMapLibreProps) {
     const container = document.createElement('div')
     const p = propsRef.current
 
+    // The map card clips to its rounded corners (overflow-hidden), so a
+    // popup opening from a marker sitting near an edge can get clipped by
+    // that ancestor rather than just running out of its own room.
+    // Centering the marker first guarantees the maximum possible space in
+    // every direction before the popup ever measures itself against it.
+    map.easeTo({ center: [p.longitude, p.latitude], duration: 200 })
+
     const popup = new maplibregl.Popup({ closeButton: false, maxWidth: '300px', offset: 28, className: 'property-popup' })
       .setLngLat([p.longitude, p.latitude])
       .setDOMContent(container)
@@ -377,7 +411,15 @@ export function PropertyMapLibre(props: PropertyMapLibreProps) {
       />,
     )
 
+    // Product Polish pass (2026-07-20) — .property-marker-active already
+    // existed in globals.css (deeper shadow, larger scale) but nothing
+    // ever applied it, so selecting the marker gave no lasting visual
+    // acknowledgment beyond the popup itself. Wired up here, the marker's
+    // one real selection cue.
+    markerRef.current?.getElement().classList.add('property-marker-active')
+
     popup.on('close', () => {
+      markerRef.current?.getElement().classList.remove('property-marker-active')
       // Deferred so React never unmounts mid-render (Popup fires 'close'
       // synchronously from within the same click handler that could still
       // be bubbling through this exact DOM subtree).
@@ -394,6 +436,7 @@ export function PropertyMapLibre(props: PropertyMapLibreProps) {
     }
 
     let cancelled = false
+    let resizeObserver: ResizeObserver | undefined
 
     async function init() {
       // Try Dataviz Light first, then the documented fallbacks, in case a
@@ -422,6 +465,21 @@ export function PropertyMapLibre(props: PropertyMapLibreProps) {
         touchPitch: false,
       })
       mapRef.current = map
+
+      // UX Architecture pass (2026-07-20) — real bug found via responsive
+      // verification: the marker consistently rendered pinned to the map
+      // card's top-left corner instead of at its constructed `center`,
+      // which made popups clip against the card's rounded-corner
+      // overflow-hidden on short viewports. Root cause: this card sits in
+      // a CSS grid whose column width isn't necessarily final at the exact
+      // moment `new maplibregl.Map()` measures its container — MapLibre
+      // caches that first measurement and never re-checks it on its own.
+      // An immediate resize() corrects that initial mismeasurement;
+      // ResizeObserver keeps it correct for the rest of the component's
+      // life (sidebar toggle, orientation change, fullscreen dialog open).
+      map.resize()
+      resizeObserver = new ResizeObserver(() => map.resize())
+      resizeObserver.observe(containerRef.current!)
 
       map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right')
       map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
@@ -458,6 +516,7 @@ export function PropertyMapLibre(props: PropertyMapLibreProps) {
 
     return () => {
       cancelled = true
+      resizeObserver?.disconnect()
       popupRef.current?.remove()
       markerRef.current?.remove()
       poiMarkersRef.current.forEach(m => m.remove())
@@ -477,7 +536,11 @@ export function PropertyMapLibre(props: PropertyMapLibreProps) {
     if (!map || !styleReady) return
 
     const el = createMarkerElement(title)
-    el.addEventListener('click', openPopup)
+    // stopPropagation: without it, this click bubbles to the map's own
+    // click handling, which — since the popup below is created with the
+    // default closeOnClick:true — immediately closes the popup this same
+    // click just opened.
+    el.addEventListener('click', e => { e.stopPropagation(); openPopup() })
     el.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPopup() }
     })
@@ -560,46 +623,52 @@ export function PropertyMapLibre(props: PropertyMapLibreProps) {
     }
   }, [nearbyPlaces, styleReady])
 
-  const mapsUrl = buildGoogleMapsUrl({ latitude, longitude })
-
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" style={{ background: '#f6f5f1' }} />
 
+      {/* Product Polish pass (2026-07-20): same chip + type scale as
+          LocationIntelligenceCenter's MapUnavailableState — the two states
+          occupy the identical visual slot under sibling "map can't render"
+          conditions and should read as one family. WifiOff rather than the
+          other state's MapPinOff: this one is a network/key failure, not a
+          missing-location one — same treatment, honest about the
+          different cause. */}
       {(styleFailed || noKey) && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#f6f5f1] text-center px-6">
-          <p className="text-[11px] font-bold text-muted-foreground/60">Map style unavailable</p>
-          <p className="text-[10.5px] text-muted-foreground/45 max-w-64">
-            {noKey
-              ? 'No MapTiler API key is configured for this environment.'
-              : "Couldn't reach the MapTiler style service — check your connection and try again."}
-          </p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#f6f5f1] text-center px-6">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-muted/50">
+            <WifiOff className="size-4.5 text-muted-foreground/40" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[11px] font-bold text-muted-foreground/60">{t('map.mapStyleUnavailable')}</p>
+            <p className="text-[10.5px] text-muted-foreground/45 max-w-64 leading-relaxed">
+              {noKey ? t('map.noApiKey') : t('map.styleServiceUnreachable')}
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Custom control cluster — recenter + fullscreen + open in Google
-          Maps, matching the same visual language as the Leaflet map's
-          equivalent controls (globals.css: .property-map-control-btn). */}
+      {/* Control cluster — Locate + Fullscreen only. UX Architecture pass
+          (2026-07-20): "Open in Google Maps" removed from here — it's
+          redundant with the same action already offered as the popup's
+          primary CTA, one click away via the always-visible marker.
+          Zoom is MapLibre's own NavigationControl (bottom-right); together
+          these three are the full, non-duplicated control set. */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
         {onFullscreenClick && (
-          <button type="button" onClick={onFullscreenClick} aria-label="View map fullscreen" title="Fullscreen" className="property-map-control-btn">
+          <button type="button" onClick={onFullscreenClick} aria-label={t('map.viewMapFullscreen')} title={t('map.fullscreen')} className="property-map-control-btn">
             <Maximize2 size={16} />
           </button>
         )}
         <button
           type="button"
           onClick={() => mapRef.current?.flyTo({ center: [longitude, latitude], zoom: 15, duration: 600 })}
-          aria-label="Recenter map on property"
-          title="Recenter on property"
+          aria-label={t('map.recenterOnProperty')}
+          title={t('map.recenterOnProperty')}
           className="property-map-control-btn"
         >
           <LocateFixed size={16} />
         </button>
-        {mapsUrl && (
-          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" aria-label="Open location in Google Maps" title="Open in Google Maps" className="property-map-control-btn">
-            <ExternalLink size={16} />
-          </a>
-        )}
       </div>
     </div>
   )

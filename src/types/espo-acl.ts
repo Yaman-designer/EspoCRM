@@ -18,10 +18,13 @@ export type EspoAclData = Record<string, EspoAclScope>
 
 /**
  * Conservative check: only treat an action as denied when EspoCRM explicitly
- * says so ('no' or false). 'own'/'team'/'all' (or an unrecognized value) are
- * treated as allowed at the UI-affordance level — this is a UX nicety, not a
- * security boundary; EspoCRM itself still enforces the real 403 server-side
- * regardless of what this returns.
+ * says so ('no', false, or the scope being absent from acl.data entirely —
+ * confirmed via scripts/investigate-403.mjs that a missing entry means the
+ * role has no ACL for that scope and the server denies with
+ * "No delete access."). 'own'/'team'/'all' are treated as allowed at the
+ * UI-affordance level — this is a UX nicety, not a security boundary;
+ * EspoCRM itself still enforces the real 403 server-side regardless of what
+ * this returns.
  */
 export function isAclActionDenied(
   acl: EspoAclData | undefined,
@@ -29,5 +32,5 @@ export function isAclActionDenied(
   action: keyof EspoAclScope,
 ): boolean {
   const value = acl?.[entityType]?.[action]
-  return value === 'no' || value === false
+  return value === undefined || value === 'no' || value === false
 }

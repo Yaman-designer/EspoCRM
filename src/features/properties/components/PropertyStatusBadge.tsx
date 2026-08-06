@@ -1,7 +1,40 @@
 'use client'
 
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { STATUS_DOT_COLORS, STATUS_DOT_FALLBACK } from '../domain/constants'
+import { createLabelResolver } from '../domain/label-resolution'
+
+// Status → i18n key. Presentation only — the underlying `status` value
+// stored/sent to EspoCRM is never touched; only what's rendered changes per
+// active locale. Any value not in this map (future statuses added in
+// EspoCRM before this map is updated) falls back to the raw value.
+const STATUS_LABEL_KEY: Record<string, string> = {
+  'Under Approval':   'underApproval',
+  Active:              'active',
+  Inactive:            'inactive',
+  'Not Approved':      'notApproved',
+  'Under negotiation': 'underNegotiation',
+  'Received payment':  'receivedPayment',
+  Rented:               'rented',
+  Sold:                 'sold',
+}
+
+/**
+ * Single public entry point for displaying a raw property `status` value —
+ * translates via properties.json's `statuses.*` keys (or `statusesCompact.*`
+ * when `{ compact: true }`), falling back to the raw value for anything
+ * unmapped. Used both by PropertyStatusBadge itself and by the handful of
+ * call sites that render `status` as plain text alongside the badge
+ * component rather than through it (map popups, hero section). Callers never
+ * need to know which namespace backs the result.
+ */
+export const getStatusLabel = createLabelResolver({
+  namespace: 'statuses',
+  compactNamespace: 'statusesCompact',
+  keyMap: STATUS_LABEL_KEY,
+  fallback: (value: string) => value,
+})
 
 // ── Color maps ────────────────────────────────────────────────────────────────
 // Wave 2 (2026-07-14): rebuilt for the real 8-value live status enum, per the
@@ -41,16 +74,24 @@ interface PropertyStatusBadgeProps {
   status: string
   className?: string
   variant?: 'default' | 'overlay'
+  /** Use short display labels (e.g. "Διαπραγμ." instead of "Υπό Διαπραγμάτευση")
+   *  for width-constrained placements like the property card image badge.
+   *  Presentation only — same `statusesCompact.*` i18n keys, full labels
+   *  stay the default everywhere else. */
+  compact?: boolean
 }
 
 export function PropertyStatusBadge({
   status,
   className,
   variant = 'default',
+  compact = false,
 }: PropertyStatusBadgeProps) {
-  const dot  = STATUS_DOT_COLORS[status] ?? STATUS_DOT_FALLBACK
-  const chip = CHIP[status]         ?? FALLBACK_CHIP
-  const tint = OVERLAY_TINT[status] ?? FALLBACK_OVERLAY_TINT
+  const { t } = useTranslation('properties')
+  const dot   = STATUS_DOT_COLORS[status] ?? STATUS_DOT_FALLBACK
+  const chip  = CHIP[status]         ?? FALLBACK_CHIP
+  const tint  = OVERLAY_TINT[status] ?? FALLBACK_OVERLAY_TINT
+  const label = getStatusLabel(status, t, { compact })
 
   if (variant === 'overlay') {
     return (
@@ -65,7 +106,7 @@ export function PropertyStatusBadge({
         )}
       >
         <span className={cn('size-1.5 shrink-0 rounded-full shadow-sm', dot)} />
-        {status}
+        {label}
       </span>
     )
   }
@@ -81,7 +122,7 @@ export function PropertyStatusBadge({
       )}
     >
       <span className={cn('size-1.5 shrink-0 rounded-full', dot)} />
-      {status}
+      {label}
     </span>
   )
 }

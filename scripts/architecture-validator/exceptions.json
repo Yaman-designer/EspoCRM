@@ -1,0 +1,33 @@
+{
+  "entityLeakage": [
+    {
+      "file": "src/features/properties/components/sections/LocationIntelligenceCenter.tsx",
+      "reason": "Owns async data fetching (usePropertyLocation/useNearbyPlaces geocoding + nearby-places queries) that must run before any ViewModel could exist — needs raw property fields to build those queries.",
+      "approvedBy": "Enterprise architecture pass, 2026-07-23",
+      "entity": "RealEstateProperty"
+    },
+    {
+      "file": "src/features/properties/components/sections/RelatedPropertiesSection.tsx",
+      "reason": "Owns its own useQuery for related listings (fetch-on-render, not container-provided) — same category of exception as LocationIntelligenceCenter.",
+      "approvedBy": "Enterprise architecture pass, 2026-07-23",
+      "entity": "RealEstateProperty"
+    }
+  ],
+  "serviceLayerAccess": [
+    {
+      "file": "src/features/properties/components/sections/LocationIntelligenceCenter.tsx",
+      "reason": "Same async-data-owner exception as its entityLeakage entry above — builds geocoding/nearby-places queries via services/geocoding.service.ts.",
+      "approvedBy": "Enterprise architecture pass, 2026-07-23"
+    },
+    {
+      "file": "src/features/properties/components/sections/NeighborhoodPanel.tsx",
+      "reason": "Renders formatDistance() output for the real nearby-place distances LocationIntelligenceCenter (its data-owning sibling) fetches — geocoding.service.ts mixes pure formatters with async fetch functions in one file, which this exception accepts rather than works around.",
+      "approvedBy": "Enterprise architecture pass, 2026-07-23"
+    },
+    {
+      "file": "src/features/properties/components/sections/RelatedPropertiesSection.tsx",
+      "reason": "Same async-data-owner exception as its entityLeakage entry above — queries repositories/property.repository.ts directly for related listings.",
+      "approvedBy": "Enterprise architecture pass, 2026-07-23"
+    }
+  ]
+}

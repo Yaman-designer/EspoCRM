@@ -108,9 +108,18 @@ export function createAutosavePlugin(
 
 export interface AnalyticsPluginOptions {
   onFormStart?: (config: { entityLabel?: string; totalSteps: number }) => void
-  onStepView?: (stepId: string, stepIndex: number, totalSteps: number) => void
+  /**
+   * `progressPercent` is the framework's one canonical progress value
+   * (see FormFrameworkContextValue.progressPercent) — pass it straight
+   * through to whatever tracking backend consumes this, rather than
+   * recomputing `stepIndex / totalSteps` again downstream. That
+   * recomputation is exactly the class of bug this field exists to rule
+   * out (see FormActionBar/FormStepper/FormPageHeader, which all now read
+   * the same context field instead of deriving their own).
+   */
+  onStepView?: (stepId: string, stepIndex: number, totalSteps: number, progressPercent: number) => void
   onFormComplete?: (entityLabel?: string) => void
-  onFormAbandon?: (lastStepIndex: number, totalSteps: number) => void
+  onFormAbandon?: (lastStepIndex: number, totalSteps: number, progressPercent: number) => void
 }
 
 export function createAnalyticsPlugin(
@@ -128,19 +137,20 @@ export function createAnalyticsPlugin(
         ctx.config.steps[0]?.id ?? '',
         0,
         ctx.totalSteps,
+        ctx.progressPercent,
       )
 
       return () => {
         /* On unmount without full completion → abandon */
         if (!ctx.completedSteps.has(ctx.totalSteps - 1)) {
-          options.onFormAbandon?.(ctx.currentStepIndex, ctx.totalSteps)
+          options.onFormAbandon?.(ctx.currentStepIndex, ctx.totalSteps, ctx.progressPercent)
         }
       }
     },
 
     onStepChange(ctx) {
       const stepId = ctx.config.steps[ctx.currentStepIndex]?.id ?? ''
-      options.onStepView?.(stepId, ctx.currentStepIndex, ctx.totalSteps)
+      options.onStepView?.(stepId, ctx.currentStepIndex, ctx.totalSteps, ctx.progressPercent)
     },
   }
 }

@@ -1,11 +1,11 @@
+'use client'
+
 import { Sparkles } from 'lucide-react'
-import type { PropertyNarrative } from '../../lib/property-narrative'
-import type { RealEstateProperty } from '../../types/property.types'
+import { useTranslation } from 'react-i18next'
+import type { BriefingViewModel } from '../../view-models/briefing.viewmodel'
 
 interface ExecutiveBriefingCardProps {
-  narrative:   PropertyNarrative
-  property:    Pick<RealEstateProperty, 'status' | 'type' | 'locationName' | 'regionLocationName' | 'requestType' | 'propertyCode'>
-  displayName: string
+  viewModel: BriefingViewModel
 }
 
 // IA Sprint 3 (2026-07-18). Status/Type/Code KPI strip and the Description
@@ -31,36 +31,20 @@ interface ExecutiveBriefingCardProps {
 // (the eyebrow), Insight (the lead clause, headline weight), Supporting
 // context (the rest, quieter) — instead of asking the eye to parse color
 // changes mid-sentence.
+//
+// Enterprise architecture pass (2026-07-23). Sentence-splitting and the
+// narrative-absent fallback template used to live in this component; both
+// moved to `buildBriefingViewModel` (view-models/briefing.viewmodel.ts).
 
-/**
- * Splits a one-or-two-sentence narrative into an "insight" line and an
- * optional "supporting context" line, breaking at the first sentence
- * boundary when one exists in a reasonable position, and at the nearest
- * word boundary otherwise — so the visual break between the two stacked
- * lines never lands mid-word.
- */
-function splitInsight(text: string): [insight: string, supporting: string] {
-  const periodIdx = text.indexOf('.')
-  if (periodIdx > 30 && periodIdx < 140) {
-    return [text.slice(0, periodIdx + 1), text.slice(periodIdx + 1).trim()]
-  }
-  const hardCut   = Math.min(90, text.length)
-  const lastSpace = text.lastIndexOf(' ', hardCut)
-  const cut       = lastSpace > 30 ? lastSpace : hardCut
-  return [text.slice(0, cut), text.slice(cut).trim()]
-}
-
-export function ExecutiveBriefingCard({ narrative, property, displayName }: ExecutiveBriefingCardProps) {
-  const locationLabel = property.locationName?.trim() || property.regionLocationName?.trim() || null
-
-  const briefingText = narrative.summary
-    ?? `${displayName} is a ${(property.type ?? 'property').toLowerCase()}${locationLabel ? ` in ${locationLabel}` : ''} — currently ${property.status.toLowerCase()}.`
-
-  const [insight, supporting] = splitInsight(briefingText)
-
-  const requestTypeLabel = property.requestType?.trim()
-    ? `For ${property.requestType.trim()}`
-    : null
+export function ExecutiveBriefingCard({ viewModel }: ExecutiveBriefingCardProps) {
+  const { t } = useTranslation('properties')
+  // insight/supporting are NOT translated here — see property-narrative.ts's
+  // own doc comment: a deterministic but combinatorially open-ended sentence
+  // generator built from real property data, not a bounded set of UI
+  // template strings. Localizing it correctly means localizing the
+  // generator's own sentence-construction rules, not wrapping its output in
+  // t() — flagged as a follow-up, not guessed at here.
+  const { insight, supporting, requestTypeLabel } = viewModel
 
   return (
     <div className="bg-card rounded-2xl border border-border/40 shadow-design-xs p-[clamp(1.25rem,1.05rem+0.9vw,2rem)]">
@@ -75,7 +59,7 @@ export function ExecutiveBriefingCard({ narrative, property, displayName }: Exec
               it doesn't compete with the insight beneath it. */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-[0.14em]">
-              Executive Intelligence Brief
+              {t('briefing.eyebrow')}
             </span>
             {requestTypeLabel && (
               <>

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import type { RealEstateProperty } from '../../types/property.types'
+import type { DescriptionViewModel } from '../../view-models/description.viewmodel'
 
 // IA Sprint 3 (2026-07-18). Split out of ExecutiveBriefingCard, which
 // previously carried both a synthesized one-line brief and this raw,
@@ -25,13 +26,19 @@ import type { RealEstateProperty } from '../../types/property.types'
 //      from the real, currently-rendered DOM (so it's correct at any
 //      viewport width or fluid font size) and transitioned with CSS,
 //      instead of snapping instantly between clamped and unclamped.
+//
+// Enterprise architecture pass (2026-07-23): takes `DescriptionViewModel`
+// instead of `RealEstateProperty` for API consistency with every other
+// section — the ResizeObserver/clamp mechanics are legitimate UI state, not
+// a data-shaping concern, so they stay here unchanged.
 
 interface ListingDescriptionCardProps {
-  property: Pick<RealEstateProperty, 'description' | 'cDescriptionGr'>
+  viewModel: DescriptionViewModel
 }
 
-export function ListingDescriptionCard({ property }: ListingDescriptionCardProps) {
-  const { description, cDescriptionGr } = property
+export function ListingDescriptionCard({ viewModel }: ListingDescriptionCardProps) {
+  const { t } = useTranslation('properties')
+  const { description, descriptionGr, isEmpty } = viewModel
   const [expanded, setExpanded]   = useState(false)
   const [truncated, setTruncated] = useState(false)
   const [maxHeight, setMaxHeight] = useState<number | undefined>(undefined)
@@ -51,14 +58,14 @@ export function ListingDescriptionCard({ property }: ListingDescriptionCardProps
     const observer = new ResizeObserver(measure)
     observer.observe(el)
     return () => observer.disconnect()
-  }, [expanded, description, cDescriptionGr])
+  }, [expanded, description, descriptionGr])
 
-  if (!description && !cDescriptionGr) return null
+  if (isEmpty) return null
 
   return (
     <div className="bg-card rounded-2xl border border-border/40 shadow-design-xs p-[clamp(1.25rem,1.05rem+0.9vw,2rem)]">
       <p className="mb-3 text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-[0.14em]">
-        Listing Description
+        {t('description.title')}
       </p>
 
       <div
@@ -74,9 +81,9 @@ export function ListingDescriptionCard({ property }: ListingDescriptionCardProps
               {description}
             </p>
           )}
-          {cDescriptionGr && (
+          {descriptionGr && (
             <p className="text-[clamp(0.875rem,0.83rem+0.2vw,0.9375rem)] leading-relaxed text-foreground/60 whitespace-pre-line max-w-[68ch]" lang="el">
-              {cDescriptionGr}
+              {descriptionGr}
             </p>
           )}
         </div>
@@ -98,7 +105,7 @@ export function ListingDescriptionCard({ property }: ListingDescriptionCardProps
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
           )}
         >
-          {expanded ? 'Show less' : 'Read more'}
+          {expanded ? t('description.showLess') : t('description.readMore')}
           <ChevronDown className={cn('size-3 transition-transform duration-300 ease-out', expanded && 'rotate-180')} />
         </button>
       )}

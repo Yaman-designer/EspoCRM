@@ -17,94 +17,124 @@ import { SWIMMING_POOL_OPTIONS, ACCESS_FROM_OPTIONS, ORIENTATION_OPTIONS, GARAGE
 // directions rather than merged — per spec §14's explicit UX mitigation for
 // the Audit's documented confusion risk.
 
+const S = 'wizard.steps.outdoorBuildingAmenities.sections'
+
+// cPlacement's values are preserved exactly, including the deliberate
+// duplicate — 'airy' and 'Clear' are distinct values that both display the
+// same label (Greek "Διαμπερές", English "Airy") — not merged or
+// deduplicated. Field's canonical PDF/entityDefs name is Greek
+// ("Χωροθέτηση"); `label` below is the English fallback, and `labelKey` is
+// what actually renders per active locale — see properties.json's
+// wizard.steps.outdoorBuildingAmenities.sections.positionExposure.fields.
+// cPlacement.options.* (el keeps this exact Greek text, unchanged).
+const CPLACEMENT_OPTIONS_KEY = `${S}.positionExposure.fields.cPlacement.options`
+const CPLACEMENT_OPTIONS = [
+  { value: 'airy',             label: 'Airy',             labelKey: `${CPLACEMENT_OPTIONS_KEY}.airy` },
+  { value: 'painted',          label: 'Painted',          labelKey: `${CPLACEMENT_OPTIONS_KEY}.painted` },
+  { value: 'corner',           label: 'Corner',           labelKey: `${CPLACEMENT_OPTIONS_KEY}.corner` },
+  { value: 'Facade',           label: 'Facade',           labelKey: `${CPLACEMENT_OPTIONS_KEY}.facade` },
+  { value: 'Interior',         label: 'Interior',         labelKey: `${CPLACEMENT_OPTIONS_KEY}.interior` },
+  { value: 'forCommercialUse', label: 'For Commercial Use', labelKey: `${CPLACEMENT_OPTIONS_KEY}.forCommercialUse` },
+  { value: 'Side',             label: 'Side',             labelKey: `${CPLACEMENT_OPTIONS_KEY}.side` },
+  { value: 'Clear',            label: 'Airy',             labelKey: `${CPLACEMENT_OPTIONS_KEY}.airy` },
+  { value: 'bright',           label: 'Bright',           labelKey: `${CPLACEMENT_OPTIONS_KEY}.bright` },
+  { value: 'Three-sided',      label: 'Three-Sided',      labelKey: `${CPLACEMENT_OPTIONS_KEY}.threeSided` },
+  { value: 'Four-sided',       label: 'Four-Sided',       labelKey: `${CPLACEMENT_OPTIONS_KEY}.fourSided` },
+]
+
 export const outdoorBuildingAmenitiesSchema: StepSchema = {
   sections: [
-    section({ id: 'outdoor-space', title: 'Outdoor Space', icon: TreePine }).fields([
+    section({ id: 'outdoor-space', titleKey: `${S}.outdoorSpace.title`, icon: TreePine }).fields([
       // Reconciled from a 4-value descriptive select to the PDF's true
       // Boolean type. Visibility Category ≠ Land.
-      field.switch('balcony', 'Balcony')
-        .half()
+      // Composition pass: .third() (was .half()) across this trio — for
+      // Category ≠ Land all 3 are visible together, which as an odd count
+      // of .half() fields always stranded the third; .third() lets them
+      // complete a clean 3-up row once the container has room.
+      field.switch('balcony', `${S}.outdoorSpace.fields.balcony.label`)
+        .third()
         .visibleWhen(NOT_LAND_CATEGORY).clearWhenHidden()
         .build(),
       // PDF-exact order/values/labels. No category gate — a demand signal
       // that stays visible regardless of category.
-      field.select('swimmingPool', 'Swimming Pool')
-        .half()
+      field.select('swimmingPool', `${S}.outdoorSpace.fields.swimmingPool.label`)
+        .third()
         .options(SWIMMING_POOL_OPTIONS)
         .clearable()
         .build(),
       // PDF-exact order/values/labels, incl. deliberately spaced values
       // ('Dirt road', 'No access') — preserved exactly.
-      field.select('accessFrom', 'Access From')
-        .half()
+      field.select('accessFrom', `${S}.outdoorSpace.fields.accessFrom.label`)
+        .third()
         .options(ACCESS_FROM_OPTIONS)
         .clearable()
         .build(),
     ]),
 
-    section({ id: 'position-exposure', title: 'Position & Exposure', icon: Compass }).fields([
+    section({ id: 'position-exposure', titleKey: `${S}.positionExposure.title`, icon: Compass }).fields([
       // Relocated from specifications.schema.ts. PDF-exact values/labels
-      // (lowercase short codes, exact order). No dynamic logic. Span
-      // preserved exactly as .third() from the original — not resized
-      // during migration.
-      field.select('cOrientation', 'Orientation')
-        .third()
+      // (lowercase short codes, exact order). No dynamic logic.
+      // Composition pass: .full() (was .third(), preserved verbatim through
+      // the original content migration) — this is the only field in the
+      // section at that width, with nothing to share a row with, so it was
+      // stranded with dead space either side. Presentation-only; no
+      // value/option/behavior change.
+      field.select('cOrientation', `${S}.positionExposure.fields.cOrientation.label`)
+        .full()
         .options(ORIENTATION_OPTIONS)
         .clearable()
         .build(),
       // Relocated from specifications.schema.ts. Multi-Enum, zero or more
-      // values, no dynamic logic. Values/labels preserved exactly,
-      // including the deliberate duplicate label (Διαμπερές) shared by the
-      // distinct 'airy' and 'Clear' values — not merged or deduplicated.
-      field.multiSelect('cPlacement', 'Χωροθέτηση')
+      // values, no dynamic logic. Values preserved exactly, including the
+      // deliberate duplicate — 'airy' and 'Clear' are distinct values that
+      // both display the same label (Greek "Διαμπερές", English "Airy") —
+      // not merged or deduplicated. Field's canonical PDF/entityDefs name is
+      // Greek ("Χωροθέτηση"); `label` below is the English fallback, and
+      // `labelKey` is what actually renders per active locale — see
+      // properties.json's wizard.steps.outdoorBuildingAmenities.sections.
+      // positionExposure.fields.cPlacement.options.* (el keeps this exact
+      // Greek text, unchanged).
+      field.multiSelect('cPlacement', `${S}.positionExposure.fields.cPlacement.label`)
         .full()
-        .options([
-          { value: 'airy',             label: 'Διαμπερές' },
-          { value: 'painted',          label: 'Βαμμένο' },
-          { value: 'corner',           label: 'Γωνιακό' },
-          { value: 'Facade',           label: 'Πρόσοψης' },
-          { value: 'Interior',         label: 'Εσωτερικό' },
-          { value: 'forCommercialUse', label: 'Για επαγγελματική χρήση' },
-          { value: 'Side',             label: 'Πλαϊνό' },
-          { value: 'Clear',            label: 'Διαμπερές' },
-          { value: 'bright',           label: 'Φωτεινό' },
-          { value: 'Three-sided',      label: 'Τριών Όψεων' },
-          { value: 'Four-sided',       label: 'Τεσσάρων Όψεων' },
-        ])
+        .options(CPLACEMENT_OPTIONS)
         .build(),
     ]),
 
-    section({ id: 'building', title: 'Building', icon: Building2 }).fields([
+    section({ id: 'building', titleKey: `${S}.building.title`, icon: Building2 }).fields([
       // Distinct field from `cGarage` (construction-systems.schema.ts —
       // type/location of parking). This field is existence/size only
       // (Yes/No/Double). Cross-referenced by helper text, not merged.
-      field.select('garage', 'Garage')
-        .half()
+      // Composition pass: .full() (was .half()) — every field after it in
+      // this section (buildingElevator/buildingElevatorRooms/
+      // internalElevator/hasDisabledAccess) is already .full(), so a lone
+      // .half() garage left dead space before that run starts.
+      field.select('garage', `${S}.building.fields.garage.label`)
+        .full()
         .options(GARAGE_OPTIONS)
         .clearable()
-        .helperText('Existence/size of a parking spot. See also "Parking Type" in the Construction & Systems step.')
+        .helperText(`${S}.building.fields.garage.helperText`)
         .build(),
       // First of the elevator trio — kept strictly adjacent to
       // buildingElevatorRooms/internalElevator below.
-      field.switch('buildingElevator', 'Building Elevator')
+      field.switch('buildingElevator', `${S}.building.fields.buildingElevator.label`)
         .full()
         .build(),
-      field.switch('buildingElevatorRooms', 'Elevator in Rooms')
+      field.switch('buildingElevatorRooms', `${S}.building.fields.buildingElevatorRooms.label`)
         .full()
         .build(),
-      field.switch('internalElevator', 'Internal Elevator')
+      field.switch('internalElevator', `${S}.building.fields.internalElevator.label`)
         .full()
         .build(),
       // Distinct from the 'accessbility' option inside the `features`
       // Multi-Enum below — this is its own standalone Boolean attribute,
       // not a duplicate, not merged (unreconciled per spec, carried
       // forward as-is).
-      field.switch('hasDisabledAccess', 'Disabled Access')
+      field.switch('hasDisabledAccess', `${S}.building.fields.hasDisabledAccess.label`)
         .full()
         .build(),
     ]),
 
-    section({ id: 'amenities', title: 'Amenities', icon: Sparkles }).fields([
+    section({ id: 'amenities', titleKey: `${S}.amenities.title`, icon: Sparkles }).fields([
       // Relocated from specifications.schema.ts. Multi-Enum — zero or more
       // values, no dynamic logic. Values/labels preserved exactly,
       // including deliberately inconsistent casing/spelling
@@ -112,7 +142,7 @@ export const outdoorBuildingAmenitiesSchema: StepSchema = {
       // normalize, correct, or reorder. 'Building elevator' here is a
       // distinct string value from the standalone `buildingElevator`
       // Boolean field above — unrelated, not to be merged.
-      field.multiSelect('features', 'Features')
+      field.multiSelect('features', `${S}.amenities.fields.features.label`)
         .full()
         .options([
           { value: 'Veranda',                     label: 'Veranda' },
@@ -158,7 +188,7 @@ export const outdoorBuildingAmenitiesSchema: StepSchema = {
         .build(),
       // Relocated from specifications.schema.ts. Multi-Enum, no dynamic
       // logic. Values/labels preserved exactly.
-      field.multiSelect('additionalBenefits', 'Additional Benefits')
+      field.multiSelect('additionalBenefits', `${S}.amenities.fields.additionalBenefits.label`)
         .full()
         .options([
           { value: 'BBQ',                  label: 'BBQ' },
@@ -167,10 +197,10 @@ export const outdoorBuildingAmenitiesSchema: StepSchema = {
         .build(),
       // Relocated from identity.schema.ts. No dynamic logic, never
       // required, no validation.
-      field.switch('idealForStudents', 'Ideal for Students')
+      field.switch('idealForStudents', `${S}.amenities.fields.idealForStudents.label`)
         .half()
         .build(),
-      field.switch('idealForEmployees', 'Ideal for Employees')
+      field.switch('idealForEmployees', `${S}.amenities.fields.idealForEmployees.label`)
         .half()
         .build(),
     ]),

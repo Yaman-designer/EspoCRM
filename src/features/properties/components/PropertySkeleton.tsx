@@ -136,21 +136,16 @@ export function PropertyListRowSkeleton({ className }: { className?: string }) {
 }
 
 // ── Grid + List skeleton containers ───────────────────────────────────────────
-// CRITICAL: Grid breakpoints here MUST be byte-for-byte identical to
+// CRITICAL: grid-template-columns here MUST be byte-for-byte identical to
 // PropertyGrid.tsx to avoid column-count mismatch during skeleton → content
-// transition (which would produce visible layout shift).
-//
-// Grid view breakpoints (container width, not viewport):
-//   default    → 1 col   (mobile, matches PropertyGrid grid-cols-1)
-//   @[600px]   → 3 cols
-//   @[1100px]  → 4 cols
-//   @[1280px]  → 5 cols
-//   @[1560px]  → 6 cols
+// transition (which would produce visible layout shift). Both reference the
+// same --card-grid-min-w / --card-list-min-w tokens (globals.css) rather
+// than each hand-typing the minimum, so they can't drift apart.
 
 export function PropertySkeletonGrid({ count = 10 }: { count?: number }) {
   return (
-    <div className="@container w-full">
-      <div className="grid grid-cols-1 gap-4 @[600px]:grid-cols-3 @[1100px]:grid-cols-4 @[1280px]:grid-cols-5 @[1560px]:grid-cols-6">
+    <div className="w-full">
+      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(max(var(--card-grid-min-w),(100%_-_3rem)/4),1fr))]">
         {Array.from({ length: count }, (_, i) => (
           <PropertyCardSkeleton key={i} />
         ))}
@@ -161,8 +156,8 @@ export function PropertySkeletonGrid({ count = 10 }: { count?: number }) {
 
 export function PropertySkeletonList({ count = 6 }: { count?: number }) {
   return (
-    <div className="@container w-full">
-      <div className="grid grid-cols-1 gap-4 @[920px]:grid-cols-2 @[1500px]:grid-cols-3">
+    <div className="w-full">
+      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(var(--card-list-min-w),1fr))]">
         {Array.from({ length: count }, (_, i) => (
           <PropertyListRowSkeleton key={i} />
         ))}

@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   AlertTriangle,
   Check,
@@ -25,10 +26,11 @@ interface StepBubbleProps {
   status: StepStatus
   size?: 'md' | 'sm'
   onClick: () => void
-  bubbleRef?: (el: HTMLElement | null) => void
+  bubbleRef?: (el: HTMLButtonElement | null) => void
 }
 
 function StepBubble({ step, index, status, size = 'md', onClick, bubbleRef }: StepBubbleProps) {
+  const { t } = useTranslation('common')
   const Icon = step.icon
   const isClickable = (status === 'completed' || status === 'error' || status === 'warning')
     && !step.locked
@@ -42,9 +44,9 @@ function StepBubble({ step, index, status, size = 'md', onClick, bubbleRef }: St
   const el = (
     <button
       type="button"
-      ref={bubbleRef as any}
+      ref={bubbleRef}
       onClick={isClickable ? onClick : undefined}
-      aria-label={`${step.title}${step.optional ? ' (optional)' : ''} — ${status}`}
+      aria-label={`${step.title}${step.optional ? ` ${t('formFramework.stepper.optionalSuffix')}` : ''} — ${status}`}
       aria-current={isActive ? 'step' : undefined}
       aria-disabled={!isClickable ? true : undefined}
       data-status={status}
@@ -62,7 +64,7 @@ function StepBubble({ step, index, status, size = 'md', onClick, bubbleRef }: St
           'shadow-[0_0_0_4px_rgba(0,97,188,0.12),0_0_0_2px_rgba(0,97,188,0.30),0_6px_20px_rgba(0,97,188,0.25)]',
         ],
         status === 'upcoming' && [
-          'border-2 border-border/50 bg-card text-muted-foreground/35',
+          'border-2 border-border/50 bg-card text-muted-foreground/45',
           isLocked ? 'cursor-not-allowed opacity-55' : 'cursor-default',
         ],
         status === 'error' && [
@@ -120,9 +122,90 @@ function StepConnector({ filled, partial }: { filled: boolean; partial?: boolean
   )
 }
 
+/* ─── Horizontal wheel-scroll ─────────────────────────────────────
+   Lets a plain vertical mouse wheel drive the horizontal step rail —
+   the same affordance Linear/Stripe/GitHub use on their own scroll rails.
+   Needs a native (non-passive) listener: React's JSX onWheel prop is
+   passive, so preventDefault() inside it is silently ignored and the
+   page would scroll vertically underneath the rail at the same time. ── */
+function useHorizontalWheelScroll(ref: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+      if (el.scrollWidth <= el.clientWidth) return
+      el.scrollLeft += e.deltaY
+      e.preventDefault()
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [ref])
+}
+
+/* ─── Edge fade indicators ──────────────────────────────────────
+   Only relevant to the compact rail (the full/desktop rail isn't asked
+   for this treatment). Tracks whether there's more rail past either
+   edge so the caller can fade that edge in/out — recomputed on scroll,
+   and on resize of either the viewport (scrollEl) or the content it
+   scrolls (contentEl grows/shrinks independently, e.g. locale swaps
+   changing label widths), so a step added/removed or a width change
+   can't leave a stale fade showing on a rail that no longer overflows. ── */
+function useEdgeFade(
+  scrollRef: React.RefObject<HTMLDivElement | null>,
+  contentRef: React.RefObject<HTMLDivElement | null>,
+) {
+  const [fade, setFade] = useState({ start: false, end: false })
+
+  useLayoutEffect(() => {
+    const scrollEl = scrollRef.current
+    if (!scrollEl) return
+
+    const measure = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollEl
+      const overflowing = scrollWidth > clientWidth + 1
+      setFade({
+        start: overflowing && scrollLeft > 1,
+        end: overflowing && scrollLeft < scrollWidth - clientWidth - 1,
+      })
+    }
+
+    measure()
+    scrollEl.addEventListener('scroll', measure, { passive: true })
+    const ro = new ResizeObserver(measure)
+    ro.observe(scrollEl)
+    if (contentRef.current) ro.observe(contentRef.current)
+
+    return () => {
+      scrollEl.removeEventListener('scroll', measure)
+      ro.disconnect()
+    }
+  }, [scrollRef, contentRef])
+
+  return fade
+}
+
+/* ─── Auto-scroll active step into view, centered ─────────────────── */
+function useActiveStepAutoScroll(
+  containerRef: React.RefObject<HTMLDivElement | null>,
+  bubbleRefs: React.RefObject<(HTMLElement | null)[]>,
+  currentStepIndex: number,
+) {
+  useEffect(() => {
+    const container = containerRef.current
+    const el = bubbleRefs.current[currentStepIndex]
+    if (!container || !el) return
+    const cw = container.clientWidth
+    const left = el.offsetLeft
+    const ew = el.offsetWidth
+    container.scrollTo({ left: Math.max(0, left - (cw - ew) / 2), behavior: 'smooth' })
+  }, [containerRef, bubbleRefs, currentStepIndex])
+}
+
 /* ─── Main stepper ───────────────────────────────────────────────── */
 
 export function FormStepper() {
+  const { t } = useTranslation('common')
   const {
     config,
     currentStepIndex,
@@ -130,141 +213,176 @@ export function FormStepper() {
     goToStep,
     isAnimating,
     totalSteps,
+    progressPercent,
   } = useFormFramework()
   const { steps } = config
 
-  const scrollRef   = useRef<HTMLDivElement>(null)
-  const tabletRef   = useRef<HTMLDivElement>(null)
-  const bubbleRefs  = useRef<(HTMLElement | null)[]>([])
+  /* Two independent rails (compact <lg, full ≥lg) get their own scroll
+     container + bubble-ref array. Both variants are mounted at once
+     (toggled with `hidden` / `lg:hidden`, not conditional rendering) so
+     that switching breakpoints never triggers a remount/flash — sharing
+     one bubble-ref array between them would let whichever rail mounts
+     later silently steal the other's ref slots and break its
+     auto-scroll math, so each rail must keep its own. */
+  const compactScrollRef  = useRef<HTMLDivElement>(null)
+  const compactContentRef = useRef<HTMLDivElement>(null)
+  const compactBubbleRefs = useRef<(HTMLElement | null)[]>([])
+  const desktopScrollRef  = useRef<HTMLDivElement>(null)
+  const desktopBubbleRefs = useRef<(HTMLElement | null)[]>([])
 
-  useEffect(() => {
-    const container = scrollRef.current
-    const el = bubbleRefs.current[currentStepIndex]
-    if (!container || !el) return
-    const cw = container.clientWidth
-    const left = (el as HTMLElement).offsetLeft
-    const ew = (el as HTMLElement).offsetWidth
-    container.scrollTo({ left: Math.max(0, left - (cw - ew) / 2), behavior: 'smooth' })
-  }, [currentStepIndex])
-
-  useEffect(() => {
-    const container = tabletRef.current
-    const el = bubbleRefs.current[currentStepIndex]
-    if (!container || !el) return
-    const cw = container.clientWidth
-    const left = (el as HTMLElement).offsetLeft
-    const ew = (el as HTMLElement).offsetWidth
-    container.scrollTo({ left: Math.max(0, left - (cw - ew) / 2), behavior: 'smooth' })
-  }, [currentStepIndex])
+  useActiveStepAutoScroll(compactScrollRef, compactBubbleRefs, currentStepIndex)
+  useActiveStepAutoScroll(desktopScrollRef, desktopBubbleRefs, currentStepIndex)
+  useHorizontalWheelScroll(compactScrollRef)
+  useHorizontalWheelScroll(desktopScrollRef)
+  const compactFade = useEdgeFade(compactScrollRef, compactContentRef)
 
   const handleClick = (index: number) => {
     if (!isAnimating) goToStep(index)
   }
 
-  const currentStep    = steps[currentStepIndex]
-  const completionPct  = currentStep?.completion ?? 0
-  const mobileProgress = ((currentStepIndex + 1) / totalSteps) * 100
+  const currentStep = steps[currentStepIndex]
+  // Reads the framework's one canonical progress value (context.tsx) —
+  // this used to look up a hand-authored `step.completion` field that
+  // wasn't kept in sync with the footer's own independently-computed
+  // percentage, which is exactly how the header and footer ended up
+  // disagreeing. That field has been retired; every surface derives from
+  // the same number now.
+  const completionPct = Math.round(progressPercent)
 
   return (
     <TooltipProvider>
       {/* ARIA live region */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
-        {`Step ${currentStepIndex + 1} of ${totalSteps}: ${currentStep?.title ?? ''}`}
+        {t('formFramework.stepper.stepStatusAnnounce', { current: currentStepIndex + 1, total: totalSteps, title: currentStep?.title ?? '' })}
       </div>
 
-      <nav aria-label="Form progress" className="select-none">
+      <nav aria-label={t('formFramework.stepper.formProgress')} className="select-none">
 
-        {/* ── Mobile: compact progress bar ──────────────── */}
-        <div className="sm:hidden">
-          <div className="mb-2.5 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
-                'bg-primary text-white shadow-[0_0_0_3px_rgba(0,97,188,0.12),0_2px_6px_rgba(0,97,188,0.20)]',
-              )}>
-                {currentStepIndex + 1}
-              </div>
-              <div>
-                <p className="text-xs font-bold leading-tight text-foreground">
-                  {currentStep?.title}
-                </p>
-                {currentStep?.description && (
-                  <p className="mt-1 text-[10px] leading-tight text-muted-foreground/50 line-clamp-1">
-                    {currentStep.description}
-                  </p>
-                )}
+        {/* ── Compact rail: mobile + tablet, one scrollable row, every step reachable ── */}
+        <div className="lg:hidden">
+          <div className="relative">
+            <div
+              ref={compactScrollRef}
+              className="ff-scroll-x snap-x snap-proximity overflow-x-auto no-scrollbar"
+            >
+              <div
+                ref={compactContentRef}
+                className="flex min-w-max items-start gap-0 px-0.5 py-1"
+                role="list"
+                aria-label={t('formFramework.stepper.formSteps')}
+              >
+                {steps.map((step, index) => {
+                  const status = getStepStatus(index)
+                  const isLast = index === steps.length - 1
+                  return (
+                    <div key={step.id} role="listitem" className="flex items-start">
+                      <div className="snap-center flex flex-col items-center gap-1">
+                        <span className={cn(
+                          'text-[8.5px] font-bold uppercase tracking-[0.12em]',
+                          status === 'current'
+                            ? 'text-primary/75'
+                            : status === 'completed'
+                            ? 'text-brand-emerald/50'
+                            : 'text-muted-foreground/45',
+                        )}>
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <StepBubble
+                          step={step}
+                          index={index}
+                          status={status}
+                          size="sm"
+                          onClick={() => handleClick(index)}
+                          bubbleRef={el => { compactBubbleRefs.current[index] = el }}
+                        />
+                        <span
+                          title={step.title}
+                          className={cn(
+                            // CSS truncate, not a hardcoded character slice —
+                            // a fixed char count truncates unevenly across
+                            // scripts/locales (e.g. Greek diacritics render
+                            // wider per character than this was tuned for).
+                            'block max-w-14 truncate text-center text-[10px] font-medium leading-tight',
+                            status === 'current'   && 'font-bold text-primary',
+                            status === 'completed' && 'font-semibold text-brand-emerald',
+                            status === 'warning'   && 'text-amber-600',
+                            status === 'error'     && 'text-destructive',
+                            status === 'upcoming'  && 'text-muted-foreground/50',
+                          )}
+                        >
+                          {step.title}
+                        </span>
+                      </div>
+                      {!isLast && (
+                        <div className="mx-2 w-8 shrink-0 pt-4.5">
+                          <StepConnector
+                            filled={status === 'completed'}
+                            partial={status === 'current'}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
-            <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground/45">
-              {currentStepIndex + 1} / {totalSteps}
-            </span>
-          </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-border/40">
+
+            {/* Edge fade indicators — subtle "there's more this way" hint,
+                only rendered while the rail actually overflows on that
+                side; fades itself out once the user reaches that edge. */}
             <div
-              className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
-              style={{ width: `${mobileProgress}%` }}
+              aria-hidden
+              className={cn(
+                'pointer-events-none absolute inset-y-0 left-0 z-20 w-6',
+                'bg-linear-to-r from-background to-transparent',
+                'transition-opacity duration-200',
+                compactFade.start ? 'opacity-100' : 'opacity-0',
+              )}
+            />
+            <div
+              aria-hidden
+              className={cn(
+                'pointer-events-none absolute inset-y-0 right-0 z-20 w-6',
+                'bg-linear-to-l from-background to-transparent',
+                'transition-opacity duration-200',
+                compactFade.end ? 'opacity-100' : 'opacity-0',
+              )}
             />
           </div>
-        </div>
 
-        {/* ── Tablet: compact scrollable bubbles ────────── */}
-        <div className="hidden sm:block lg:hidden">
-          <div
-            ref={tabletRef}
-            className="overflow-x-auto no-scrollbar"
-          >
-            <div className="flex min-w-max items-center gap-0 px-0.5 py-1">
-              {steps.map((step, index) => {
-                const status = getStepStatus(index)
-                const isLast = index === steps.length - 1
-                return (
-                  <div key={step.id} className="flex items-center">
-                    <div
-                      ref={el => { bubbleRefs.current[index] = el }}
-                      className="flex flex-col items-center gap-1.5"
-                    >
-                      <StepBubble
-                        step={step}
-                        index={index}
-                        status={status}
-                        size="sm"
-                        onClick={() => handleClick(index)}
-                      />
-                      <span className={cn(
-                        'max-w-14 text-center text-[10px] font-medium leading-tight',
-                        status === 'current'   && 'font-bold text-primary',
-                        status === 'completed' && 'font-semibold text-brand-emerald',
-                        status === 'warning'   && 'text-amber-600',
-                        status === 'error'     && 'text-destructive',
-                        status === 'upcoming'  && 'text-muted-foreground/40',
-                      )}>
-                        {step.title.length > 10 ? `${step.title.slice(0, 9)}…` : step.title}
-                      </span>
-                    </div>
-                    {!isLast && (
-                      <div className="mx-2 w-8 shrink-0">
-                        <StepConnector
-                          filled={status === 'completed'}
-                          partial={status === 'current'}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+          {/* Progress summary — moves below the rail on compact widths so it
+              can never overlap or squeeze the step row (see desktop's side
+              counter, which serves the same purpose at ≥lg). */}
+          <div className="mt-2 flex items-center justify-between gap-3 border-t border-border/15 pt-2">
+            <span className="text-[11px] font-semibold text-muted-foreground/60">
+              {t('formFramework.stepper.stepOfTotal', { current: currentStepIndex + 1, total: totalSteps })}
+            </span>
+            <div className="flex items-center gap-2">
+              {currentStep?.estTime && (
+                <span className="text-[10px] text-muted-foreground/40">
+                  {t('formFramework.stepper.timeLeft', { time: currentStep.estTime })}
+                </span>
+              )}
+              <span className="text-[11px] font-bold tabular-nums text-primary">
+                {completionPct}%
+              </span>
             </div>
           </div>
         </div>
 
-        {/* ── Desktop: full stepper + completion counter ── */}
-        <div className="hidden lg:flex items-stretch" role="list" aria-label="Form steps">
+        {/* ── Full rail: laptop + desktop, large bubbles + completion counter ── */}
+        <div className="hidden lg:flex items-stretch">
 
           {/* Steps row */}
           <div
-            ref={scrollRef}
-            className="flex flex-1 items-start overflow-x-auto no-scrollbar"
+            ref={desktopScrollRef}
+            className="ff-scroll-x flex flex-1 items-start overflow-x-auto no-scrollbar"
           >
-            <div className="flex min-w-max flex-1 items-start pb-0.5">
+            <div
+              className="flex min-w-max flex-1 items-start pb-0.5"
+              role="list"
+              aria-label={t('formFramework.stepper.formSteps')}
+            >
               {steps.map((step, index) => {
                 const status = getStepStatus(index)
                 const isLast = index === steps.length - 1
@@ -277,10 +395,7 @@ export function FormStepper() {
                     className={cn('flex items-start', isLast ? 'flex-none' : 'flex-1')}
                   >
                     {/* Step column */}
-                    <div
-                      ref={el => { bubbleRefs.current[index] = el }}
-                      className="flex flex-col items-center gap-1.5"
-                    >
+                    <div className="flex flex-col items-center gap-1.5">
                       {/* Step number label */}
                       <span className={cn(
                         'text-[9.5px] font-bold uppercase tracking-[0.14em] transition-colors duration-200',
@@ -288,7 +403,7 @@ export function FormStepper() {
                           ? 'text-primary/75'
                           : status === 'completed'
                           ? 'text-brand-emerald/50'
-                          : 'text-muted-foreground/40',
+                          : 'text-muted-foreground/50',
                       )}>
                         {String(index + 1).padStart(2, '0')}
                       </span>
@@ -300,28 +415,44 @@ export function FormStepper() {
                         status={status}
                         size="md"
                         onClick={() => handleClick(index)}
-                        bubbleRef={el => { bubbleRefs.current[index] = el }}
+                        bubbleRef={el => { desktopBubbleRefs.current[index] = el }}
                       />
 
                       {/* Title + optional badge */}
                       <div className="flex flex-col items-center gap-0.5 text-center">
-                        <span className={cn(
-                          'block max-w-22 text-[12px] leading-tight transition-all duration-200',
-                          isActive
-                            ? 'font-bold text-primary'
-                            : status === 'completed'
-                            ? 'font-semibold text-brand-emerald'
-                            : status === 'warning'
-                            ? 'font-medium text-amber-600'
-                            : status === 'error'
-                            ? 'font-medium text-destructive'
-                            : 'font-medium text-muted-foreground/40',
-                        )}>
+                        <span
+                          title={step.title}
+                          className={cn(
+                            // line-clamp-2, not unbounded wrap: at 88px-wide
+                            // columns the longest titles (e.g. "Outdoor,
+                            // Building & Amenities") would otherwise wrap to
+                            // 3-4 lines, making the 8-step row uneven and
+                            // hard to scan. Widened slightly (max-w-22 →
+                            // max-w-26) so 2 lines is usually the full title,
+                            // not a truncation — `title` covers the rest.
+                            // text-balance: the browser's default wrap
+                            // greedily fills line 1 first, which can strand
+                            // a lone short word ("Governance") alone on
+                            // line 2 — balance spreads the break point more
+                            // evenly instead.
+                            'block max-w-26 text-[12px] leading-tight text-balance transition-all duration-200',
+                            'line-clamp-2',
+                            isActive
+                              ? 'font-bold text-primary'
+                              : status === 'completed'
+                              ? 'font-semibold text-brand-emerald'
+                              : status === 'warning'
+                              ? 'font-medium text-amber-600'
+                              : status === 'error'
+                              ? 'font-medium text-destructive'
+                              : 'font-medium text-muted-foreground/50',
+                          )}
+                        >
                           {step.title}
                         </span>
                         {step.optional && (
                           <span className="text-[9px] leading-none text-muted-foreground/30">
-                            Optional
+                            {t('formFramework.stepper.optionalBadge')}
                           </span>
                         )}
                       </div>
@@ -345,7 +476,7 @@ export function FormStepper() {
           {/* ── Completion counter ───────────────── */}
           <div className="ml-5 flex shrink-0 flex-col items-end justify-center gap-1 border-l border-border/15 pl-5">
             <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/30">
-              Progress
+              {t('formFramework.stepper.progress')}
             </span>
             <div className="flex items-baseline gap-0.5">
               <span className="text-[20px] font-bold leading-none tabular-nums text-primary">
@@ -354,11 +485,11 @@ export function FormStepper() {
               <span className="text-[12px] font-bold text-primary/65">%</span>
             </div>
             <span className="text-[10.5px] font-medium text-muted-foreground/50">
-              Step {currentStepIndex + 1} of {totalSteps}
+              {t('formFramework.stepper.stepOfTotal', { current: currentStepIndex + 1, total: totalSteps })}
             </span>
             {currentStep?.estTime && (
               <span className="text-[10px] text-muted-foreground/40">
-                ~{currentStep.estTime} left
+                {t('formFramework.stepper.timeLeft', { time: currentStep.estTime })}
               </span>
             )}
           </div>

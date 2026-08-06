@@ -1,7 +1,7 @@
 import { Building2, ShieldCheck, Archive } from 'lucide-react'
 import { field, section } from '@/framework/form-engine'
 import type { StepSchema, FieldOption, FieldSchema } from '@/framework/form-engine'
-import { validateStatusChange, requiresOwner } from '@/features/properties/domain/property-lifecycle.rules'
+import { validateStatusChange } from '@/features/properties/domain/property-lifecycle.rules'
 import { isPropertyCodeTaken } from '@/features/properties/repositories/property.repository'
 import { getTypeOptionsForCategory } from '@/features/properties/domain/property-type.registry'
 import { getAssignmentForCategory } from '@/features/properties/domain/assignment-rules'
@@ -22,6 +22,8 @@ import { PROPERTY_CODE_MAX_LENGTH } from '@/features/properties/domain/validatio
 // files in later phases (3, 4, 5, 6) — they remain untouched in
 // identity.schema.ts until this file is wired in at cutover (Phase 7).
 
+const S = 'wizard.steps.identityGovernance.sections'
+
 export function buildIdentityGovernanceStep(
   statusOptions: FieldOption[],
   userOptions: FieldOption[],
@@ -37,8 +39,8 @@ export function buildIdentityGovernanceStep(
     sections: [
       section({
         id: 'classification',
-        title: 'Classification',
-        description: 'What kind of asset is this, and what is it for?',
+        titleKey: `${S}.classification.title`,
+        descriptionKey: `${S}.classification.description`,
         icon: Building2,
       }).fields([
         // Enterprise Phase 3.2, Finding B first resolved this as "keep
@@ -58,20 +60,20 @@ export function buildIdentityGovernanceStep(
         // UI disables this field too (no browser access to verify) — this
         // app should not overclaim more certainty than the evidence
         // supports. The helper text below discloses the override instead.
-        field.text('title', 'Title')
+        field.text('title', `${S}.classification.fields.title.label`)
           .full()
-          .placeholder('e.g. Skyline Corporate Plaza')
-          .helperText('EspoCRM replaces this with the Reference Code below when the listing is saved.')
+          .placeholder(`${S}.classification.fields.title.placeholder`)
+          .helperText(`${S}.classification.fields.title.helperText`)
           .build(),
         // Enterprise Phase 3.2, Finding A (resolved). Live entityDefs:
         // { type: 'varchar', maxLength: 10 } — previously unenforced client-
         // side; a value longer than 10 characters used to pass validation
         // here and fail only server-side (or be silently truncated).
-        field.text('propertyCode', 'Reference Code')
+        field.text('propertyCode', `${S}.classification.fields.propertyCode.label`)
           .half()
           .maxLength(PROPERTY_CODE_MAX_LENGTH)
-          .placeholder('Auto-generated if left empty')
-          .helperText('Short internal reference code, e.g. REF-001.')
+          .placeholder(`${S}.classification.fields.propertyCode.placeholder`)
+          .helperText(`${S}.classification.fields.propertyCode.helperText`)
           // Duplicate detection: propertyCode is the only confirmed EspoCRM
           // attribute suited to a uniqueness check (see
           // property.repository.ts's isPropertyCodeTaken).
@@ -85,9 +87,9 @@ export function buildIdentityGovernanceStep(
             },
           }])
           .build(),
-        field.select('category', 'Category')
+        field.select('category', `${S}.classification.fields.category.label`)
           .required().half()
-          .placeholder('Select category…')
+          .placeholder(`${S}.classification.fields.category.placeholder`)
           .options(CATEGORY_OPTIONS)
           .build(),
         {
@@ -107,9 +109,9 @@ export function buildIdentityGovernanceStep(
           // not get wiped by a reload that merely observes category go from
           // unset to set. Empty category still correctly empties the
           // dropdown (PDF Condition 5), since `[]` never contains any value.
-          ...field.select('type', 'Property Type')
+          ...field.select('type', `${S}.classification.fields.type.label`)
             .required().half()
-            .placeholder('Select type…')
+            .placeholder(`${S}.classification.fields.type.placeholder`)
             // Reuses the exact same getTypeOptionsForCategory registry the
             // dropdown's options come from — the submitted value must be a
             // member of the current category's allowed list, not just
@@ -132,17 +134,17 @@ export function buildIdentityGovernanceStep(
             },
           ],
         } as FieldSchema,
-        field.select('requestType', 'Request Type')
+        field.select('requestType', `${S}.classification.fields.requestType.label`)
           .required().half()
-          .placeholder('Select request type…')
+          .placeholder(`${S}.classification.fields.requestType.placeholder`)
           .options(REQUEST_TYPE_OPTIONS)
           .build(),
       ]),
 
       section({
         id: 'governance',
-        title: 'Governance',
-        description: 'Lifecycle, ownership, and scheduling.',
+        titleKey: `${S}.governance.title`,
+        descriptionKey: `${S}.governance.description`,
         icon: ShieldCheck,
       }).fields([
         {
@@ -156,9 +158,9 @@ export function buildIdentityGovernanceStep(
           // change. Still a plain required select (not read-only): the rule
           // is a convenience default, not a hard lock — the user can always
           // override it.
-          ...field.select('cAssignment', 'Assignment')
+          ...field.select('cAssignment', `${S}.governance.fields.cAssignment.label`)
             .required().half()
-            .placeholder('Select assignment…')
+            .placeholder(`${S}.governance.fields.cAssignment.placeholder`)
             .options(ASSIGNMENT_OPTIONS)
             .build(),
           dependencies: [
@@ -177,7 +179,7 @@ export function buildIdentityGovernanceStep(
         // below, which needs a real, user-confirmed value to check against,
         // not a silently-applied default the user never saw. Intentional UX
         // decision, not a metadata mirror.
-        field.select('status', 'Listing Status')
+        field.select('status', `${S}.governance.fields.status.label`)
           .required().half()
           .options(statusOptions)
           // Wave 2 (2026-07-14): real live entityDefs default is 'Under
@@ -196,51 +198,66 @@ export function buildIdentityGovernanceStep(
             },
           }])
           .build(),
-        field.select('assignedUserId', 'Assigned Agent')
+        // Composition pass, corrected after live-browser verification: this
+        // section renders inside CompactSectionCard (IdentityGovernanceStepView.tsx),
+        // a ~545px peer card in the Classification|Governance SectionRow —
+        // narrower than .third()'s own 3-up breakpoint (@2xl, 672px), which
+        // never resolves there. A prior pass set this trio to .third()
+        // expecting a 3-up row; in the actual rendered card it silently
+        // behaved exactly like .half() (both share the same @md 2-up tier),
+        // leaving nextUpdate stranded alone on its own row with dead space
+        // beside it — unchanged from the original defect. Fixed instead by
+        // keeping assignedUserId/cAvailableFrom as the established .half()
+        // pair (matching Classification's own 2-col rhythm) and giving the
+        // trailing nextUpdate .full() — the same "lone field -> full width"
+        // treatment already used throughout this pass, which is tier-
+        // independent and actually removes the dead space.
+        // C1 fix (Enterprise Production Certification, Critical): this field
+        // was functionally mandatory (property-lifecycle.rules.ts's
+        // requiresOwner() now unconditionally returns true — the real
+        // backend's own assignedUser.required:true, per Wave 2) but carried
+        // no required asterisk, since the old custom validator only set a
+        // validation rule, never `field.required`. `.required(msg)` sets
+        // both from one declaration, so the visible indicator and the actual
+        // enforcement can no longer drift apart. requiresOwner() itself is
+        // untouched (still exported, still unit-tested) — this field simply
+        // no longer needs to call it, since it's no longer conditional.
+        field.select('assignedUserId', `${S}.governance.fields.assignedUserId.label`)
           .half()
-          .placeholder('Select agent…')
+          .required('An active listing must have an assigned agent.')
+          .placeholder(`${S}.governance.fields.assignedUserId.placeholder`)
           .options(userOptions)
           .clearable()
-          // Ownership rule: any status other than Draft must have an
-          // assignee (property-lifecycle.rules.ts's requiresOwner — same
-          // function the legacy Edit dialog's Zod schema calls).
-          .validate([{
-            type: 'custom',
-            validate: (value, allValues) => {
-              const status = String(allValues.status ?? '')
-              if (requiresOwner(status) && !value) {
-                return 'An active listing must have an assigned agent.'
-              }
-              return true
-            },
-          }])
           .build(),
-        field.date('cAvailableFrom', 'Available from')
+        field.date('cAvailableFrom', `${S}.governance.fields.cAvailableFrom.label`)
           .half()
-          .placeholder('Pick a date…')
+          .placeholder(`${S}.governance.fields.cAvailableFrom.placeholder`)
           .build(),
-        field.date('nextUpdate', 'Next Update')
-          .half()
-          .placeholder('Pick a date…')
+        field.date('nextUpdate', `${S}.governance.fields.nextUpdate.label`)
+          .full()
+          .placeholder(`${S}.governance.fields.nextUpdate.placeholder`)
           .build(),
       ]),
 
       section({
         id: 'office-use',
-        title: 'Office Use',
-        description: 'Back-office bookkeeping, rarely touched at listing time.',
+        titleKey: `${S}.officeUse.title`,
+        descriptionKey: `${S}.officeUse.description`,
         icon: Archive,
         collapsible: true,
         defaultCollapsed: true,
       }).fields([
-        field.switch('keys', 'Keys')
-          .half()
+        // Composition pass: 3 peer switches — .third() completes a clean
+        // 3-up row instead of the odd .half() trio's lonely trailing
+        // control. Presentation-only.
+        field.switch('keys', `${S}.officeUse.fields.keys.label`)
+          .third()
           .build(),
-        field.switch('cSold', 'Sold')
-          .half()
+        field.switch('cSold', `${S}.officeUse.fields.cSold.label`)
+          .third()
           .build(),
-        field.switch('cConsideration', 'Consideration')
-          .half()
+        field.switch('cConsideration', `${S}.officeUse.fields.cConsideration.label`)
+          .third()
           .build(),
       ]),
     ],

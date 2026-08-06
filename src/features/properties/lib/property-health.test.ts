@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import { buildPropertyHealth, buildMarketDemand } from './property-health'
+import { buildPropertyHealth as buildPropertyHealthRaw, buildMarketDemand as buildMarketDemandRaw } from './property-health'
 import { buildProperty } from '@/test/builders/property'
+import type { RealEstateProperty } from '../types/property.types'
+
+// Trivial passthrough translator — these tests assert status/id/score
+// fields, never rendered label/note text, so English keys back unchanged
+// are sufficient (the real i18next `t` is only wired up at the UI layer,
+// ReviewStep.tsx).
+const testT = (key: string) => key
+const buildPropertyHealth = (p: RealEstateProperty) => buildPropertyHealthRaw(p, testT)
+const buildMarketDemand   = (p: RealEstateProperty) => buildMarketDemandRaw(p, testT)
 
 describe('buildPropertyHealth', () => {
   it('scores near-0 and grade D for a listing with none of the 6 tracked factors', () => {

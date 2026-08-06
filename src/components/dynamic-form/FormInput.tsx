@@ -27,7 +27,7 @@ export function FormInput({ field, config }: FormInputProps) {
           placeholder="0"
           disabled={disabled}
           readOnly={readOnly}
-          className="h-10 pl-7"
+          className="pl-8"
           {...field}
           value={field.value ?? ''}
           onChange={(e) => field.onChange(Math.max(0, Number(e.target.value)))}
@@ -49,7 +49,7 @@ export function FormInput({ field, config }: FormInputProps) {
             placeholder={placeholder ?? '0'}
             disabled={disabled}
             readOnly={readOnly}
-            className={cn('h-10', suffix ? 'pr-8' : undefined)}
+            className={cn(suffix ? 'pr-8' : undefined)}
             {...field}
             value={field.value ?? ''}
             onChange={(e) => {
@@ -108,7 +108,7 @@ export function FormInput({ field, config }: FormInputProps) {
         max={max}
         step={step}
         maxLength={maxLength}
-        className={cn('h-10', suffix ? 'pr-8' : undefined)}
+        className={cn(suffix ? 'pr-8' : undefined)}
         {...field}
         value={field.value ?? ''}
       />

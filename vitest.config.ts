@@ -41,6 +41,16 @@ export default defineConfig({
         'src/features/properties/lib/property-feature-mapper.ts',
         'src/features/properties/lib/data-completeness.ts',
         'src/features/properties/lib/portfolio-analytics.ts',
+        'src/features/properties/lib/mappers/status-presentation.ts',
+        // Enterprise 100% Data Certification (2026-07-23). Property
+        // Details' entire container-builds-ViewModel layer — the critical
+        // business logic a field-coverage certification is actually
+        // about (field selection, conditional visibility, null/edge-case
+        // fallbacks, media selection). Added here specifically so
+        // `test:coverage` reports real, provable numbers for this layer
+        // instead of the certification report asserting coverage that
+        // was never actually measured.
+        'src/features/properties/view-models/**',
         'src/features/properties/repositories/**',
         'src/framework/form-engine/VisibilityEngine.ts',
         'src/framework/form-engine/DependencyEngine.ts',

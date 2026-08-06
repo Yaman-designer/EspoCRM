@@ -60,6 +60,21 @@
   --radius-2xl: 22px;
   --radius-3xl: 28px;
   --radius-4xl: 999px;
+  /* ── Form action bar (footer) container-query breakpoint ──
+     Backs the `@footer-row:` variant FormActionBar.tsx uses to switch
+     between its stacked (3-row) and unified (single-row) layouts. This is
+     a *container* query, not a viewport one — deliberately, since the
+     bar renders inside the dashboard's persistent sidebar, and a
+     viewport-based breakpoint has no way to know how much of the
+     viewport the sidebar has already eaten (confirmed live: a 768px, and
+     even a 1024px, *viewport* left the panel narrower than this value
+     once the sidebar's width came out of it).
+     45rem (720px) = --footer-min-inline-size below (682px, the measured
+     true minimum — see that token's own comment) plus a ~38px buffer for
+     cross-browser font-metric and locale/translation width variance.
+     Change this value, not a hardcoded `@min-[…px]` in the component, if
+     the footer's content ever changes enough to need remeasuring. */
+  --container-footer-row: 45rem;
 }
 
 /* ---- Azure SaaS CRM — Light Mode ---- */
@@ -116,6 +131,45 @@
   --shadow-md: 0 2px 4px rgba(16,24,40,0.04), 0 6px 16px rgba(16,24,40,0.07);
   --shadow-lg: 0 4px 8px rgba(16,24,40,0.06), 0 16px 32px rgba(16,24,40,0.10);
   --shadow-xl: 0 8px 16px rgba(16,24,40,0.08), 0 24px 48px rgba(16,24,40,0.14);
+  /* ── Motion tokens — one scale for every interactive element ──
+     Durations tier by what's moving: micro feedback is fast, a
+     multi-element glide (segmented indicator) earns the top tier.
+     Referenced from components via `duration-(--duration-fast)` etc
+     (Tailwind's var()-shorthand), not hand-typed ms values. */
+  --duration-fast:     120ms; /* press/release, icon micro-transitions */
+  --duration-medium:   180ms; /* hover color/opacity, thumbnail scale */
+  --duration-standard: 220ms; /* row/card lift, shadow, border emphasis */
+  --duration-large:    280ms; /* segmented control indicator glide */
+  --ease-premium: cubic-bezier(0.4, 0, 0.2, 1);  /* standard deceleration */
+  --ease-spring:  cubic-bezier(0.22, 1, 0.36, 1); /* confident settle, zero overshoot — not a literal bounce */
+  /* ── Card layout tokens — shared minimum card widths ──
+     Content-driven floors a card can never compress below (StatChip row +
+     footer actions start reading as compressed under these). Referenced
+     from PropertyGrid.tsx and PropertySkeleton.tsx via Tailwind's
+     var()-shorthand in grid-template-columns, so both the live grid and
+     its loading skeleton read the same number, and any future card layout
+     reuses it instead of re-deriving a magic number.
+     --card-grid-min-w — live-measured floor for PropertyCard (grid view):
+       the width below which the desktop (sm:) StatChip row and footer
+       ghost buttons start reading as tight.
+     --card-list-min-w — narrowest width PropertyListRow's horizontal
+       image + content layout reads comfortably at (w-36/w-52 image rail). */
+  --card-grid-min-w: 260px;
+  --card-list-min-w: 420px;
+  /* ── Form action bar (footer) layout token ──
+     --footer-min-inline-size — 682px — the measured true minimum width
+     the unified single-row footer (FormActionBar.tsx) needs to render
+     its widest real case (Discard + full progress pill + Previous +
+     Continue) without any overlap. Measured live via a headless
+     max-content probe of the rendered row (grid-template-columns forced
+     to `max-content max-content max-content`, then reading its
+     scrollWidth) — not guessed, and not the same as the container-query
+     breakpoint itself: see `--container-footer-row` in the `@theme`
+     block above for the actual (buffered) switch point this number
+     feeds into. Kept here purely as the documented source of that
+     buffer's basis, so a future remeasurement has a labeled baseline to
+     compare against instead of an unexplained "why 720?". */
+  --footer-min-inline-size: 682px;
 }
 
 
@@ -124,6 +178,18 @@
   body { @apply bg-background text-foreground; }
   html { @apply font-sans; }
   button, [role="button"], label[for] { @apply cursor-pointer; }
+  /* Mobile UX pass (2026-07-24). Chrome/Android's default gray tap-highlight
+     flash fires on every tap and visually fights any custom :active state
+     (double feedback — the browser's flash, then ours). manipulation drops
+     the ~300ms tap-delay some mobile browsers still apply before firing
+     click, and disables double-tap-to-zoom on repeated taps of the same
+     control — both irrelevant to app UI and, for the delay, actively
+     working against the tactile feel this pass is after. See layout.tsx's
+     `ontouchstart` note for the matching iOS Safari :active fix. */
+  button, [role="button"], a {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
 }
 
 @layer utilities {
@@ -215,23 +281,45 @@
   @keyframes fade-in-up { from { opacity: 0; } to { opacity: 1; } }
 }
 
-/* ── Stitch timeline connector lines (PropertyIntelligenceStream) ── */
-.timeline-line::before {
-  content: '';
-  position: absolute;
-  left: 20px;
-  top: 40px;
-  bottom: -24px;
-  width: 2px;
-  background: #E3E8EF;
-}
-.timeline-node:last-child .timeline-line::before {
-  display: none;
+/* ── Global reduced-motion floor ──────────────────────────────────────
+   The wizard's own .ff-* animations (below) are individually neutralized
+   already, but overlay entrance/exit motion — Radix's data-open:animate-in/
+   zoom-in/fade-in/slide-in-from-* on Popover, Select, Calendar-in-Popover,
+   Tooltip, AlertDialog (via the `tw-animate-css` utility layer, which ships
+   with no reduced-motion handling of its own — confirmed empirically, zero
+   `prefers-reduced-motion` occurrences in its source) — had no accommodation
+   at all. This is the standard, safe catch-all: it collapses every
+   animation/transition to near-zero duration rather than disabling motion
+   selectively per component, so nothing is missed as new animated overlays
+   get added. scroll-behavior is included for the same reason (anchor/
+   programmatic smooth-scrolls are motion too). This also freezes
+   animate-spin loaders (an accepted, standard side effect of this exact
+   recipe) — acceptable here because loading status is never conveyed by
+   the spin alone: the autosave indicator pairs it with text ("Saving…") and
+   an aria-live region, so a frozen icon loses nothing screen-reader or
+   sighted users depend on. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Hide scrollbar utility (used by PropertySpecsBar overflow-x scroll) ── */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Horizontal drag-scroll feel (FormStepper) ──
+   overscroll-behavior-x: contain keeps a fast wheel/trackpad fling from
+   chaining into page scroll once the stepper hits its scroll edge.
+   -webkit-overflow-scrolling: touch restores momentum/inertia scrolling on
+   iOS Safari, which otherwise stops dead the instant a touch lifts. */
+.ff-scroll-x {
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
 
 /* ── Stitch map-grid dot pattern (LocationIntelligenceCenter map container) ── */
 .map-grid {
@@ -385,6 +473,18 @@
   }
 }
 
+/* ── FeedbackState — soft fade + scale entrance ── */
+@keyframes fb-mount {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.fb-mount {
+  animation: fb-mount 0.32s var(--ease-spring) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fb-mount { animation: none; }
+}
+
 /* ── Sidebar nav scrollbar — minimal, premium ── */
 .app-sidebar nav::-webkit-scrollbar       { width: 3px; }
 .app-sidebar nav::-webkit-scrollbar-track { background: transparent; }
@@ -422,7 +522,6 @@
 }
 
 .property-map-marker {
-  animation: property-marker-drop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   transition: filter 0.15s ease;
 }
 .property-map-marker:hover,
@@ -431,6 +530,19 @@
 }
 .property-map-marker .property-marker-pin {
   position: relative;
+  /* UX Architecture pass (2026-07-20) — real positioning bug found via
+     responsive verification: the entrance animation used to live on
+     .property-map-marker itself (the outer element), the SAME element
+     both MapLibre's Marker and Leaflet's divIcon position via their own
+     inline `transform` on every frame. A CSS animation targeting
+     `transform` with fill-mode:both permanently wins the cascade over an
+     inline style for that property, so the marker was rendering at
+     roughly (0,0) — its raw box origin — instead of its real map
+     coordinate, for the entire life of the component. Animating this
+     inner pin instead (never touched by either map engine) keeps the
+     identical visual entrance effect without fighting either engine's
+     positioning. */
+  animation: property-marker-drop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .property-map-marker:hover .property-marker-pin,
@@ -447,7 +559,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .property-map-marker {
+  .property-map-marker .property-marker-pin {
     animation: none;
   }
   .property-map-marker .property-marker-pin,
@@ -527,13 +639,27 @@
 /* ── Property popup — quick actions ──────────────────────────────────────── */
 
 .property-popup-primary-btn {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  width: 100%; margin-top: 10px; padding: 8px 10px;
-  background: #0061BC; color: #fff; border-radius: 10px;
-  font-size: 11.5px; font-weight: 700; text-decoration: none;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; margin-top: 12px; padding: 10px 12px;
+  background: #0061BC; border-radius: 10px;
+  font-size: 12px; font-weight: 700; text-decoration: none;
+  letter-spacing: 0.01em;
+  box-shadow: 0 1px 2px rgba(0, 51, 102, 0.16), 0 4px 10px rgba(0, 97, 188, 0.18);
+  transition: background-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
-.property-popup-primary-btn:hover  { background: #004E99; }
+/* Leaflet ships its own `.leaflet-container a { color: #0078A8 }` rule
+   (leaflet.css) at higher specificity (class+element) than a bare
+   `.property-popup-primary-btn` class selector, which was silently
+   winning the cascade and tinting this button's label/icon (currentColor)
+   a dull teal instead of the pure white the design calls for. Both
+   selectors below match Leaflet's own specificity so this rule wins
+   regardless of stylesheet import order, and the `!important` closes the
+   gap for good against any future higher-specificity library rule. */
+.leaflet-container a.property-popup-primary-btn,
+.property-popup-primary-btn {
+  color: #fff !important;
+}
+.property-popup-primary-btn:hover  { background: #004E99; box-shadow: 0 1px 2px rgba(0, 51, 102, 0.18), 0 6px 14px rgba(0, 97, 188, 0.24); }
 .property-popup-primary-btn:active { transform: scale(0.98); }
 .property-popup-primary-btn:focus-visible {
   outline: 2px solid #0061BC; outline-offset: 2px;
@@ -541,8 +667,8 @@
 
 .property-popup-icon-btn {
   display: flex; align-items: center; justify-content: center;
-  width: 32px; height: 32px; flex-shrink: 0;
-  border: none; border-radius: 8px;
+  width: 34px; height: 34px; flex-shrink: 0;
+  border: none; border-radius: 9px;
   background: transparent; color: #667085;
   transition: background-color 0.15s ease, color 0.15s ease;
   cursor: pointer;
@@ -574,9 +700,9 @@
 }
 
 .property-popup .leaflet-popup-content-wrapper {
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: 0 14px 40px rgba(16, 24, 40, 0.16), 0 4px 14px rgba(16, 24, 40, 0.08);
-  padding: 14px 16px;
+  padding: 18px 20px;
   animation: property-popup-in 0.16s cubic-bezier(0, 0, 0.2, 1) both;
 }
 .property-popup .leaflet-popup-content {
@@ -605,10 +731,21 @@
    className and keyframe. */
 
 .property-popup .maplibregl-popup-content {
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: 0 14px 40px rgba(16, 24, 40, 0.16), 0 4px 14px rgba(16, 24, 40, 0.08);
-  padding: 14px 16px;
+  padding: 18px 20px;
   animation: property-popup-in 0.16s cubic-bezier(0, 0, 0.2, 1) both;
+  /* UX Architecture pass (2026-07-20): never let the popup get wider than
+     the viewport allows — content inside stays vertically stacked at any
+     width (see PopupCard) rather than compressing horizontally. */
+  max-width: min(300px, calc(100vw - 40px)) !important;
+  /* The map container itself can be short on small screens (mobile map
+     height is ~380px) — if the marker isn't near dead-center, MapLibre's
+     own collision-based anchor placement can still run out of vertical
+     room in either direction. Rather than let content clip off-screen
+     unreachably, the card scrolls internally past this height instead. */
+  max-height: min(420px, calc(100vh - 96px));
+  overflow-y: auto;
 }
 .property-popup .maplibregl-popup-tip {
   box-shadow: 3px 3px 8px rgba(16, 24, 40, 0.06);
@@ -685,4 +822,37 @@
 
 @media (prefers-reduced-motion: reduce) {
   .property-map-control-btn { transition: none; }
+}
+
+/* ── Map library z-index containment ─────────────────────────────────────
+   Bug fix (2026-07-24): the Property Location modal (LocationIntelligenceCenter's
+   fullscreen map Dialog) was rendering beneath the map's own zoom/locate
+   controls. Root cause: maplibre-gl.css and leaflet.css both ship their own
+   z-index values for control/overlay elements, set with zero knowledge of
+   this app's dialog scale (Dialog content sits at z-50 — see
+   components/ui/dialog.tsx) — `.maplibregl-cooperative-gesture-screen` ships
+   at z-index:99999 and Leaflet's `.leaflet-top`/`.leaflet-bottom` control
+   containers ship at z-index:1000, both far above z-50. This app's own
+   React-rendered map controls were already kept in-scale (z-10 — see
+   PropertyMapLibreInner.tsx's Locate/Fullscreen cluster and the App's z-10/
+   20/30/50 convention), but nothing capped what the *vendor* CSS injects,
+   so any native library control or overlay could silently outrank a Dialog
+   the moment it mounted. Capped here, once, for every map instance and
+   every dialog — not a per-component patch, and not an arbitrary huge
+   number: z-10 matches the exact tier this app's own map controls already
+   use, safely under Dialog's z-50 ceiling. */
+.maplibregl-ctrl-top-left,
+.maplibregl-ctrl-top-right,
+.maplibregl-ctrl-bottom-left,
+.maplibregl-ctrl-bottom-right,
+.maplibregl-cooperative-gesture-screen,
+.leaflet-top,
+.leaflet-bottom {
+  /* Deliberately NOT `.leaflet-pane`/`.maplibregl-popup`: those govern the
+     map's own INTERNAL layer ordering (tiles below markers below popups)
+     via Leaflet's own 200/400/600/700 pane scale — capping them to a flat
+     value would break that relative ordering inside the map itself, a
+     regression this fix must not introduce. Only the CONTROL/OVERLAY
+     containers that compete with page-level UI are touched here. */
+  z-index: 10 !important;
 }

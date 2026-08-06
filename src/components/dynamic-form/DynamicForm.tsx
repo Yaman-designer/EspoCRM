@@ -19,11 +19,11 @@ import {
   Form,
   FormField,
   FormItem,
-  FormLabel,
   FormControl,
-  FormMessage,
-  FormDescription,
+  useFormField,
 } from '@/components/ui/form'
+import { FormFieldShell } from '@/components/ui/form-field-shell'
+import type { ControllerRenderProps, ControllerFieldState, FieldValues } from 'react-hook-form'
 import type { DynamicFormProps, FieldConfig, FormSectionConfig } from './types'
 import { FormSection } from './FormSection'
 import { FormActions } from './FormActions'
@@ -73,10 +73,49 @@ function buildDefaults(
   return { ...base, ...(externalDefaults ?? {}), ...(initialData ?? {}) }
 }
 
-// ── Field types that embed their own label (skip FormLabel wrapper) ────────────
+// ── Field types that embed their own label (skip the shell's label row) ───────
 
 function ownsLabel(field: FieldConfig): boolean {
   return field.type === 'switch' || field.type === 'checkbox'
+}
+
+// ── Single field row: shared FormFieldShell (label/required/helper/error) ──────
+// around FormControl's id-injecting Slot + FieldRenderer. A real component
+// (not an inline render-prop) so useFormField() — which needs FormItem's id
+// context — can be called legitimately per hook rules.
+
+interface DynamicFormFieldRowProps {
+  fieldConfig: FieldConfig
+  field: ControllerRenderProps<FieldValues, string>
+  fieldState: ControllerFieldState
+  isView: boolean
+}
+
+function DynamicFormFieldRow({ fieldConfig, field, fieldState, isView }: DynamicFormFieldRowProps) {
+  const { formItemId } = useFormField()
+  const inlineLabel = ownsLabel(fieldConfig)
+
+  return (
+    <FormFieldShell
+      id={formItemId}
+      label={!inlineLabel ? fieldConfig.label : undefined}
+      required={!inlineLabel ? fieldConfig.required : undefined}
+      helperText={!inlineLabel ? fieldConfig.description : undefined}
+      error={fieldState.error?.message}
+      reserveLabelSpace={inlineLabel}
+    >
+      <FormControl>
+        <FieldRenderer
+          field={field}
+          config={{
+            ...fieldConfig,
+            disabled: fieldConfig.disabled || isView,
+            readOnly: fieldConfig.readOnly || isView,
+          }}
+        />
+      </FormControl>
+    </FormFieldShell>
+  )
 }
 
 // ── DynamicForm ────────────────────────────────────────────────────────────────
@@ -196,47 +235,27 @@ export function DynamicForm<T = Record<string, unknown>>({
                       icon={section.icon}
                       columns={section.columns ?? 2}
                     >
-                      {visibleFields.map((fieldConfig) => {
-                        const inlineLabel = ownsLabel(fieldConfig)
-
-                        return (
-                          <div
-                            key={fieldConfig.name}
-                            className={cn(COL_SPAN[fieldConfig.colSpan ?? 1])}
-                          >
-                            <FormField
-                              control={form.control}
-                              name={fieldConfig.name}
-                              render={({ field }) => (
-                                <FormItem>
-                                  {!inlineLabel && (
-                                    <FormLabel>
-                                      {fieldConfig.label}
-                                      {fieldConfig.required && (
-                                        <span className="ml-1 text-destructive">*</span>
-                                      )}
-                                    </FormLabel>
-                                  )}
-                                  <FormControl>
-                                    <FieldRenderer
-                                      field={field}
-                                      config={{
-                                        ...fieldConfig,
-                                        disabled: fieldConfig.disabled || isView,
-                                        readOnly: fieldConfig.readOnly || isView,
-                                      }}
-                                    />
-                                  </FormControl>
-                                  {fieldConfig.description && !inlineLabel && (
-                                    <FormDescription>{fieldConfig.description}</FormDescription>
-                                  )}
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                        )
-                      })}
+                      {visibleFields.map((fieldConfig) => (
+                        <div
+                          key={fieldConfig.name}
+                          className={cn(COL_SPAN[fieldConfig.colSpan ?? 1])}
+                        >
+                          <FormField
+                            control={form.control}
+                            name={fieldConfig.name}
+                            render={({ field, fieldState }) => (
+                              <FormItem>
+                                <DynamicFormFieldRow
+                                  fieldConfig={fieldConfig}
+                                  field={field}
+                                  fieldState={fieldState}
+                                  isView={isView}
+                                />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      ))}
                     </FormSection>
                   )
                 })}

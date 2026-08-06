@@ -49,5 +49,92 @@
     "saving": "Saving…",
     "fieldsRequired": "Fields marked * are required",
     "failedToSave": "Failed to save. Please try again."
+  },
+  "mediaLightbox": {
+    "close": "Close",
+    "previousImage": "Previous image",
+    "nextImage": "Next image",
+    "viewImage": "View image {{index}}",
+    "imageOfTotal": "image {{index}} of {{total}}"
+  },
+  "formFramework": {
+    "leaveGuard": {
+      "title": "Leave without saving?",
+      "description1": "You have unsaved changes.",
+      "description2": "If you leave now, any edits since the last save will be lost.",
+      "leavePage": "Leave Page",
+      "continueEditing": "Continue Editing"
+    },
+    "discardDialog": {
+      "title": "Discard this draft?",
+      "description1": "Everything entered so far will be permanently removed.",
+      "description2": "This wizard will reset to a blank first step.",
+      "keepEditing": "Keep Editing",
+      "discardDraft": "Discard Draft"
+    },
+    "actionBar": {
+      "discard": "Discard",
+      "discardDraft": "Discard Draft",
+      "cancel": "Cancel",
+      "previous": "Previous",
+      "continue": "Continue",
+      "continueTo": "Continue to {{step}}",
+      "next": "Next",
+      "createRecord": "Create {{entity}}",
+      "record": "Record",
+      "saving": "Saving…",
+      "savedExclaim": "Saved!",
+      "justNow": "just now",
+      "secAgo": "{{count}}s ago",
+      "minAgo": "{{count}}m ago",
+      "offline": "Offline",
+      "syncing": "Syncing…",
+      "syncFailed": "Sync failed",
+      "saved": "Saved",
+      "savedAt": "Saved {{time}}",
+      "unsavedChanges": "Unsaved changes",
+      "autoSave": "Auto-save",
+      "phase": "Step {{current}}/{{total}}",
+      "required": "{{count}} required",
+      "formCompletion": "Form completion",
+      "goToPreviousStep": "Go to previous step"
+    },
+    "pageHeader": {
+      "step": "STEP {{current}} OF {{total}}",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "syncFailed": "Sync Failed",
+      "draft": "Draft",
+      "stepSummary": "Step summary",
+      "saveStatus": "Save status: {{status}}",
+      "required": "{{count}} required"
+    },
+    "stepper": {
+      "optionalSuffix": "(optional)",
+      "stepStatusAnnounce": "Step {{current}} of {{total}}: {{title}}",
+      "formProgress": "Form progress",
+      "formSteps": "Form steps",
+      "optionalBadge": "Optional",
+      "progress": "Progress",
+      "stepOfTotal": "Step {{current}} of {{total}}",
+      "timeLeft": "~{{time}} left"
+    },
+    "saveIndicator": {
+      "justNow": "just now",
+      "secAgo": "{{count}}s ago",
+      "minAgo": "{{count}}m ago",
+      "saving": "Saving…",
+      "savingDraft": "Saving draft…",
+      "saved": "Saved",
+      "autosaved": "Autosaved",
+      "draft": "Draft",
+      "saveFailed": "Save failed",
+      "unsavedChanges": "Unsaved changes",
+      "retry": "Retry",
+      "retryAria": "Retry save"
+    },
+    "stepCard": {
+      "learnMore": "Learn more"
+    }
   }
 }

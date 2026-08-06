@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Controller } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
@@ -11,8 +12,9 @@ import { getFieldId } from '../utils'
 import type { FieldComponentProps, PasswordField as Schema } from '../types'
 
 function StrengthMeter({ value }: { value: string }) {
+  const { t } = useTranslation('properties')
   const strength = getStrength(value)
-  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong']
+  const labels = ['', t('wizard.common.strengthWeak'), t('wizard.common.strengthFair'), t('wizard.common.strengthGood'), t('wizard.common.strengthStrong')]
   const colors = ['', 'bg-destructive', 'bg-orange-400', 'bg-yellow-400', 'bg-brand-emerald']
 
   if (!value) return null
@@ -41,6 +43,7 @@ function getStrength(password: string): number {
 }
 
 export function PasswordField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
   const [show, setShow] = useState(false)
 
   return (
@@ -56,7 +59,7 @@ export function PasswordField({ schema, form, disabled, readOnly }: FieldCompone
               id={getFieldId(schema.key)}
               value={field.value ?? ''}
               type={show ? 'text' : 'password'}
-              placeholder={schema.placeholder ?? '••••••••'}
+              placeholder={schema.placeholderKey ? t(schema.placeholderKey) : '••••••••'}
               disabled={disabled}
               readOnly={readOnly}
               autoComplete="current-password"
@@ -68,7 +71,7 @@ export function PasswordField({ schema, form, disabled, readOnly }: FieldCompone
               onClick={() => setShow(s => !s)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
               tabIndex={-1}
-              aria-label={show ? 'Hide password' : 'Show password'}
+              aria-label={show ? t('wizard.common.hidePassword') : t('wizard.common.showPassword')}
             >
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

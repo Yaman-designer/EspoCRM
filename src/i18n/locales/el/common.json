@@ -49,5 +49,92 @@
     "saving": "Αποθήκευση…",
     "fieldsRequired": "Τα πεδία με * είναι υποχρεωτικά",
     "failedToSave": "Αποτυχία αποθήκευσης. Παρακαλώ προσπαθήστε ξανά."
+  },
+  "mediaLightbox": {
+    "close": "Κλείσιμο",
+    "previousImage": "Προηγούμενη εικόνα",
+    "nextImage": "Επόμενη εικόνα",
+    "viewImage": "Προβολή εικόνας {{index}}",
+    "imageOfTotal": "εικόνα {{index}} από {{total}}"
+  },
+  "formFramework": {
+    "leaveGuard": {
+      "title": "Έξοδος χωρίς αποθήκευση;",
+      "description1": "Έχετε μη αποθηκευμένες αλλαγές.",
+      "description2": "Αν φύγετε τώρα, οι αλλαγές από την τελευταία αποθήκευση θα χαθούν.",
+      "leavePage": "Έξοδος",
+      "continueEditing": "Συνέχεια επεξεργασίας"
+    },
+    "discardDialog": {
+      "title": "Απόρριψη αυτού του προσχεδίου;",
+      "description1": "Όλα όσα έχουν καταχωρηθεί μέχρι στιγμής θα διαγραφούν οριστικά.",
+      "description2": "Αυτός ο οδηγός θα επαναφερθεί στο κενό πρώτο βήμα.",
+      "keepEditing": "Συνέχεια επεξεργασίας",
+      "discardDraft": "Απόρριψη προσχεδίου"
+    },
+    "actionBar": {
+      "discard": "Απόρριψη",
+      "discardDraft": "Απόρριψη προσχεδίου",
+      "cancel": "Ακύρωση",
+      "previous": "Προηγούμενο",
+      "continue": "Συνέχεια",
+      "continueTo": "Συνέχεια στο {{step}}",
+      "next": "Επόμενο",
+      "createRecord": "Δημιουργία {{entity}}",
+      "record": "Εγγραφή",
+      "saving": "Αποθήκευση…",
+      "savedExclaim": "Αποθηκεύτηκε!",
+      "justNow": "μόλις τώρα",
+      "secAgo": "πριν {{count}}δ",
+      "minAgo": "πριν {{count}}λ",
+      "offline": "Εκτός σύνδεσης",
+      "syncing": "Συγχρονισμός…",
+      "syncFailed": "Αποτυχία συγχρονισμού",
+      "saved": "Αποθηκεύτηκε",
+      "savedAt": "Αποθηκεύτηκε {{time}}",
+      "unsavedChanges": "Μη αποθηκευμένες αλλαγές",
+      "autoSave": "Αυτόματη αποθήκευση",
+      "phase": "Βήμα {{current}}/{{total}}",
+      "required": "{{count}} υποχρεωτικά",
+      "formCompletion": "Ολοκλήρωση φόρμας",
+      "goToPreviousStep": "Μετάβαση στο προηγούμενο βήμα"
+    },
+    "pageHeader": {
+      "step": "ΒΗΜΑ {{current}} ΑΠΟ {{total}}",
+      "saving": "Αποθήκευση…",
+      "saved": "Αποθηκεύτηκε",
+      "syncFailed": "Αποτυχία συγχρονισμού",
+      "draft": "Προσχέδιο",
+      "stepSummary": "Σύνοψη βήματος",
+      "saveStatus": "Κατάσταση αποθήκευσης: {{status}}",
+      "required": "{{count}} υποχρεωτικά"
+    },
+    "stepper": {
+      "optionalSuffix": "(προαιρετικό)",
+      "stepStatusAnnounce": "Βήμα {{current}} από {{total}}: {{title}}",
+      "formProgress": "Πρόοδος φόρμας",
+      "formSteps": "Βήματα φόρμας",
+      "optionalBadge": "Προαιρετικό",
+      "progress": "Πρόοδος",
+      "stepOfTotal": "Βήμα {{current}} από {{total}}",
+      "timeLeft": "~{{time}} απομένουν"
+    },
+    "saveIndicator": {
+      "justNow": "μόλις τώρα",
+      "secAgo": "πριν {{count}}δ",
+      "minAgo": "πριν {{count}}λ",
+      "saving": "Αποθήκευση…",
+      "savingDraft": "Αποθήκευση προσχεδίου…",
+      "saved": "Αποθηκεύτηκε",
+      "autosaved": "Αυτόματη αποθήκευση",
+      "draft": "Προσχέδιο",
+      "saveFailed": "Αποτυχία αποθήκευσης",
+      "unsavedChanges": "Μη αποθηκευμένες αλλαγές",
+      "retry": "Επανάληψη",
+      "retryAria": "Επανάληψη αποθήκευσης"
+    },
+    "stepCard": {
+      "learnMore": "Μάθετε περισσότερα"
+    }
   }
 }

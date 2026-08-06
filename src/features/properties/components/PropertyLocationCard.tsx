@@ -5,6 +5,7 @@ import {
   MapPin, Globe, Layers, Navigation,
   Copy, ExternalLink,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { PropertyMap } from './PropertyMap'
 import { NearbyPlaces } from './NearbyPlaces'
@@ -104,6 +105,7 @@ function LocationSkeleton() {
 // ── Empty state (no geocoded coordinates) ─────────────────────────────────────
 
 function LocationEmptyState({ property }: { property: RealEstateProperty }) {
+  const { t } = useTranslation('properties')
   const { locationName, subRegionLocationName, regionLocationName, addressCity } = property
 
   const district = locationName
@@ -138,19 +140,19 @@ function LocationEmptyState({ property }: { property: RealEstateProperty }) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           {(district || city) && (
             <div className="rounded-lg border border-border/12 bg-card px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <p className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/35">District</p>
+              <p className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/35">{t('locationCard.districtLabel')}</p>
               <p className="text-[13.5px] font-semibold text-foreground">{district || city}</p>
             </div>
           )}
           {area && (
             <div className="rounded-lg border border-border/12 bg-card px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <p className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/35">Area</p>
+              <p className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/35">{t('locationCard.areaLabel')}</p>
               <p className="text-[13.5px] font-semibold text-foreground">{area}</p>
             </div>
           )}
           {region && (
             <div className="rounded-lg border border-border/12 bg-card px-4 py-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-              <p className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/35">Region</p>
+              <p className="mb-1 text-[9.5px] font-bold uppercase tracking-[0.18em] text-muted-foreground/35">{t('locationCard.regionLabel')}</p>
               <p className="text-[13.5px] font-semibold text-foreground">{region}</p>
             </div>
           )}
@@ -158,7 +160,7 @@ function LocationEmptyState({ property }: { property: RealEstateProperty }) {
       ) : (
         <div className="flex items-center gap-3 rounded-lg border border-dashed border-border/22 bg-muted/8 px-4 py-4">
           <MapPin className="size-4 shrink-0 text-muted-foreground/28" />
-          <p className="text-[13px] text-muted-foreground/45">Location details available on request</p>
+          <p className="text-[13px] text-muted-foreground/45">{t('locationCard.locationDetailsOnRequest')}</p>
         </div>
       )}
     </div>
@@ -178,6 +180,7 @@ function LocationInfoPanel({
   longitude:        number
   formattedAddress: string
 }) {
+  const { t } = useTranslation('properties')
   const [copied, setCopied] = useState(false)
 
   const mapsUrl = `https://maps.google.com/?q=${latitude},${longitude}`
@@ -194,12 +197,12 @@ function LocationInfoPanel({
   return (
     <div className="flex flex-col justify-between gap-6 pt-1">
       <div className="divide-y divide-border/8">
-        {locationName          && <InfoRow icon={MapPin}    label="Area"        value={locationName} />}
-        {subRegionLocationName && <InfoRow icon={Globe}     label="District"    value={subRegionLocationName} />}
-        {regionLocationName    && <InfoRow icon={Layers}    label="Region"      value={regionLocationName} />}
-        {property.addressCity  && <InfoRow icon={MapPin}    label="City"        value={property.addressCity} />}
-        <InfoRow icon={Globe}      label="Country"     value="Greece" />
-        <InfoRow icon={Navigation} label="Coordinates" value={coordStr} mono />
+        {locationName          && <InfoRow icon={MapPin}    label={t('locationCard.areaLabel')}        value={locationName} />}
+        {subRegionLocationName && <InfoRow icon={Globe}     label={t('locationCard.districtLabel')}    value={subRegionLocationName} />}
+        {regionLocationName    && <InfoRow icon={Layers}    label={t('locationCard.regionLabel')}      value={regionLocationName} />}
+        {property.addressCity  && <InfoRow icon={MapPin}    label={t('locationCard.cityLabel')}        value={property.addressCity} />}
+        <InfoRow icon={Globe}      label={t('locationCard.countryLabel')}     value={t('locationCard.greeceFallback')} />
+        <InfoRow icon={Navigation} label={t('locationCard.coordinatesLabel')} value={coordStr} mono />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -210,7 +213,7 @@ function LocationInfoPanel({
           className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-primary transition-colors hover:text-primary/70 focus-visible:outline-none"
         >
           <ExternalLink className="size-3.5" />
-          Open in Google Maps
+          {t('map.openInGoogleMaps')}
         </a>
         <button
           type="button"
@@ -218,7 +221,7 @@ function LocationInfoPanel({
           className="inline-flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground/45 transition-colors hover:text-foreground focus-visible:outline-none"
         >
           <Copy className="size-3" />
-          {copied ? 'Copied!' : 'Copy Coordinates'}
+          {copied ? t('locationCard.copied') : t('locationCard.copyCoordinates')}
         </button>
       </div>
     </div>
@@ -233,6 +236,7 @@ interface PropertyLocationCardProps {
 }
 
 export function PropertyLocationCard({ property, className }: PropertyLocationCardProps) {
+  const { t } = useTranslation('properties')
   const {
     locationName, subRegionLocationName, regionLocationName,
     propertyCode, addressLatitude, addressLongitude,
@@ -281,7 +285,7 @@ export function PropertyLocationCard({ property, className }: PropertyLocationCa
       {/* Section header */}
       <div className="mb-7">
         <p className="text-[10px] font-semibold uppercase tracking-[0.20em] text-muted-foreground/42">
-          Location Intelligence
+          {t('locationCard.locationIntelligenceEyebrow')}
         </p>
         {geoQuery && (
           <p className="mt-2 text-[11px] text-muted-foreground/35">

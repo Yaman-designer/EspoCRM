@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Controller } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Link as LinkExtBase } from '@tiptap/extension-link'
@@ -135,8 +136,8 @@ const ACTIONS: Record<string, ToolbarAction> = {
 
 function buildToolbar(keys: Schema['toolbar']): ToolbarItem[] {
   if (!keys?.length) return []
-  return keys.flatMap(key => {
-    if (key === '|') return [{ type: 'separator' } as ToolbarSeparator]
+  return keys.flatMap((key): ToolbarItem[] => {
+    if (key === '|') return [{ type: 'separator' }]
     const action = ACTIONS[key]
     return action ? [action] : []
   })
@@ -286,7 +287,7 @@ function RichTextEditor({
   // Sync external value changes (form reset)
   useEffect(() => {
     if (editor && editor.getHTML() !== value) {
-      editor.commands.setContent(value ?? '', false)
+      editor.commands.setContent(value ?? '', { emitUpdate: false })
     }
   }, [value, editor])
 
@@ -303,7 +304,9 @@ function RichTextEditor({
       className={cn(
         'overflow-hidden rounded-xl border border-border/70 bg-background',
         'shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-all duration-200',
-        'hover:border-border/90',
+        // Final polish pass: matches Input/Select/Textarea/Combobox's
+        // strengthened hover signal — see input.tsx.
+        'hover:border-border',
         'focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/15 focus-within:shadow-[0_1px_4px_rgba(16,24,40,0.06)]',
         error && 'border-destructive focus-within:border-destructive focus-within:ring-destructive/15',
         disabled && 'cursor-not-allowed opacity-50',
@@ -344,10 +347,15 @@ function RichTextEditor({
 /* ─── Public field ────────────────────────────────────────────────── */
 
 export function RichTextField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
+  // Keyed on the joined key list, not the array reference — schema.toolbar
+  // is commonly a fresh array literal each render even when its contents
+  // are unchanged, which would otherwise recompute the toolbar every time.
+  const toolbarKey = schema.toolbar?.join(',')
   const toolbarItems = useMemo(
     () => buildToolbar(schema.toolbar),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [schema.toolbar?.join(',')],
+    [toolbarKey],
   )
 
   return (
@@ -370,7 +378,7 @@ export function RichTextField({ schema, form, disabled, readOnly }: FieldCompone
             minHeight={schema.minHeight ?? 160}
             toolbarItems={toolbarItems}
             maxLength={schema.maxLength}
-            placeholder={schema.placeholder}
+            placeholder={schema.placeholderKey ? t(schema.placeholderKey) : undefined}
             error={!!fieldState.error}
           />
         </FieldWrapper>

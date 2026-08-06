@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Expand } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,7 @@ interface PropertyGalleryProps {
 }
 
 export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyGalleryProps) {
+  const { t } = useTranslation('properties')
   const allIds = mainImageId
     ? [mainImageId, ...imageIds.filter(id => id !== mainImageId)]
     : imageIds
@@ -46,7 +48,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
         >
           <Image
             src={src(activeIndex)}
-            alt={title || 'Property'}
+            alt={title || t('gallery.propertyFallback')}
             fill
             priority
             unoptimized
@@ -65,7 +67,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
           {images.length > 1 && (
             <button
               type="button"
-              aria-label="Previous image"
+              aria-label={t('gallery.previousImage')}
               onClick={e => { e.stopPropagation(); handlePrev() }}
               className={cn(
                 'absolute left-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center',
@@ -82,7 +84,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
           {images.length > 1 && (
             <button
               type="button"
-              aria-label="Next image"
+              aria-label={t('gallery.nextImage')}
               onClick={e => { e.stopPropagation(); handleNext() }}
               className={cn(
                 'absolute right-4 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center',
@@ -98,7 +100,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
           {/* Fullscreen — top-right, always visible */}
           <button
             type="button"
-            aria-label="View full screen"
+            aria-label={t('gallery.viewFullScreen')}
             onClick={e => { e.stopPropagation(); setLightboxOpen(true) }}
             className={cn(
               'absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center',
@@ -131,7 +133,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
               <button
                 key={i}
                 type="button"
-                aria-label={`View image ${i + 1}`}
+                aria-label={t('gallery.viewImageN', { index: i + 1 })}
                 onClick={() => setActiveIndex(i)}
                 className={cn(
                   'relative h-17 w-23 shrink-0 overflow-hidden rounded-xl bg-muted',
@@ -143,7 +145,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
               >
                 <Image
                   src={src(i)}
-                  alt={`${title || 'Property'} ${i + 1}`}
+                  alt={`${title || t('gallery.propertyFallback')} ${i + 1}`}
                   fill
                   unoptimized
                   className="object-cover"
@@ -159,12 +161,12 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
       {/* ── Lightbox ──────────────────────────────────────────────────────── */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-5xl border-none bg-black/96 p-0 shadow-none">
-          <DialogTitle className="sr-only">{title ?? 'Property gallery'}</DialogTitle>
+          <DialogTitle className="sr-only">{title ?? t('gallery.propertyGalleryFallback')}</DialogTitle>
 
           <div className="relative flex h-[82vh] items-center justify-center">
             <Image
               src={src(activeIndex)}
-              alt={title || 'Property'}
+              alt={title || t('gallery.propertyFallback')}
               fill
               unoptimized
               className="object-contain"
@@ -176,7 +178,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
               <>
                 <button
                   type="button"
-                  aria-label="Previous image"
+                  aria-label={t('gallery.previousImage')}
                   onClick={handlePrev}
                   className="absolute left-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/22"
                 >
@@ -184,7 +186,7 @@ export function PropertyGallery({ mainImageId, imageIds = [], title }: PropertyG
                 </button>
                 <button
                   type="button"
-                  aria-label="Next image"
+                  aria-label={t('gallery.nextImage')}
                   onClick={handleNext}
                   className="absolute right-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/22"
                 >

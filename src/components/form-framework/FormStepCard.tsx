@@ -1,6 +1,7 @@
 'use client'
 
 import { type RefObject, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ExternalLink, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -105,6 +106,7 @@ export function FormStepCard({
   isLoading,
   className,
 }: FormStepCardProps) {
+  const { t } = useTranslation('common')
   const { config, displayedStepIndex, animClass } = useFormFramework()
   const step = config.steps[displayedStepIndex]
   const hasChildren = Boolean(children)
@@ -147,7 +149,7 @@ export function FormStepCard({
               rel="noreferrer"
               className="ml-1 inline-flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-primary underline-offset-2 hover:underline"
             >
-              Learn more
+              {t('formFramework.stepCard.learnMore')}
               <ExternalLink className="h-3 w-3" aria-hidden />
             </a>
           )}

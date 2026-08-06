@@ -1,114 +1,129 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, Expand, MapPin, Ruler, CalendarDays, Zap, ShieldCheck } from 'lucide-react'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { ChevronLeft, ChevronRight, Expand, MapPin } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { getWebAssetUrl, FALLBACK_IMAGE } from '@/lib/image-url'
-import { fmtPrice } from '../../lib/display'
-import type { PropertyStatus } from '../../types/property.types'
-import type { PropertyHealth } from '../../lib/property-health'
+import { PropertyIndicatorPills } from '../PropertyIndicators'
+import { getStatusLabel } from '../PropertyStatusBadge'
+import { getPropertyTypeLabel } from '../../domain/property-type.registry'
+import type { HeroViewModel } from '../../view-models/hero.viewmodel'
 
 // Property Overview Header redesign (2026-07-18). This section is an
 // Executive Property Summary Header for an enterprise dashboard, not a
 // listing-site hero — the real photo gallery already lives later on this
-// page (Asset Management System). Two deliberate changes from the prior
-// version drive everything below:
-//   1. The photo shrank from 620px to a 320px banner with a stronger scrim,
-//      and stopped being the only place identity information lives.
-//   2. A solid (non-photo) Executive Summary panel now carries the KPIs —
-//      Asking Price, Price/m², Area, Year Built, Status, Type, Address,
-//      Listing Type — so reading them never depends on how bright a given
-//      region of the photo happens to be.
-// `health` remains an unused-looking prop only in the sense that its old
-// "Completeness %" floating card is gone — Command Hub already owns
-// completeness as a labeled section, so this component no longer needs a
-// second copy of it.
+// page (Asset Management System).
+//
+// Information Architecture refinement (2026-07-22). This component's job is
+// identity only — image, status, property type, transaction type, title,
+// property code, address. Every one of those already lives in the photo
+// overlay below. The solid "Executive Summary" panel that used to sit under
+// the photo (first Price/Price-m²/Area/Year Built/Energy/Availability, then
+// — after an earlier pass in the same day — Category/Condition/Listing Age)
+// is removed outright, not just re-populated a second time: on review,
+// nothing that belongs there survives the "does this belong in Hero, or did
+// we just need somewhere to put it" test.
+//   - Price/Price-per-m² → Financial Intelligence, one section below.
+//   - Area/Year Built/Energy Class → Quick Specifications.
+//   - Availability → the Status badge two lines above, and Command Hub.
+//   - Category → Command Hub's "Property Information" line (its one home).
+//   - Condition → promoted to Quick Specifications instead (a physical
+//     attribute belongs beside Bedrooms/Bathrooms/Area, not in an identity
+//     header — and Quick Specifications was the explicitly invited home for
+//     exactly this kind of promotion).
+//   - Listing Age → dropped, not relocated. It was never a real stored
+//     field, only a same-day computed restatement of `createdAt` — which
+//     Financial Intelligence already shows as an absolute "Listed" date.
+// A Hero limited to real identity fields is lighter, not incomplete — every
+// fact a first-time reader needs to orient ("what is this, where is it, is
+// it available") is on screen in the first 320px, nothing else competes for
+// that same instant.
+//
+// Enterprise architecture pass (2026-07-23). Status→fill-color mapping
+// moved to the shared `status-presentation` mapper (see
+// `HeroViewModel.statusFillClass`, built by `hero.viewmodel.ts`). The
+// confirmed-dead `health`/`bedroomCount` props are dropped — neither was
+// ever read in this file's body. The `mainImageId`-triggered re-dedup path
+// is also dropped: the one real call site (PropertyDetailView) never passed
+// `mainImageId` here — the already-ordered gallery arrives as `imageIds`
+// (see PropertyDetailView's `buildHeroGalleryIds`) — so the dedup branch was
+// unreachable dead code, not a live behavior.
 
 interface PropertyIntelligenceHeroSectionProps {
-  mainImageId?:  string | null
-  imageIds?:     string[]
-  title?:        string
-  location?:     string
-  status?:       PropertyStatus
-  type?:         string
-  propertyCode?: string
-  price?:        number
-  health:        PropertyHealth
-  square?:       number
-  bedroomCount?: number
-  requestType?:  string
-  yearBuilt?:    number
-  energyClass?:  string
-  isPremium?:    boolean
-  isFeatured?:   boolean
-  isVerified?:   boolean
-  isNewListing?: boolean
-}
-
-// Wave 2 (2026-07-14): rebuilt for the real 8-value live status enum — see
-// the approved Product Decision Record for the old→new mapping. Reused here
-// for the Status badge's solid fill instead of a text-color-only treatment.
-function statusFillClass(status?: PropertyStatus): string {
-  if (status === 'Active')                                              return 'bg-brand-emerald border-brand-emerald'
-  if (status === 'Sold' || status === 'Rented')                         return 'bg-brand-crimson border-brand-crimson'
-  if (status === 'Under Approval' || status === 'Not Approved' ||
-      status === 'Under negotiation' || status === 'Received payment')  return 'bg-amber-600 border-amber-600'
-  return 'bg-primary border-primary'
+  viewModel: HeroViewModel
+  /** Media Gallery Consistency pass (2026-07-24). These replace what used to
+   *  be this component's own local `activeIndex`/`lightboxOpen` state — and
+   *  this component no longer renders a Lightbox of its own at all. Owned by
+   *  PropertyDetailView now and shared byte-for-byte with Asset Management's
+   *  Photos tab and the single shared `<MediaLightbox>` PropertyDetailView
+   *  renders, so the Hero banner, the Photos grid, and the fullscreen viewer
+   *  they both open are one gallery with one Lightbox instance, not three.
+   *  See PropertyDetailView.tsx's own `mediaIndex`/`mediaLightboxOpen` note. */
+  activeIndex: number
+  onActiveIndexChange: (index: number) => void
+  onLightboxOpenChange: (open: boolean) => void
+  /** Shared focus-restore target — see PropertyDetailView.tsx's own
+   *  `mediaTriggerRef` note. Captured here at click/keyboard-open time so
+   *  the single shared Lightbox can focus this exact trigger back on close,
+   *  even though the Lightbox itself is rendered by a different component. */
+  triggerRef: React.RefObject<HTMLElement | null>
 }
 
 export function PropertyIntelligenceHeroSection({
-  mainImageId,
-  imageIds = [],
-  title,
-  location,
-  status,
-  type,
-  propertyCode,
-  price,
-  square,
-  requestType,
-  yearBuilt,
-  energyClass,
-  isPremium,
-  isFeatured,
-  isVerified,
-  isNewListing,
+  viewModel, activeIndex, onActiveIndexChange, onLightboxOpenChange, triggerRef,
 }: PropertyIntelligenceHeroSectionProps) {
-  const allIds = mainImageId
-    ? [mainImageId, ...imageIds.filter(id => id !== mainImageId)]
-    : imageIds
-  const images = allIds.length > 0 ? allIds : [null as string | null]
+  const { t } = useTranslation('properties')
+  const {
+    imageIds, title, location, status, statusFillClass, type, propertyCode,
+    requestType, isPremium, isFeatured, isVerified, isNewListing,
+  } = viewModel
+  const propertyFallback = t('common.propertyFallback')
 
-  const [activeIndex, setActiveIndex]   = useState(0)
-  const [lightboxOpen, setLightboxOpen] = useState(false)
-  const [errored, setErrored]           = useState<Set<number>>(new Set())
+  const images = imageIds.length > 0 ? imageIds : [null as string | null]
 
-  const src     = (i: number) => errored.has(i) ? FALLBACK_IMAGE : getWebAssetUrl(images[i])
-  const onError = (i: number) => setErrored(s => new Set([...s, i]))
-  const prev    = useCallback(() => setActiveIndex(i => (i - 1 + images.length) % images.length), [images.length])
-  const next    = useCallback(() => setActiveIndex(i => (i + 1) % images.length), [images.length])
+  const [errored, setErrored] = useState<Set<string>>(new Set())
 
-  // Interaction Design Sprint 4 (2026-07-18). Lightbox keyboard navigation —
-  // Escape-to-close is already handled by the Dialog primitive; only arrow-
-  // key image stepping needs to be added here.
-  useEffect(() => {
-    if (!lightboxOpen || images.length <= 1) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'ArrowLeft')  prev()
-      if (e.key === 'ArrowRight') next()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [lightboxOpen, images.length, prev, next])
+  // Same `resolve`/`onErr` id-keyed contract MediaLightbox and Asset
+  // Management both already use — replaces the old index-keyed `src`/
+  // `onError` pair now that this component hands its images to the shared
+  // viewer instead of rendering its own.
+  function resolve(id: string | null | undefined, size?: 'small' | 'medium' | 'large'): string {
+    if (!id || errored.has(id)) return FALLBACK_IMAGE
+    return getWebAssetUrl(id, size)
+  }
+  function onErr(id: string) { setErrored(s => new Set([...s, id])) }
+
+  const prev = useCallback(
+    () => onActiveIndexChange((activeIndex - 1 + images.length) % images.length),
+    [activeIndex, images.length, onActiveIndexChange],
+  )
+  const next = useCallback(
+    () => onActiveIndexChange((activeIndex + 1) % images.length),
+    [activeIndex, images.length, onActiveIndexChange],
+  )
+
+  // Same explicit focus-restore pattern Asset Management's own lightbox
+  // trigger uses (see that file's own note on why Radix's default silently
+  // fails on this page) — captured on click/keyboard-open, written into the
+  // shared `triggerRef` PropertyDetailView's single MediaLightbox instance
+  // reads from.
+  function openLightbox() {
+    triggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    onLightboxOpenChange(true)
+  }
 
   // Photo banner itself is still the open-lightbox trigger; keyboard
-  // equivalent preserved unchanged from Interaction Design Sprint 4.
+  // equivalent preserved unchanged from Interaction Design Sprint 4. Arrow-
+  // key *browsing* here (banner focused, lightbox closed) is distinct from
+  // MediaLightbox's own arrow-key handling (lightbox open) — different
+  // focus targets, so the two never conflict — but both now write to the
+  // exact same shared `activeIndex`.
   function onBannerKeyDown(e: React.KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      setLightboxOpen(true)
+      openLightbox()
     } else if (e.key === 'ArrowLeft' && images.length > 1) {
       e.preventDefault()
       prev()
@@ -118,297 +133,172 @@ export function PropertyIntelligenceHeroSection({
     }
   }
 
-  const pricePerSqm = price != null && square ? Math.round(price / square) : null
-
-  const qualityPill =
-    isPremium    ? 'PREMIUM PORTFOLIO' :
-    isFeatured   ? 'FEATURED'          :
-    isVerified   ? 'VERIFIED'          :
-    isNewListing ? 'NEW LISTING'       :
-    null
+  const hasQualitySignal = isPremium || isFeatured || isVerified || isNewListing
 
   return (
-    <>
-      <div className="rounded-2xl overflow-hidden shadow-design-lg border border-border/50">
+    <div className="rounded-2xl overflow-hidden shadow-design-lg border border-border/50">
 
-        {/* ── Photo banner — contextual support, not the point ─────────────
-            Reduced from 620px to 320px and given a stronger, more
-            consistent scrim specifically so this reads as a supporting
-            banner rather than a gallery hero; every KPI a reader actually
-            needs lives in the solid panel below, not on the photo. */}
-        <div
-          role="button"
-          tabIndex={0}
-          aria-label={`View ${title || 'property'} photos full screen${images.length > 1 ? ` — ${images.length} images` : ''}`}
+      {/* ── Photo banner — contextual support, not the point ─────────────
+          Reduced from 620px to 320px and given a stronger, more
+          consistent scrim specifically so this reads as a supporting
+          banner rather than a gallery hero; every KPI a reader actually
+          needs lives in the solid panel below, not on the photo. */}
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={
+          images.length > 1
+            ? t('hero.viewPhotosFullScreen', { title: title || propertyFallback, count: images.length })
+            : t('hero.viewPhotoFullScreen', { title: title || propertyFallback })
+        }
+        className={cn(
+          'group relative h-80 overflow-hidden cursor-zoom-in',
+          'shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]',
+          'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40 focus-visible:ring-inset',
+        )}
+        onClick={openLightbox}
+        onKeyDown={onBannerKeyDown}
+      >
+        <Image
+          src={resolve(images[activeIndex])}
+          alt={title || propertyFallback}
+          fill
+          priority
+          unoptimized
           className={cn(
-            'group relative h-80 overflow-hidden cursor-zoom-in',
-            'shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]',
-            'focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/40 focus-visible:ring-inset',
+            'object-cover transition-transform duration-700 group-hover:scale-105',
+            // Final polish pass (2026-07-18): a whisper of contrast and
+            // saturation — the single highest-leverage fix for "flat,
+            // lifeless, too soft" — tuned to stay believable rather than
+            // HDR-looking. No blur, no opacity wash; the photo itself
+            // still does all the work.
+            'contrast-[1.06] saturate-[1.1] brightness-[1.015]',
           )}
-          onClick={() => setLightboxOpen(true)}
-          onKeyDown={onBannerKeyDown}
-        >
-          <Image
-            src={src(activeIndex)}
-            alt={title || 'Property'}
-            fill
-            priority
-            unoptimized
+          style={{ objectPosition: '50% 42%' }}
+          sizes="(max-width: 1023px) 100vw, 65vw"
+          onError={() => { const id = images[activeIndex]; if (id) onErr(id) }}
+        />
+
+        {/* Final polish pass: a five-stop directional gradient (was four)
+            for a genuinely photographic light falloff — a real
+            transparent band through the middle instead of a sudden jump
+            from "barely there" to "dark enough to read text" — plus a
+            second, radial layer that only darkens the far corners, the
+            way a vignette on an actual lens does. Neither layer is a
+            blur or an opaque wash; the property is fully visible through
+            both. */}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(10,14,20,0.30)_0%,rgba(10,14,20,0.00)_22%,rgba(10,14,20,0.05)_42%,rgba(10,14,20,0.32)_68%,rgba(10,14,20,0.82)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_100%_at_50%_40%,transparent_58%,rgba(10,14,20,0.16)_100%)]" />
+
+        {/* Top-left: quality signals — trust indicators, not a data field,
+            so they stay the one thing still allowed to float. */}
+        {hasQualitySignal && (
+          <div className="absolute top-4 left-4 z-20 flex flex-wrap gap-1.5 max-w-[calc(100%-2.5rem)]" onClick={e => e.stopPropagation()}>
+            <PropertyIndicatorPills
+              isFeatured={isFeatured} isVerified={isVerified}
+              isPremium={isPremium} isNewListing={isNewListing}
+              size="md"
+            />
+          </div>
+        )}
+
+        {/* Top-right: expand-to-lightbox, unchanged from Interaction
+            Design Sprint 4 (touch-visible, keyboard-operable). */}
+        <div className="absolute top-4 right-4 z-20" onClick={e => e.stopPropagation()}>
+          <button
+            type="button"
+            aria-label={t('hero.viewFullScreen')}
+            onClick={e => { e.stopPropagation(); openLightbox() }}
             className={cn(
-              'object-cover transition-transform duration-700 group-hover:scale-105',
-              // Final polish pass (2026-07-18): a whisper of contrast and
-              // saturation — the single highest-leverage fix for "flat,
-              // lifeless, too soft" — tuned to stay believable rather than
-              // HDR-looking. No blur, no opacity wash; the photo itself
-              // still does all the work.
-              'contrast-[1.06] saturate-[1.1] brightness-[1.015]',
+              'flex h-9 w-9 items-center justify-center rounded-xl',
+              'border border-white/15 bg-black/45 text-white backdrop-blur-md',
+              'opacity-70 transition-opacity duration-200 lg:opacity-0 lg:group-hover:opacity-75 hover:opacity-100!',
+              'focus-visible:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/70',
             )}
-            style={{ objectPosition: '50% 42%' }}
-            sizes="(max-width: 1023px) 100vw, 65vw"
-            onError={() => onError(activeIndex)}
-          />
-
-          {/* Final polish pass: a five-stop directional gradient (was four)
-              for a genuinely photographic light falloff — a real
-              transparent band through the middle instead of a sudden jump
-              from "barely there" to "dark enough to read text" — plus a
-              second, radial layer that only darkens the far corners, the
-              way a vignette on an actual lens does. Neither layer is a
-              blur or an opaque wash; the property is fully visible through
-              both. */}
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(10,14,20,0.30)_0%,rgba(10,14,20,0.00)_22%,rgba(10,14,20,0.05)_42%,rgba(10,14,20,0.32)_68%,rgba(10,14,20,0.82)_100%)]" />
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_100%_at_50%_40%,transparent_58%,rgba(10,14,20,0.16)_100%)]" />
-
-          {/* Top-left: quality signal only — a trust indicator, not a data
-              field, so it stays the one thing still allowed to float. */}
-          {qualityPill && (
-            <div className="absolute top-4 left-4 z-20" onClick={e => e.stopPropagation()}>
-              <span className="bg-white/12 backdrop-blur-sm border border-white/20 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest text-white shadow-sm">
-                {qualityPill}
-              </span>
-            </div>
-          )}
-
-          {/* Top-right: expand-to-lightbox, unchanged from Interaction
-              Design Sprint 4 (touch-visible, keyboard-operable). */}
-          <div className="absolute top-4 right-4 z-20" onClick={e => e.stopPropagation()}>
-            <button
-              type="button"
-              aria-label="View full screen"
-              onClick={e => { e.stopPropagation(); setLightboxOpen(true) }}
-              className={cn(
-                'flex h-9 w-9 items-center justify-center rounded-xl',
-                'border border-white/15 bg-black/45 text-white backdrop-blur-md',
-                'opacity-70 transition-opacity duration-200 lg:opacity-0 lg:group-hover:opacity-75 hover:opacity-100!',
-                'focus-visible:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/70',
-              )}
-            >
-              <Expand className="size-4" />
-            </button>
-          </div>
-
-          {/* Nav arrows — multi-image carousel, unchanged from Sprint 4 */}
-          {images.length > 1 && (
-            <>
-              <button type="button" aria-label="Previous image"
-                onClick={e => { e.stopPropagation(); prev() }}
-                className={cn(
-                  'absolute left-3 top-1/2 z-20 -translate-y-1/2',
-                  'flex h-9 w-9 items-center justify-center rounded-full',
-                  'border border-white/15 bg-black/45 text-white backdrop-blur-md',
-                  'opacity-70 transition-all duration-200 lg:opacity-0 lg:group-hover:opacity-100',
-                  'hover:scale-110 hover:bg-black/65 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
-                )}
-              >
-                <ChevronLeft className="size-4" />
-              </button>
-              <button type="button" aria-label="Next image"
-                onClick={e => { e.stopPropagation(); next() }}
-                className={cn(
-                  'absolute right-3 top-1/2 z-20 -translate-y-1/2',
-                  'flex h-9 w-9 items-center justify-center rounded-full',
-                  'border border-white/15 bg-black/45 text-white backdrop-blur-md',
-                  'opacity-70 transition-all duration-200 lg:opacity-0 lg:group-hover:opacity-100',
-                  'hover:scale-110 hover:bg-black/65 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
-                )}
-              >
-                <ChevronRight className="size-4" />
-              </button>
-            </>
-          )}
-
-          {/* ── Identity — Status → Type → Name → Address ───────────────────
-              Elevation polish: deliberate breathing room between each tier
-              (gap-3, not gap-2) instead of everything huddled together: the
-              badges are a distinct row, the name gets room to be the
-              anchor, the address sits clearly below it — three tiers a
-              reader can separate at a glance, not one dense block. */}
-          <div
-            className="absolute inset-x-5 bottom-5 z-20 flex flex-col gap-3 max-w-[calc(100%-2.5rem)]"
-            onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center gap-2 flex-wrap">
-              {status && (
-                <span className={cn(
-                  'px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border text-white shadow-sm',
-                  statusFillClass(status),
-                )}>
-                  {status}
-                </span>
-              )}
-              {type && (
-                <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border border-white/20 bg-white/10 backdrop-blur-sm text-white/90">
-                  {type}
-                </span>
-              )}
-              {requestType && (
-                <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border border-white/20 bg-white/10 backdrop-blur-sm text-white/90">
-                  For {requestType}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-baseline gap-2.5 flex-wrap">
-              <h1 className="text-[28px] lg:text-4xl font-black tracking-tight font-heading leading-[1.08] text-white drop-shadow-md truncate max-w-full">
-                {title || 'Property'}
-              </h1>
-              {propertyCode && (
-                <span className="text-[10px] font-mono font-semibold text-white/50 tracking-wide shrink-0">
-                  #{propertyCode}
-                </span>
-              )}
-            </div>
-
-            {location && (
-              <div className="flex items-center gap-1.5 text-white/75">
-                <MapPin className="size-3.5 shrink-0" />
-                <p className="text-[12.5px] font-medium tracking-tight truncate">{location}</p>
-              </div>
-            )}
-          </div>
+            <Expand className="size-4" />
+          </button>
         </div>
 
-        {/* ── Executive Summary panel — solid, not photo-dependent ─────────
-            Final polish pass: the panel now carries a soft inset shadow at
-            its top edge — the photo casting a whisper of depth onto the
-            panel below — so the cut from photo to solid surface reads as
-            one continuous composition instead of an abrupt seam. */}
-        <div className="relative bg-linear-to-b from-muted/20 to-card px-6 pt-7 pb-7 sm:px-8 sm:pt-8 sm:pb-8 shadow-[inset_0_10px_16px_-14px_rgba(0,0,0,0.18)]">
+        {/* Nav arrows — multi-image carousel, unchanged from Sprint 4 */}
+        {images.length > 1 && (
+          <>
+            <button type="button" aria-label={t('hero.previousImage')}
+              onClick={e => { e.stopPropagation(); prev() }}
+              className={cn(
+                'absolute left-3 top-1/2 z-20 -translate-y-1/2',
+                'flex h-9 w-9 items-center justify-center rounded-full',
+                'border border-white/15 bg-black/45 text-white backdrop-blur-md',
+                'opacity-70 transition-all duration-200 lg:opacity-0 lg:group-hover:opacity-100',
+                'hover:scale-110 hover:bg-black/65 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
+              )}
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <button type="button" aria-label={t('hero.nextImage')}
+              onClick={e => { e.stopPropagation(); next() }}
+              className={cn(
+                'absolute right-3 top-1/2 z-20 -translate-y-1/2',
+                'flex h-9 w-9 items-center justify-center rounded-full',
+                'border border-white/15 bg-black/45 text-white backdrop-blur-md',
+                'opacity-70 transition-all duration-200 lg:opacity-0 lg:group-hover:opacity-100',
+                'hover:scale-110 hover:bg-black/65 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70',
+              )}
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </>
+        )}
 
-          {/* Final polish pass (2026-07-18): baseline-aligned instead of
-              bottom-aligned — Price and Price/m² now share a natural text
-              baseline rather than being nudged into place with a manual
-              offset, which is what made the old spacing feel mechanical.
-              The label picks up a faint primary tint, a single quiet
-              accent tying this panel back to the primary-accented details
-              in the Command Hub beside it. */}
-          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 pb-6 mb-6 border-b border-border/25">
-            <div>
-              <p className="text-[9px] font-bold text-primary/55 uppercase tracking-wider mb-2">
-                Asking Price
-              </p>
-              <p className={cn(
-                'font-black font-heading tracking-tighter leading-none',
-                price != null ? 'text-4xl sm:text-5xl text-foreground' : 'text-xl text-muted-foreground/40',
+        {/* ── Identity — Status → Type → Name → Address ───────────────────
+            Elevation polish: deliberate breathing room between each tier
+            (gap-3, not gap-2) instead of everything huddled together: the
+            badges are a distinct row, the name gets room to be the
+            anchor, the address sits clearly below it — three tiers a
+            reader can separate at a glance, not one dense block. */}
+        <div
+          className="absolute inset-x-5 bottom-5 z-20 flex flex-col gap-3 max-w-[calc(100%-2.5rem)]"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-2 flex-wrap">
+            {status && (
+              <span className={cn(
+                'px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border text-white shadow-sm',
+                statusFillClass,
               )}>
-                {price != null ? fmtPrice(price, false) : 'Not provided'}
-              </p>
-            </div>
-            {pricePerSqm != null && (
-              <div className="flex items-baseline gap-1 pl-6 border-l border-border/25">
-                <span className="text-base font-bold text-muted-foreground/55 tracking-tight tabular-nums">
-                  {pricePerSqm.toLocaleString('en-US')}
-                </span>
-                <span className="text-[10px] font-semibold text-muted-foreground/35">/m²</span>
-              </div>
+                {getStatusLabel(status, t)}
+              </span>
+            )}
+            {type && (
+              <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border border-white/20 bg-white/10 backdrop-blur-sm text-white/90">
+                {getPropertyTypeLabel(type, t)}
+              </span>
+            )}
+            {requestType && (
+              <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border border-white/20 bg-white/10 backdrop-blur-sm text-white/90">
+                {t('common.for')} {requestType}
+              </span>
             )}
           </div>
 
-          {/* Final polish pass: restored Availability alongside the true
-              specs (Area, Year Built, Energy Class) — these four are the
-              only fields on this card that don't already appear elsewhere.
-              Address is deliberately demoted below as plain metadata
-              rather than a fifth equal-weight card — it's context, not a
-              spec a reader is scanning for. */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <SummaryKpi icon={Ruler} label="Area" value={square != null ? `${square.toLocaleString('en-US')} m²` : '—'} />
-            <SummaryKpi icon={CalendarDays} label="Year Built" value={yearBuilt != null ? String(yearBuilt) : '—'} />
-            <SummaryKpi icon={Zap} label="Energy Class" value={energyClass ?? '—'} />
-            <SummaryKpi icon={ShieldCheck} label="Availability" value={status === 'Active' ? 'Available' : status ?? '—'} />
+          <div className="flex items-baseline gap-2.5 flex-wrap">
+            <h1 className="text-[28px] lg:text-4xl font-black tracking-tight font-heading leading-[1.08] text-white drop-shadow-md truncate max-w-full">
+              {title || propertyFallback}
+            </h1>
+            {propertyCode && (
+              <span className="text-[10px] font-mono font-semibold text-white/50 tracking-wide shrink-0">
+                #{propertyCode}
+              </span>
+            )}
           </div>
 
           {location && (
-            <div className="mt-4 flex items-center gap-1.5 text-muted-foreground/40">
-              <MapPin className="size-3 shrink-0" />
-              <p className="text-[11px] font-medium truncate">{location}</p>
+            <div className="flex items-center gap-1.5 text-white/75">
+              <MapPin className="size-3.5 shrink-0" />
+              <p className="text-[12.5px] font-medium tracking-tight truncate">{location}</p>
             </div>
           )}
         </div>
-      </div>
-
-      {/* ── Lightbox ─────────────────────────────────────────────────────────── */}
-      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <DialogContent className="max-w-5xl border-none bg-black/97 p-0 shadow-none">
-          <DialogTitle className="sr-only">{title ?? 'Property gallery'}</DialogTitle>
-          <div className="relative flex h-[85vh] items-center justify-center">
-            <Image src={src(activeIndex)} alt={title || 'Property'} fill unoptimized
-              className="object-contain" sizes="90vw" onError={() => onError(activeIndex)} />
-            {images.length > 1 && (
-              <>
-                <button type="button" aria-label="Previous image" onClick={prev}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline-none">
-                  <ChevronLeft className="size-6" />
-                </button>
-                <button type="button" aria-label="Next image" onClick={next}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 focus-visible:outline-none">
-                  <ChevronRight className="size-6" />
-                </button>
-              </>
-            )}
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-white/15 bg-black/50 px-5 py-2 text-[12px] font-semibold text-white">
-              {activeIndex + 1} / {images.length}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  )
-}
-
-// ── SummaryKpi ───────────────────────────────────────────────────────────────
-// Final polish pass: icon now sits in its own quiet chip (the same
-// icon-in-a-tile language the Command Hub already uses for its header
-// icon), border softened further, hover adds a 1px lift instead of a
-// border-opacity jump — a subtler, more considered elevation cue.
-
-function SummaryKpi({
-  icon: Icon, label, value,
-}: {
-  icon:  React.ComponentType<{ className?: string }>
-  label: string
-  value: string
-}) {
-  const isEmpty = value === '—'
-  return (
-    <div className={cn(
-      'flex items-center gap-3 min-w-0 rounded-xl border border-border/35 bg-muted/3 px-4 py-3.5',
-      'transition-all duration-200 ease-out',
-      'hover:border-border/60 hover:-translate-y-px hover:shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08)]',
-      'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
-    )}>
-      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted/50">
-        <Icon className="size-4 text-muted-foreground/50" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[9px] font-bold text-muted-foreground/45 uppercase tracking-wider mb-0.5">
-          {label}
-        </p>
-        <p className={cn(
-          'text-[14px] font-black tracking-tight truncate',
-          isEmpty ? 'text-muted-foreground/35' : 'text-foreground',
-        )}>
-          {value}
-        </p>
       </div>
     </div>
   )

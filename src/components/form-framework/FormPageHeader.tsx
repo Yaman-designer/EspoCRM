@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslation } from 'react-i18next'
 import {
   CheckCircle2,
   Clock,
@@ -13,7 +14,8 @@ import { cn } from '@/lib/utils'
 import { useFormFramework } from './context'
 
 export function FormPageHeader({ className }: { className?: string }) {
-  const { config, currentStepIndex, totalSteps, saveState } = useFormFramework()
+  const { t } = useTranslation('common')
+  const { config, currentStepIndex, totalSteps, progressPercent, saveState } = useFormFramework()
   const step = config.steps[currentStepIndex]
   if (!step) return null
 
@@ -21,10 +23,14 @@ export function FormPageHeader({ className }: { className?: string }) {
   const subtitle   = step.description
   const required   = step.requiredCount
   const estTime    = step.estTime
-  const completion = step.completion
+  // The framework's one canonical progress value (context.tsx) — was a
+  // hand-authored `step.completion` field that drifted out of sync with
+  // the footer's own independently-computed percentage. Retired in favor
+  // of every surface reading this same number.
+  const completion = Math.round(progressPercent)
 
   const stepNum = String(currentStepIndex + 1).padStart(2, '0')
-  const stepTag = `STEP ${stepNum} OF ${String(totalSteps).padStart(2, '0')}`
+  const stepTag = t('formFramework.pageHeader.step', { current: stepNum, total: String(totalSteps).padStart(2, '0') })
 
   /* ── Save state chip ── */
   const isSaving      = saveState.status === 'saving' || saveState.status === 'saving_draft'
@@ -40,12 +46,12 @@ export function FormPageHeader({ className }: { className?: string }) {
     : FileEdit
 
   const saveLabel = isSaving
-    ? 'Saving…'
+    ? t('formFramework.pageHeader.saving')
     : isSaved
-    ? 'Saved'
+    ? t('formFramework.pageHeader.saved')
     : hasSaveError
-    ? 'Sync Failed'
-    : 'Draft'
+    ? t('formFramework.pageHeader.syncFailed')
+    : t('formFramework.pageHeader.draft')
 
   const saveCls = isSaved
     ? 'border-brand-emerald/25 bg-brand-emerald-soft/50 text-brand-emerald'
@@ -55,10 +61,10 @@ export function FormPageHeader({ className }: { className?: string }) {
 
   return (
     <header
-      className={cn('border-b border-border/20 bg-background px-5 pb-4 pt-5 sm:px-6 sm:pb-6 sm:pt-4', className)}
-      aria-label="Step summary"
+      className={cn('border-b border-border/20 bg-background px-5 pb-3.5 pt-5 sm:px-6 sm:pb-4 sm:pt-4', className)}
+      aria-label={t('formFramework.pageHeader.stepSummary')}
     >
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-6xl lg:max-w-7xl">
 
         {/* ── Eyebrow: step tag + save badge ── */}
         <div className="mb-2 flex items-center gap-2.5 sm:mb-2.5">
@@ -76,7 +82,7 @@ export function FormPageHeader({ className }: { className?: string }) {
               saveCls,
             )}
             aria-live="polite"
-            aria-label={`Save status: ${saveLabel}`}
+            aria-label={t('formFramework.pageHeader.saveStatus', { status: saveLabel })}
           >
             <SaveIcon
               className={cn('h-2.5 w-2.5 shrink-0', isSaving && 'animate-spin')}
@@ -98,41 +104,37 @@ export function FormPageHeader({ className }: { className?: string }) {
           </p>
         )}
 
-        {/* ── KPI chips ── */}
-        {(required !== undefined || estTime || completion !== undefined) && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4">
-
-            {/* Required Fields */}
-            {required !== undefined && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/35 bg-muted/35 px-3 py-1">
-                <ListChecks className="h-3 w-3 shrink-0 text-muted-foreground/45" aria-hidden />
-                <span className="text-[11px] font-medium text-muted-foreground/55">
-                  {required} required
-                </span>
+        {/* ── KPI chips — completion is always defined (the canonical
+            progressPercent), so this row always renders. ── */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 sm:mt-4">
+          {/* Required Fields */}
+          {required !== undefined && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/35 bg-muted/35 px-3 py-1">
+              <ListChecks className="h-3 w-3 shrink-0 text-muted-foreground/45" aria-hidden />
+              <span className="text-[11px] font-medium text-muted-foreground/55">
+                {t('formFramework.pageHeader.required', { count: required })}
               </span>
-            )}
+            </span>
+          )}
 
-            {/* Est. Time */}
-            {estTime && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/35 bg-muted/35 px-3 py-1">
-                <Clock className="h-3 w-3 shrink-0 text-muted-foreground/45" aria-hidden />
-                <span className="text-[11px] font-medium text-muted-foreground/55">
-                  ~{estTime}
-                </span>
+          {/* Est. Time */}
+          {estTime && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border/35 bg-muted/35 px-3 py-1">
+              <Clock className="h-3 w-3 shrink-0 text-muted-foreground/45" aria-hidden />
+              <span className="text-[11px] font-medium text-muted-foreground/55">
+                ~{estTime}
               </span>
-            )}
+            </span>
+          )}
 
-            {/* Completion */}
-            {completion !== undefined && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/35 bg-muted/35 px-3 py-1">
-                <TrendingUp className="h-3 w-3 shrink-0 text-muted-foreground/45" aria-hidden />
-                <span className="text-[11px] font-medium tabular-nums text-muted-foreground/55">
-                  {completion}%
-                </span>
-              </span>
-            )}
-          </div>
-        )}
+          {/* Completion */}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border/35 bg-muted/35 px-3 py-1">
+            <TrendingUp className="h-3 w-3 shrink-0 text-muted-foreground/45" aria-hidden />
+            <span className="text-[11px] font-medium tabular-nums text-muted-foreground/55">
+              {completion}%
+            </span>
+          </span>
+        </div>
       </div>
     </header>
   )

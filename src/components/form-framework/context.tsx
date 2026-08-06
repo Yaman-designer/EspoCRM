@@ -244,6 +244,17 @@ export function FormFrameworkProvider<T extends FieldValues>({
     [config, completedSteps, doNavigate],
   )
 
+  /* ─── Reset wizard navigation state (Discard Draft) ──────────── */
+
+  const resetWizardState = useCallback(() => {
+    setCurrentStepIndex(0)
+    setDisplayedStepIndex(0)
+    setCompletedSteps(new Set())
+    setErrorSteps(new Set())
+    setWarningSteps(new Set())
+    setSaveState({ status: 'idle' })
+  }, [])
+
   /* ─── Context value ─────────────────────────────────────────── */
 
   const value = useMemo<FormFrameworkContextValue>(
@@ -255,6 +266,11 @@ export function FormFrameworkProvider<T extends FieldValues>({
       errorSteps,
       warningSteps,
       totalSteps,
+      // THE canonical progress value — see its doc comment in types.ts.
+      // Computed once, here, and nowhere else: every consumer (header,
+      // stepper, footer, analytics) reads this instead of deriving its own
+      // fraction from currentStepIndex/totalSteps.
+      progressPercent: ((currentStepIndex + 1) / totalSteps) * 100,
       isDirty,
       saveState,
       setSaveState,
@@ -278,6 +294,7 @@ export function FormFrameworkProvider<T extends FieldValues>({
       _setIsSubmitting: setIsSubmitting,
       _setIsSavingDraft: setIsSavingDraft,
       _setIsSubmitSuccess: setIsSubmitSuccess,
+      _resetWizardState: resetWizardState,
     }),
     [
       config, currentStepIndex, displayedStepIndex, completedSteps, errorSteps,
@@ -286,6 +303,7 @@ export function FormFrameworkProvider<T extends FieldValues>({
       direction, animClass,
       goToStep, goNext, goPrevious, getStepStatus,
       markStepWarning, clearStepWarning, markStepError, markStepComplete,
+      resetWizardState,
     ],
   )
 
@@ -293,12 +311,31 @@ export function FormFrameworkProvider<T extends FieldValues>({
 
   /* ─── Plugin mount lifecycle ────────────────────────────────── */
 
+  // Production Certification Audit (2026-08-04). Root cause of autosave
+  // never actually persisting: onMount(valueRef.current) captured a
+  // one-time SNAPSHOT of the context value at mount, not a live reference.
+  // createAutosavePlugin's setInterval closure held onto that snapshot's
+  // `ctx.isDirty` — frozen at its mount-time value (always false, the form
+  // is pristine on first render) for the plugin's entire lifetime, so
+  // `if (onlyWhenDirty && !ctx.isDirty) return` short-circuited on every
+  // single tick, forever, regardless of how dirty the form later became.
+  // Live-verified: draft never appeared in localStorage after 40s+ with a
+  // genuinely dirty form. valueRef itself was already kept live (see
+  // "Mutable refs (break stale closures)" above) — the bug was handing
+  // onMount a dereferenced snapshot instead of something that re-reads the
+  // ref. A Proxy forwarding every property access to valueRef.current
+  // fixes this for any plugin (present or future) that stashes ctx and
+  // reads it later from a deferred callback, without changing the
+  // FormFrameworkPlugin/ctx API's shape at all.
+  //
   // intentionally run only once on mount; plugins update via pluginsRef
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
+    const liveCtx = new Proxy({} as FormFrameworkContextValue, {
+      get: (_target, prop) => Reflect.get(valueRef.current, prop),
+    })
     const cleanups = pluginsRef.current
       .filter(p => p.onMount)
-      .map(p => p.onMount!(valueRef.current))
+      .map(p => p.onMount!(liveCtx))
       .filter((c): c is () => void => typeof c === 'function')
 
     return () => cleanups.forEach(c => c())

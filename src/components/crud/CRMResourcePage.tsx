@@ -104,6 +104,17 @@ export function CRMResourcePage<T extends { id: string }>({
   const handleDelete = useCallback((row: T) => { setDeleteRow(row); setDeleteOpen(true) }, [])
 
   // ── Mutations ────────────────────────────────────────────────────────────────
+  //
+  // This deleteMutation is the *generic* native delete flow shared by every
+  // entity rendered through CRMResourcePage (Contacts, Companies, Calls,
+  // Contracts, Requests, Pipeline, Properties' list view). Property's detail
+  // page (PropertyDetailPage.tsx) intentionally has its own separate
+  // useMutation instead of reusing this one — it has no list cache to
+  // optimistically update and must redirect away on success, neither of
+  // which apply here. Unifying them would mean either forking Property's
+  // list delete out of this shared flow, or reshaping this generic,
+  // 7-entity mutation around one entity's redirect need. Both cost more
+  // than the ~15 lines of duplication they'd save.
 
   type DeleteContext = { snapshot: [QueryKey, EspoListResponse<T> | undefined][] }
 

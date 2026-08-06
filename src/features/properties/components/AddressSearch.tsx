@@ -2,8 +2,10 @@
 
 /**
  * Address Business Group, Phase 3 (Maps & Places). A debounced free-text
- * search over Nominatim (see geocoding.service.ts's searchAddresses) that
- * fills the Phase 2 canonical address fields on selection — a convenience
+ * search over Nominatim, proxied through /api/geocode/search (see that
+ * route's comment — geocoding.service.ts's searchAddresses() can't be
+ * called from the browser, Nominatim sends no CORS header) that fills the
+ * Phase 2 canonical address fields on selection — a convenience
  * quick-fill, not a replacement for the individual Street/City/State/
  * Postal Code/Country/Latitude/Longitude fields, which remain directly
  * editable before and after a selection is made.
@@ -15,10 +17,23 @@
 
 import { useCallback, useRef, useState } from 'react'
 import { Search, Loader2, MapPin } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from '@/components/ui/command'
-import { searchAddresses, type AddressSuggestion } from '../services/geocoding.service'
+import type { AddressSuggestion } from '../services/geocoding.service'
+
+// Production Certification Audit (2026-08-04): routes through this app's own
+// /api/geocode/search instead of calling geocoding.service.ts's
+// searchAddresses() (Nominatim) directly from the browser — same CORS
+// failure mode already fixed for usePropertyLocation.ts's /api/geocode, see
+// that route's comment. searchAddresses() itself is unchanged; it now only
+// ever runs server-side, inside the API route.
+async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
+  const res = await fetch(`/api/geocode/search?q=${encodeURIComponent(query)}`)
+  if (!res.ok) return []
+  return res.json() as Promise<AddressSuggestion[]>
+}
 
 interface AddressSearchProps {
   onSelect: (suggestion: AddressSuggestion) => void
@@ -26,6 +41,7 @@ interface AddressSearchProps {
 }
 
 export function AddressSearch({ onSelect, className }: AddressSearchProps) {
+  const { t } = useTranslation('properties')
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
@@ -65,7 +81,7 @@ export function AddressSearch({ onSelect, className }: AddressSearchProps) {
             value={query}
             onChange={e => { search(e.target.value); if (!open) setOpen(true) }}
             onFocus={() => query.trim().length >= 3 && setOpen(true)}
-            placeholder="Search for an address…"
+            placeholder={t('addressSearch.placeholder')}
             className={cn(
               'h-12 w-full rounded-xl border border-border/70 bg-input pr-3 pl-10 text-sm shadow-[0_1px_2px_rgba(16,24,40,0.04)]',
               'transition-all duration-200 hover:border-border/90 hover:shadow-[0_1px_4px_rgba(16,24,40,0.07)]',
@@ -80,7 +96,11 @@ export function AddressSearch({ onSelect, className }: AddressSearchProps) {
           <CommandList>
             {results.length === 0 ? (
               <CommandEmpty>
-                {loading ? 'Searching…' : query.trim().length < 3 ? 'Type at least 3 characters…' : 'No results found.'}
+                {loading
+                  ? t('addressSearch.searching')
+                  : query.trim().length < 3
+                    ? t('addressSearch.typeMoreChars')
+                    : t('addressSearch.noResults')}
               </CommandEmpty>
             ) : (
               <CommandGroup>

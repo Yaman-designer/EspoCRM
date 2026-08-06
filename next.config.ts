@@ -1,24 +1,37 @@
 import type { NextConfig } from "next";
 
 // Most EspoCRM API calls are proxied through /api/espo, needing only 'self'.
-// The Location Intelligence Center's MapLibre map is the one exception: it
-// talks to MapTiler directly from the browser. Verified (2026-07-19) against
-// a live style.json + its referenced tiles.json — style, sprite, glyphs and
-// vector tiles all resolve to the single host api.maptiler.com, so that's
-// the only origin added, not a wildcard. MapLibre GL JS also spins up a
+// The Location Intelligence Center's MapLibre map is one exception: it talks
+// to MapTiler directly from the browser. Verified (2026-07-19) against a live
+// style.json + its referenced tiles.json — style, sprite, glyphs and vector
+// tiles all resolve to the single host api.maptiler.com, so that's the only
+// origin added there, not a wildcard. MapLibre GL JS also spins up a
 // tile-parsing Web Worker via `URL.createObjectURL(new Blob(...))` (verified
 // by inspecting the actual maplibre-gl package bundle used by the build) —
 // that requires worker-src to allow blob:, which falls back to child-src
 // then script-src if unset, neither of which previously allowed blob:.
-// img-src/style-src/font-src are untouched: MapLibre decodes sprite/raster
-// images via fetch()+createImageBitmap (connect-src), never `new Image()`,
-// and its bundled CSS has no external @font-face/url() references.
+// img-src/style-src/font-src are otherwise untouched for MapLibre: it decodes
+// sprite/raster images via fetch()+createImageBitmap (connect-src), never
+// `new Image()`, and its bundled CSS has no external @font-face/url()
+// references.
+//
+// PropertyMapLeaflet (the smaller Leaflet-based preview used by the property
+// wizard's Location step and PropertyLocationCard) is the second exception,
+// and unlike MapLibre it DOES need img-src: react-leaflet's <TileLayer>
+// renders one real <img> per visible tile, requested round-robin across
+// a/b/c/d.basemaps.cartocdn.com (`subdomains="abcd"` — see PropertyMapLeaflet.
+// tsx). A Production Certification Audit live-browser pass (2026-08-04)
+// caught every tile on that map silently failing under this policy — CSP
+// blocks img-src, not connect-src, for an <img> load, so the MapLibre-only
+// carve-out above never covered it. `*.basemaps.cartocdn.com` (not a fixed
+// a/b/c/d list) so it isn't silently broken again if CARTO's subdomain set
+// ever changes.
 const ContentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://*.basemaps.cartocdn.com",
   "connect-src 'self' https://api.maptiler.com",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",

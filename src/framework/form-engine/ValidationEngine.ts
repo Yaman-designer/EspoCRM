@@ -8,6 +8,23 @@ const PHONE_RE = /^[+]?[\d\s\-()]{7,}$/
 
 type GetValues = () => Record<string, unknown>
 
+// Dedupes a `type: 'async'` validator call for a value it has already
+// checked — e.g. identity-governance.schema.ts's propertyCode uniqueness
+// check, which used to fire a live GET request on every single "Continue"
+// click on step 1 (once the user had typed a code), even when the value
+// hadn't changed since the previous click. Keyed by the validate function's
+// own identity (not the field key): each schema field builds its `validate`
+// closure fresh per wizard session (see buildIdentityGovernanceStep, memoized
+// in PropertyFormPage.tsx), so a WeakMap on that closure naturally scopes the
+// cache to the session that created it — a create-mode check and an
+// edit-mode check (which excludes the record's own id) never share a cache
+// bucket, without ValidationEngine needing to know anything about
+// currentPropertyId or any other context baked into the closure.
+const asyncValidationCache = new WeakMap<
+  (value: unknown) => Promise<boolean | string>,
+  Map<string, Promise<boolean | string>>
+>()
+
 /**
  * Converts a field's `required` flag + `validation` array into react-hook-form
  * RegisterOptions compatible with both `register()` and `<Controller rules={} />`.
@@ -93,13 +110,32 @@ export function buildRules(field: FieldSchema, getValues?: GetValues): RegisterO
         }
         break
 
-      case 'async':
-        validates[`vld_async_${i}`] = async (val) => {
-          const result = await rule.validate(val)
-          if (typeof result === 'string') return result
-          return result || 'Validation failed'
+      case 'async': {
+        const validateFn = rule.validate
+        validates[`vld_async_${i}`] = (val) => {
+          const cacheKey = JSON.stringify(val)
+          let cache = asyncValidationCache.get(validateFn)
+          if (!cache) {
+            cache = new Map()
+            asyncValidationCache.set(validateFn, cache)
+          }
+          const cached = cache.get(cacheKey)
+          if (cached) return cached
+
+          const outcome = (async () => {
+            const result = await validateFn(val)
+            if (typeof result === 'string') return result
+            return result || 'Validation failed'
+          })()
+          cache.set(cacheKey, outcome)
+          // A network/unexpected failure shouldn't permanently poison the
+          // cache for this value — evict so the next attempt retries for
+          // real. A resolved "taken"/"available" outcome stays cached.
+          outcome.catch(() => cache!.delete(cacheKey))
+          return outcome
         }
         break
+      }
     }
   }
 

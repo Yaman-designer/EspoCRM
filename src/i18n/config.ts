@@ -7,6 +7,7 @@ import enDashboard from './locales/en/dashboard.json'
 import enAuth from './locales/en/auth.json'
 import enProfile from './locales/en/profile.json'
 import enNotifications from './locales/en/notifications.json'
+import enProperties from './locales/en/properties.json'
 
 import elCommon from './locales/el/common.json'
 import elNav from './locales/el/nav.json'
@@ -14,20 +15,24 @@ import elDashboard from './locales/el/dashboard.json'
 import elAuth from './locales/el/auth.json'
 import elProfile from './locales/el/profile.json'
 import elNotifications from './locales/el/notifications.json'
+import elProperties from './locales/el/properties.json'
 
-// No 'properties' namespace — Architecture Debt Rank #9/9a found the
-// Properties feature has zero useTranslation() usage anywhere (a Product
-// Decision, not an engineering gap: real translations for ~125 live fields
-// need business sign-off), and the one existing properties.json (en/el)
-// carried stale, actively-wrong content (fabricated statuses, USD pricing)
-// that would have silently reintroduced two already-fixed defects if ever
-// wired up. Removed rather than left dormant. See the Phase 2 Certification
-// Report for the full evidence trail.
+// 'properties' namespace (Enterprise Localization pass, 2026-07-24). The
+// prior removal note (Architecture Debt Rank #9/9a) is intentionally
+// preserved in git history, not copied forward here — it documented why the
+// *previous* properties.json was unsafe (fabricated statuses, USD pricing
+// baked into what should have been dynamic API values) and why wiring it up
+// needed business sign-off first. Both conditions are resolved in this pass:
+// sign-off was obtained, and every key in this file was audited to hold only
+// static UI chrome (section titles, field labels, buttons, empty states) —
+// never a property's actual data (status, type, city, price, names, IDs),
+// which continues to render exactly as the API returns it, in every
+// language. See each edited component's own note for the per-file audit.
 
 i18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  ns: ['common', 'nav', 'dashboard', 'auth', 'profile', 'notifications'],
+  ns: ['common', 'nav', 'dashboard', 'auth', 'profile', 'notifications', 'properties'],
   defaultNS: 'common',
   interpolation: { escapeValue: false },
   // Opts out of react-i18next v17's use()-based Suspense integration.
@@ -46,6 +51,7 @@ i18n.use(initReactI18next).init({
       auth: enAuth,
       profile: enProfile,
       notifications: enNotifications,
+      properties: enProperties,
     },
     el: {
       common: elCommon,
@@ -54,6 +60,7 @@ i18n.use(initReactI18next).init({
       auth: elAuth,
       profile: elProfile,
       notifications: elNotifications,
+      properties: elProperties,
     },
   },
 })

@@ -2,6 +2,7 @@
 
 import { memo } from 'react'
 import { AlertCircle, RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { PropertyCard, PropertyListRow } from './PropertyCard'
 import { PropertySkeletonGrid, PropertySkeletonList } from './PropertySkeleton'
@@ -42,6 +43,7 @@ export const PropertyGrid = memo(function PropertyGrid({
   searchQuery = '',
   onRetry,
 }: PropertyGridProps) {
+  const { t } = useTranslation('properties')
   // Error branch must come before isLoading: when the query errors, data becomes
   // undefined which makes isLoading=true, causing the skeleton to show forever.
   if (isError) {
@@ -52,18 +54,16 @@ export const PropertyGrid = memo(function PropertyGrid({
         </div>
         <div className="flex flex-col gap-1.5">
           <p className="text-[15px] font-semibold text-foreground">
-            {savedOnly ? 'Unable to load saved properties.' : 'Unable to load properties.'}
+            {savedOnly ? t('grid.unableToLoadSaved') : t('grid.unableToLoad')}
           </p>
           <p className="max-w-xs text-[13px] leading-relaxed text-muted-foreground">
-            {savedOnly
-              ? 'The saved properties filter could not complete. Check the browser console for the request duration and HTTP status.'
-              : 'An error occurred while fetching properties. Please try again.'}
+            {savedOnly ? t('grid.savedError') : t('grid.genericError')}
           </p>
         </div>
         {onRetry && (
           <Button variant="outline" size="sm" onClick={onRetry} className="gap-1.5">
             <RefreshCw className="size-3.5" />
-            Retry
+            {t('grid.retry')}
           </Button>
         )}
       </div>
@@ -88,17 +88,35 @@ export const PropertyGrid = memo(function PropertyGrid({
     )
   }
 
-  // List view — @container grid so column count tracks content-area width.
+  // Enterprise UI/UX Architecture Refinement (2026-07-24). Both grids used to
+  // pick a column COUNT at fixed content-width breakpoints
+  // (`@[600px]:grid-cols-3`, etc.) — a step function that forces every card
+  // in a row into whatever width N columns happens to divide the available
+  // space into, even when that's narrower than the card's own content
+  // needs. Live-measured this pass: the grid view's `@[600px]:grid-cols-3`
+  // tier put real cards at ~192-232px — narrow enough that the desktop
+  // StatChip row (3 icon+value+label chips) reads as compressed. Both grids
+  // now use `repeat(auto-fill, minmax(MIN, 1fr))` instead: the browser fits
+  // as many columns as actually satisfy MIN, wrapping to fewer (never
+  // fewer than 1) the moment they wouldn't — column count is an emergent
+  // property of the available width, not a hand-picked breakpoint ladder,
+  // and no card can ever be forced narrower than MIN regardless of how
+  // many properties are in the list or how wide the screen is.
   //
-  // Priority is readability over density: each card needs enough width for the
-  // horizontal image + content layout to breathe. Breakpoints:
-  //   default        → 1 col  (mobile / tablet, full-width card)
-  //   @[920px]       → 2 cols (desktop sidebar open ≈ 1160px → each card ≈ 570px)
-  //   @[1500px]      → 3 cols (ultra-wide / 1920p screens)
+  // auto-fill (not auto-fit): auto-fit collapses empty tracks and hands
+  // their space to whatever cards exist via the `1fr` upper bound — with
+  // 1-3 properties that stretches the existing cards to fill the row.
+  // auto-fill keeps the unused tracks in the layout so leftover space stays
+  // empty on the right instead, regardless of item count.
+
+  // List view — each card lays out a horizontal image + content row side by
+  // side (see PropertyListRow below); --card-list-min-w (globals.css) is the
+  // narrowest width that combination reads comfortably at, live-verified
+  // against the existing w-36/w-52 image rail.
   if (viewMode === 'list') {
     return (
-      <div className="@container w-full">
-        <div className="grid grid-cols-1 gap-4 @[920px]:grid-cols-2 @[1500px]:grid-cols-3">
+      <div className="w-full">
+        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(var(--card-list-min-w),1fr))]">
           {properties.map(p => (
             <PropertyListRow
               key={p.id}
@@ -114,20 +132,25 @@ export const PropertyGrid = memo(function PropertyGrid({
     )
   }
 
-  // Grid view — column count locked to actual content-area width via @container.
+  // Grid view — --card-grid-min-w (globals.css) is a live-measured floor:
+  // comfortably above the ~232px width where the desktop (sm:) StatChip row
+  // and footer ghost buttons started reading as tight, with real margin
+  // rather than the narrowest width that merely still technically fits.
   //
-  // Layout math (1440px screen, md:p-6 = 24px each side, sidebar inset = sidebar + 12px):
-  //   Sidebar open  (220+12+48 = 280px overhead): content ≈ 1160px → 4 cols
-  //   Sidebar closed (64+12+48 = 124px overhead): content ≈ 1316px → 5 cols
-  //
-  // Breakpoints derived from content widths — NOT viewport widths.
-  // @[600px]  → tablet: 3 cols (card ≈ 192px)
-  // @[1100px] → desktop sidebar open: 4 cols  (card ≈ 278px at 1160px)
-  // @[1280px] → desktop sidebar closed: 5 cols (card ≈ 250px at 1316px)
-  // @[1560px] → large screen: 6 cols
+  // Plain `auto-fit, minmax(var(--card-grid-min-w), 1fr)` has no upper bound
+  // on column count: on an ultra-wide desktop the container comfortably fits
+  // 6+ tracks at that floor, so cards get needlessly numerous instead of
+  // staying at a predictable max (Stripe/Linear/Airbnb-style dashboards cap
+  // at 4). The `max(floor, (100% - 3*gap)/4)` track-size trick forces a 5th
+  // column to never fit — once the container is wide enough for four tracks
+  // above the floor, the floor itself grows to exactly one quarter of the
+  // available width, so auto-fit always resolves to exactly 4. Below that
+  // width the max() collapses back to the flat floor and auto-fit reduces
+  // columns (4→3→2→1) exactly as before — the floor is never violated, so a
+  // card can never compress smaller than --card-grid-min-w at any width.
   return (
-    <div className="@container w-full">
-      <div className="grid grid-cols-1 gap-4 @[600px]:grid-cols-3 @[1100px]:grid-cols-4 @[1280px]:grid-cols-5 @[1560px]:grid-cols-6">
+    <div className="w-full">
+      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(max(var(--card-grid-min-w),(100%_-_3rem)/4),1fr))]">
         {properties.map(p => (
           <PropertyCard
             key={p.id}

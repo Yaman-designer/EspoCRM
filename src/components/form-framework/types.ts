@@ -41,8 +41,6 @@ export interface StepConfig {
   requiredCount?: number
   /** Estimated time to complete this step (e.g. "4 min") */
   estTime?: string
-  /** Overall form completion percentage after this step (0–100) */
-  completion?: number
 }
 
 /* ─── Per-step validation state ─────────────────────────────────── */
@@ -119,11 +117,6 @@ export interface FormFrameworkConfig {
    * confirmation dialog. Default: true.
    */
   navigationGuard?: boolean
-  /**
-   * Overrides the total phases denominator shown in the action bar phase counter.
-   * E.g. set to 5 to display "PHASE 01 / 05" even when steps array has 3 entries.
-   */
-  totalPhasesCount?: number
 }
 
 /* ─── Lifecycle callbacks ───────────────────────────────────────── */
@@ -150,6 +143,17 @@ export interface FormFrameworkCallbacks<T extends FieldValues = FieldValues> {
   onSubmitError?: (error: unknown) => void
   onDraftSaved?: () => void
   onValidationFailed?: (stepIndex: number, errors: unknown) => void
+
+  /**
+   * Called when the user confirms the "Discard Draft" action. When provided,
+   * the action bar's Discard button asks for confirmation and calls this
+   * instead of the plain Cancel/leave flow — the caller is responsible for
+   * clearing its own draft storage and resetting the form; the framework
+   * resets its own wizard navigation state (step index, completion/error
+   * marks) right after this resolves. When omitted, the Discard button falls
+   * back to the existing guarded-cancel behavior.
+   */
+  onDiscardDraft?: () => void | Promise<void>
 }
 
 /* ─── Plugin interface ──────────────────────────────────────────── */
@@ -195,6 +199,19 @@ export interface FormFrameworkContextValue {
   errorSteps: Set<number>
   warningSteps: Set<number>
   totalSteps: number
+  /**
+   * THE single canonical wizard-progress value (0–100), derived purely from
+   * `(currentStepIndex + 1) / totalSteps`. Every surface that shows "how far
+   * through the wizard am I" — FormPageHeader's KPI chip, FormStepper's
+   * counters, FormActionBar's progress pill, and any analytics plugin —
+   * reads this one number. Nothing downstream may compute its own fraction
+   * from currentStepIndex/totalSteps independently; that duplication is
+   * exactly what let the header and footer disagree (12% vs 13%) before
+   * this field existed. Unrounded — round at each render site so aria/text
+   * and continuous visuals (bar-width transitions) can each pick their own
+   * precision from the same source number.
+   */
+  progressPercent: number
   isDirty: boolean
 
   saveState: SaveState
@@ -229,6 +246,8 @@ export interface FormFrameworkContextValue {
   _setIsSavingDraft: (v: boolean) => void
   /** @internal */
   _setIsSubmitSuccess: (v: boolean) => void
+  /** @internal Resets navigation/completion state back to step 0 — used after onDiscardDraft resolves */
+  _resetWizardState: () => void
 }
 
 /* ─── FormStep props ────────────────────────────────────────────── */

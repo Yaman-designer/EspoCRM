@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect, type CSSProperties } from 'react'
+import { useState, useCallback, useRef, useEffect, type CSSProperties, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UseFormReturn } from 'react-hook-form'
-import type { SectionSchema, FieldOption } from './types'
-import { isFieldVisible, evaluateCondition } from './VisibilityEngine'
+import type { SectionSchema, FieldSchema, FieldOption } from './types'
+import { isFieldVisible } from './VisibilityEngine'
 import { GridEngine } from './GridEngine'
+import { getSectionCompletion, SectionCompletionBadge } from './section-primitives'
 
 /* ── Collapse phase state machine ────────────────────────────────────
    collapsed  ──[expand click]──►  expanding  ──[280 ms]──►  expanded
@@ -22,33 +24,21 @@ interface SectionRendererProps {
   form:          UseFormReturn<any>
   watchedValues: Record<string, unknown>
   fieldOptions:  Record<string, FieldOption[]>
+  /** True per field key while its `reload-options` dependency is in flight — see useDynamicForm.ts. */
+  fieldOptionsLoading?: Record<string, boolean>
   permissions?:  string[]
   hideHeader?:   boolean
   sectionIndex?: number
-}
-
-/* ── Field completion summary for collapsed state ────────────────── */
-
-function getFieldSummary(section: SectionSchema, watchedValues: Record<string, unknown>) {
-  const visible = section.fields.filter(f =>
-    f.type !== 'hidden' && isFieldVisible(f.visibility, watchedValues),
-  )
-  const filled = visible.filter(f => {
-    const val = watchedValues[f.key]
-    if (val === undefined || val === null || val === '') return false
-    if (Array.isArray(val)) return val.length > 0
-    return true
-  })
-  const isCurrentlyRequired = (f: typeof visible[number]) =>
-    f.required || (f.requiredWhen ? evaluateCondition(f.requiredWhen, watchedValues) : false)
-
-  const requiredCount = visible.filter(isCurrentlyRequired).length
-  const requiredFilledCount = filled.filter(isCurrentlyRequired).length
-  return {
-    visibleCount: visible.length,
-    filledCount: filled.length,
-    isComplete: requiredCount === 0 || requiredFilledCount >= requiredCount,
-  }
+  /**
+   * Presentation-only override of the section body: same fields, same
+   * GridEngine-driven visibility/disabled/readOnly/dependency resolution,
+   * just a different internal layout (e.g. sub-grouped clusters instead of
+   * one flat grid). Defaults to the plain `<GridEngine fields={section.fields}
+   * .../>` below, so every existing caller (the generic DynamicForm, every
+   * other wizard step) is byte-for-byte unaffected. Callers that use this
+   * are responsible for still rendering every field in `section.fields`.
+   */
+  renderBody?: (fields: FieldSchema[]) => ReactNode
 }
 
 /* ─── SectionRenderer ────────────────────────────────────────────── */
@@ -58,19 +48,26 @@ export function SectionRenderer({
   form,
   watchedValues,
   fieldOptions,
+  fieldOptionsLoading,
   permissions,
   hideHeader,
   sectionIndex = 0,
+  renderBody,
 }: SectionRendererProps) {
 
   /* ── All hooks declared before any conditional return ── */
 
+  const { t } = useTranslation('properties')
   const [phase, setPhase] = useState<CollapsePhase>(
     section.defaultCollapsed ? 'collapsed' : 'expanded',
   )
   const timerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
-  /* Suppresses entrance animation on initial page load */
-  const hasToggled = useRef(false)
+  /* Suppresses entrance animation on initial page load. State, not a ref —
+     it's read from the className expression below, and a ref's `.current`
+     can't be read during render. Every place this is set already calls
+     setPhase in the same tick, which re-renders regardless, so this adds
+     no additional render. */
+  const [hasToggled, setHasToggled] = useState(false)
 
   useEffect(
     () => () => { if (timerRef.current) clearTimeout(timerRef.current) },
@@ -79,7 +76,7 @@ export function SectionRenderer({
 
   const expand = useCallback(() => {
     if (phase !== 'collapsed') return
-    hasToggled.current = true
+    setHasToggled(true)
     if (timerRef.current) clearTimeout(timerRef.current)
     setPhase('expanding')
     timerRef.current = setTimeout(() => setPhase('expanded'), 280)
@@ -87,7 +84,7 @@ export function SectionRenderer({
 
   const collapse = useCallback(() => {
     if (phase !== 'expanded') return
-    hasToggled.current = true
+    setHasToggled(true)
     if (timerRef.current) clearTimeout(timerRef.current)
     setPhase('collapsing')
     timerRef.current = setTimeout(() => setPhase('collapsed'), 220)
@@ -97,14 +94,16 @@ export function SectionRenderer({
   if (!isFieldVisible(section.visibility, watchedValues)) return null
 
   /* ── Derived ── */
-  const Icon            = section.icon
-  const bg              = section.background
-  const hasHeader       = !hideHeader && (section.title || section.description || Icon)
-  const isCollapsible   = Boolean(section.collapsible)
+  const Icon          = section.icon
+  const bg            = section.background
+  const title         = section.titleKey ? t(section.titleKey) : ''
+  const description   = section.descriptionKey ? t(section.descriptionKey) : ''
+  const hasHeader      = !hideHeader && (title || description || Icon)
+  const isCollapsible = Boolean(section.collapsible)
   const isTransitioning = phase === 'expanding' || phase === 'collapsing'
   const isExpanded      = phase === 'expanded' || phase === 'expanding' || phase === 'collapsing'
 
-  const { visibleCount, filledCount, isComplete } = getFieldSummary(section, watchedValues)
+  const { visibleCount, filledCount, isComplete } = getSectionCompletion(section, watchedValues)
 
   /* ══════════════════════════════════════════════════════════════════
      PATH A — Collapsed summary bar
@@ -119,14 +118,14 @@ export function SectionRenderer({
         type="button"
         onClick={expand}
         className={cn(
-          'group w-full rounded-2xl border px-5 py-5 sm:py-4 text-left',
+          'group w-full rounded-2xl border px-5 py-4 sm:py-3.5 text-left',
           'transition-[border-color,background-color,box-shadow] duration-200 ease-out',
           'hover:border-border/50 hover:bg-muted/30',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           filledAndComplete
             ? 'border-brand-emerald/20 bg-brand-emerald-soft/30'
             : 'border-border/30 bg-muted/20',
-          !hasToggled.current ? 'ff-section-card-in' : 'ff-section-bar-appear',
+          !hasToggled ? 'ff-section-card-in' : 'ff-section-bar-appear',
         )}
         style={{ '--section-i': sectionIndex } as CSSProperties}
         aria-expanded={false}
@@ -144,14 +143,14 @@ export function SectionRenderer({
             'text-[14px] font-bold tracking-tight transition-colors duration-200',
             filledCount > 0 ? 'text-foreground/85' : 'text-foreground/70',
           )}>
-            {section.title}
+            {title}
           </span>
 
           {filledAndComplete && (
             <Check
               className="h-3.5 w-3.5 shrink-0 text-brand-emerald"
               strokeWidth={2.5}
-              aria-label="Section complete"
+              aria-label={t('wizard.common.sectionComplete')}
             />
           )}
 
@@ -163,7 +162,7 @@ export function SectionRenderer({
             </span>
           ) : (
             <span className="shrink-0 text-[11px] text-muted-foreground/35">
-              {visibleCount} {visibleCount === 1 ? 'field' : 'fields'}
+              {t('wizard.common.fieldCount', { count: visibleCount })}
             </span>
           )}
 
@@ -173,12 +172,12 @@ export function SectionRenderer({
           />
         </div>
 
-        {section.description && (
+        {description && (
           <p className={cn(
             'mt-1 text-[12px] leading-snug text-muted-foreground/40 line-clamp-1',
             Icon ? 'pl-6' : '',
           )}>
-            {section.description}
+            {description}
           </p>
         )}
       </button>
@@ -200,65 +199,72 @@ export function SectionRenderer({
                             'border-border/30 bg-muted/25',
           phase === 'expanding'  && 'ff-section-expand',
           phase === 'collapsing' && 'ff-section-collapse pointer-events-none',
-          phase === 'expanded'   && !hasToggled.current && 'ff-section-card-in',
+          phase === 'expanded'   && !hasToggled && 'ff-section-card-in',
         )}
         style={{ '--section-i': sectionIndex } as CSSProperties}
         data-section-id={section.id}
       >
         {hasHeader && (
-          <div className="mb-5 flex items-start justify-between gap-4">
+          <div className="mb-4 flex items-start justify-between gap-4">
             <div className="flex min-w-0 items-start gap-3.5">
               {Icon && (
                 <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-primary ring-1 ring-primary/10"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-primary ring-1 ring-primary/10 sm:h-10 sm:w-10"
                   aria-hidden
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4.5 w-4.5" />
                 </div>
               )}
               <div className="min-w-0 space-y-0.5 pt-0.5">
                 <h3 className="text-[15px] font-bold tracking-tight text-foreground">
-                  {section.title}
+                  {title}
                 </h3>
-                {section.description && (
+                {description && (
                   <p className="text-[12.5px] leading-relaxed text-muted-foreground/60">
-                    {section.description}
+                    {description}
                   </p>
                 )}
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={collapse}
-              disabled={isTransitioning}
-              className={cn(
-                'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
-                'text-muted-foreground/40 transition-colors duration-200 ease-out',
-                'hover:bg-background/60 hover:text-muted-foreground/70',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                'disabled:pointer-events-none',
-              )}
-              aria-expanded={true}
-              aria-controls={`section-${section.id}-body`}
-              aria-label={`Collapse ${section.title ?? 'section'}`}
-            >
-              <ChevronDown
-                className="h-4 w-4 rotate-180 transition-transform duration-220 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                aria-hidden
-              />
-            </button>
+            <div className="mt-0.5 flex shrink-0 items-center gap-2">
+              <SectionCompletionBadge visibleCount={visibleCount} filledCount={filledCount} isComplete={isComplete} />
+
+              <button
+                type="button"
+                onClick={collapse}
+                disabled={isTransitioning}
+                className={cn(
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
+                  'text-muted-foreground/40 transition-colors duration-200 ease-out',
+                  'hover:bg-background/60 hover:text-muted-foreground/70',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  'disabled:pointer-events-none',
+                )}
+                aria-expanded={true}
+                aria-controls={`section-${section.id}-body`}
+                aria-label={t('wizard.common.collapseSection', { title: title || t('wizard.common.sectionFallback') })}
+              >
+                <ChevronDown
+                  className="h-4 w-4 rotate-180 transition-transform duration-220 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  aria-hidden
+                />
+              </button>
+            </div>
           </div>
         )}
 
         <div id={`section-${section.id}-body`}>
-          <GridEngine
-            fields={section.fields}
-            form={form}
-            watchedValues={watchedValues}
-            fieldOptions={fieldOptions}
-            permissions={permissions}
-          />
+          {renderBody ? renderBody(section.fields) : (
+            <GridEngine
+              fields={section.fields}
+              form={form}
+              watchedValues={watchedValues}
+              fieldOptions={fieldOptions}
+              fieldOptionsLoading={fieldOptionsLoading}
+              permissions={permissions}
+            />
+          )}
         </div>
       </div>
     )
@@ -287,36 +293,45 @@ export function SectionRenderer({
         {section.divider && <hr className="mb-8 border-border/20" />}
 
         {hasHeader && (
-          <div className="mb-5 flex items-start gap-3 sm:mb-7 sm:gap-4">
-            {Icon && (
-              <div
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-primary ring-1 ring-primary/10 sm:h-10 sm:w-10"
-                aria-hidden
-              >
-                {/* Larger icon for tinted variants — serves as sub-section landmark */}
-                <Icon className="h-5 w-5" />
-              </div>
-            )}
-            <div className="min-w-0 space-y-1 pt-0.5">
-              <h3 className="text-[18px] font-bold tracking-tight text-foreground">
-                {section.title}
-              </h3>
-              {section.description && (
-                <p className="text-[13px] leading-relaxed text-muted-foreground/65">
-                  {section.description}
-                </p>
+          <div className="mb-5 flex items-start justify-between gap-3 sm:mb-7 sm:gap-4">
+            <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+              {Icon && (
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-primary ring-1 ring-primary/10 sm:h-10 sm:w-10"
+                  aria-hidden
+                >
+                  {/* Larger icon for tinted variants — serves as sub-section landmark */}
+                  <Icon className="h-5 w-5" />
+                </div>
               )}
+              <div className="min-w-0 space-y-1 pt-0.5">
+                <h3 className="text-[18px] font-bold tracking-tight text-foreground">
+                  {title}
+                </h3>
+                {description && (
+                  <p className="text-[13px] leading-relaxed text-muted-foreground/65">
+                    {description}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-0.5 shrink-0">
+              <SectionCompletionBadge visibleCount={visibleCount} filledCount={filledCount} isComplete={isComplete} />
             </div>
           </div>
         )}
 
-        <GridEngine
-          fields={section.fields}
-          form={form}
-          watchedValues={watchedValues}
-          fieldOptions={fieldOptions}
-          permissions={permissions}
-        />
+        {renderBody ? renderBody(section.fields) : (
+          <GridEngine
+            fields={section.fields}
+            form={form}
+            watchedValues={watchedValues}
+            fieldOptions={fieldOptions}
+            fieldOptionsLoading={fieldOptionsLoading}
+            permissions={permissions}
+          />
+        )}
       </div>
     )
   }
@@ -345,24 +360,30 @@ export function SectionRenderer({
       {hasHeader && (
         <>
           <div className="px-4 pb-4 pt-5 sm:px-8 sm:pb-5 sm:pt-7">
-            <div className="flex items-start gap-4">
-              {Icon && (
-                <div
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/12 bg-primary/7 text-primary sm:h-10 sm:w-10"
-                  aria-hidden
-                >
-                  <Icon className="h-4.5 w-4.5" />
-                </div>
-              )}
-              <div className="min-w-0 space-y-1.5 pt-1">
-                <h3 className="text-[15px] font-bold tracking-tight text-foreground">
-                  {section.title}
-                </h3>
-                {section.description && (
-                  <p className="text-[12.5px] leading-relaxed text-muted-foreground/60">
-                    {section.description}
-                  </p>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex min-w-0 items-start gap-4">
+                {Icon && (
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/8 text-primary ring-1 ring-primary/10 sm:h-10 sm:w-10"
+                    aria-hidden
+                  >
+                    <Icon className="h-4.5 w-4.5" />
+                  </div>
                 )}
+                <div className="min-w-0 space-y-1.5 pt-1">
+                  <h3 className="text-[15px] font-bold tracking-tight text-foreground">
+                    {title}
+                  </h3>
+                  {description && (
+                    <p className="text-[12.5px] leading-relaxed text-muted-foreground/60">
+                      {description}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-1 shrink-0">
+                <SectionCompletionBadge visibleCount={visibleCount} filledCount={filledCount} isComplete={isComplete} />
               </div>
             </div>
           </div>
@@ -373,13 +394,16 @@ export function SectionRenderer({
 
       {/* ── Body zone ── */}
       <div className={cn(hasHeader ? 'px-4 pb-5 pt-4 sm:px-8 sm:pb-8 sm:pt-6' : 'p-4 sm:p-8')}>
-        <GridEngine
-          fields={section.fields}
-          form={form}
-          watchedValues={watchedValues}
-          fieldOptions={fieldOptions}
-          permissions={permissions}
-        />
+        {renderBody ? renderBody(section.fields) : (
+          <GridEngine
+            fields={section.fields}
+            form={form}
+            watchedValues={watchedValues}
+            fieldOptions={fieldOptions}
+            fieldOptionsLoading={fieldOptionsLoading}
+            permissions={permissions}
+          />
+        )}
       </div>
     </div>
   )

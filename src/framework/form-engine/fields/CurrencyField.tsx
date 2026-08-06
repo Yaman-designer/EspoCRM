@@ -1,10 +1,11 @@
 'use client'
 
 import { Controller, useWatch } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { FieldWrapper } from '../FieldWrapper'
 import { buildRules } from '../ValidationEngine'
-import { getFieldId } from '../utils'
+import { getFieldId, getFieldDescribedBy } from '../utils'
 import type { FieldComponentProps, CurrencyField as Schema } from '../types'
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -13,6 +14,7 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 }
 
 export function CurrencyField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
   // Always call useWatch — conditionally use the result.
   // Using a sentinel key avoids conditional hook call.
   const watchedCurrency = useWatch({
@@ -43,7 +45,7 @@ export function CurrencyField({ schema, form, disabled, readOnly }: FieldCompone
               id={getFieldId(schema.key)}
               value={field.value ?? ''}
               type="number"
-              placeholder={schema.placeholder ?? '0.00'}
+              placeholder={schema.placeholderKey ? t(schema.placeholderKey) : '0.00'}
               disabled={disabled}
               readOnly={readOnly}
               min={schema.min ?? 0}
@@ -51,6 +53,7 @@ export function CurrencyField({ schema, form, disabled, readOnly }: FieldCompone
               step={schema.precision != null ? Math.pow(10, -schema.precision) : 0.01}
               inputMode="decimal"
               aria-invalid={!!fieldState.error}
+              aria-describedby={getFieldDescribedBy(schema, fieldState.error?.message)}
               onChange={e => {
                 const val = e.target.value
                 field.onChange(val === '' ? undefined : Number(val))

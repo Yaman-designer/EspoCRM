@@ -2,6 +2,7 @@
 
 import { useState, useRef, KeyboardEvent } from 'react'
 import { Controller } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -11,6 +12,7 @@ import { getFieldId } from '../utils'
 import type { FieldComponentProps, TagsField as Schema } from '../types'
 
 export function TagsField({ schema, form, disabled, readOnly, options }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
   const [input, setInput] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const opts = options ?? schema.options ?? []
@@ -55,7 +57,9 @@ export function TagsField({ schema, form, disabled, readOnly, options }: FieldCo
               className={cn(
                 'flex min-h-12 flex-wrap items-center gap-1.5 rounded-xl border border-border/70 bg-input px-3 py-2.5',
                 'shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-all duration-200 cursor-text',
-                'hover:border-border/90 hover:shadow-[0_1px_4px_rgba(16,24,40,0.07)]',
+                // Final polish pass: matches Input/Select/Textarea/Combobox's
+                // strengthened hover signal — see input.tsx.
+                'hover:border-border hover:shadow-[0_1px_4px_rgba(16,24,40,0.09)]',
                 'focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/15',
                 (disabled || readOnly) && 'opacity-50 cursor-not-allowed',
                 fieldState.error && 'border-destructive ring-3 ring-destructive/20',
@@ -70,7 +74,7 @@ export function TagsField({ schema, form, disabled, readOnly, options }: FieldCo
                       type="button"
                       onClick={e => { e.stopPropagation(); removeTag(tag) }}
                       className="hover:text-destructive transition-colors duration-200"
-                      aria-label={`Remove ${tag}`}
+                      aria-label={t('wizard.common.removeOption', { label: tag })}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -87,7 +91,7 @@ export function TagsField({ schema, form, disabled, readOnly, options }: FieldCo
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={handleKey}
                     disabled={disabled}
-                    placeholder={tags.length === 0 ? (schema.placeholder ?? 'Type and press Enter…') : ''}
+                    placeholder={tags.length === 0 ? (schema.placeholderKey ? t(schema.placeholderKey) : t('wizard.common.typeAndPressEnter')) : ''}
                     className="min-w-20 bg-transparent text-sm outline-none placeholder:text-muted-foreground/50"
                   />
                   {/* Suggestions dropdown */}
@@ -110,7 +114,7 @@ export function TagsField({ schema, form, disabled, readOnly, options }: FieldCo
             </div>
             {schema.max && (
               <p className="mt-1 text-[11px] text-muted-foreground">
-                {tags.length}/{schema.max} tags
+                {t('wizard.common.tagCount', { count: tags.length, max: schema.max })}
               </p>
             )}
           </FieldWrapper>

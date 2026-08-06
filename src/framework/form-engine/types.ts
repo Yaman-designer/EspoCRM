@@ -6,13 +6,21 @@ import type { UseFormReturn } from 'react-hook-form'
 export type ColSpan = 1|2|3|4|5|6|7|8|9|10|11|12
 
 export interface GridSpan {
-  /** Mobile < 640px (base/default) */
+  /** Base/default — always applies unless a wider tier below overrides it */
   xs?: ColSpan
-  /** ≥ 640px */
+  /**
+   * These three tiers key off the CONTAINER's rendered width (CSS container
+   * queries — see GridEngine.tsx's `@container`), not the viewport. A field
+   * inside a full-width card and a field inside a half-width card (e.g. the
+   * Identity step's side-by-side Classification/Governance cards) each get
+   * columns based on the width they actually have, not the browser window —
+   * so a `.half()` field never goes 2-up somewhere too narrow to fit it
+   * comfortably just because the *viewport* happened to be wide.
+   * Thresholds (see utils.ts's SM/MD/LG maps): sm ≈ 448px container,
+   * md ≈ 672px container, lg ≈ 896px container.
+   */
   sm?: ColSpan
-  /** ≥ 768px */
   md?: ColSpan
-  /** ≥ 1024px */
   lg?: ColSpan
 }
 
@@ -20,7 +28,16 @@ export interface GridSpan {
 
 export interface FieldOption {
   value: string | number | boolean
+  /**
+   * Static display text — the only thing rendered when `labelKey` is
+   * absent. For options whose source label isn't locale-neutral (e.g. a
+   * PDF/EspoCRM spec written in Greek), also set `labelKey`: this becomes
+   * the non-reactive fallback (SSR-safe, no i18n context required) while
+   * `labelKey` is what actually resolves per active locale at render time.
+   */
   label: string
+  /** Semantic i18n key, resolved via t() at render time — see FieldRenderer/SelectField/MultiSelectField's `resolveOptionLabel`. Takes precedence over `label` when present. */
+  labelKey?: string
   description?: string
   icon?: ComponentType<{ className?: string }>
   disabled?: boolean
@@ -128,11 +145,28 @@ interface BaseField {
   /** Unique key — maps to form value path, supports dot notation */
   key: string
   type: FieldType
-  label: string
-  placeholder?: string
-  description?: string
-  helperText?: string
-  tooltip?: string
+  /**
+   * Semantic i18n key, not literal display text — the schema layer stays
+   * framework-agnostic (no React/i18n imports) and the rendering layer
+   * (FieldWrapper, field components) resolves these via useTranslation()
+   * at render time. This is also what makes live language switching work
+   * for free: schemas are plain data built once, so nothing needs to be
+   * rebuilt when the active language changes — only the resolved text.
+   */
+  labelKey: string
+  placeholderKey?: string
+  descriptionKey?: string
+  helperTextKey?: string
+  tooltipKey?: string
+  /**
+   * Presentation-only sub-cluster label — when a run of consecutive fields
+   * in a section shares the same `groupLabelKey`, GridEngine renders one
+   * caption + divider above that run instead of a single flat grid (see
+   * GridEngine.tsx). Purely a rendering grouping; nothing else (RHF, Zod,
+   * DependencyEngine, ValidationEngine) reads it, and a field with no
+   * `groupLabelKey` renders exactly as it does today.
+   */
+  groupLabelKey?: string
   required?: boolean
   /** Declarative alternative to a hand-written custom validator: field becomes
    *  required only while this condition evaluates true against the live form values. */
@@ -240,13 +274,13 @@ export interface TimeField extends BaseField {
 
 export interface CheckboxField extends BaseField {
   type: 'checkbox'
-  checkboxLabel?: string
+  checkboxLabelKey?: string
 }
 
 export interface SwitchField extends BaseField {
   type: 'switch'
-  onLabel?: string
-  offLabel?: string
+  onLabelKey?: string
+  offLabelKey?: string
 }
 
 export interface RadioField extends BaseField {
@@ -385,8 +419,8 @@ export type FieldSchema =
 
 export interface SectionSchema {
   id: string
-  title?: string
-  description?: string
+  titleKey?: string
+  descriptionKey?: string
   icon?: ComponentType<{ className?: string }>
   fields: FieldSchema[]
   collapsible?: boolean
@@ -414,6 +448,15 @@ export interface FieldComponentProps<TSchema extends FieldSchema = FieldSchema> 
   readOnly?: boolean
   /** Dynamic options injected by the dependency engine */
   options?: FieldOption[]
+  /**
+   * True while a `reload-options` dependency's async loader is in flight for
+   * this field (see useDynamicForm.ts's useDependencyEngine). The field is
+   * already forced `disabled` by GridEngine while this is true — this prop
+   * exists so a field component can also swap its placeholder/empty-state
+   * copy to something accurate ("Loading…") instead of implying the fetch
+   * already finished and returned nothing.
+   */
+  optionsLoading?: boolean
 }
 
 export interface FieldRegistration {
@@ -426,4 +469,7 @@ export interface DynamicFormContextValue {
   permissions: string[]
   fieldOptions: Record<string, FieldOption[]>
   setFieldOptions: (key: string, options: FieldOption[]) => void
+  /** True per field key while its `reload-options` dependency is in flight. */
+  fieldOptionsLoading: Record<string, boolean>
+  setFieldOptionsLoading: (key: string, loading: boolean) => void
 }

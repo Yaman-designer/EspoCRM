@@ -10,7 +10,7 @@ import { defineConfig, devices } from '@playwright/test'
 // authenticates itself directly via the NextAuth Credentials API.
 export default defineConfig({
   testDir: './e2e',
-  testMatch: /location-intelligence-map\.spec\.ts/,
+  testMatch: /(location-intelligence-(map|responsive)|address-specs-responsive|construction-systems-responsive|features-amenities-responsive|asset-management-responsive|hero-banner-legal-images|hero-single-vs-multi-image)\.spec\.ts/,
   timeout: 90_000,
   expect: { timeout: 10_000 },
   reporter: [['list']],

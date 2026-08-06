@@ -1,6 +1,7 @@
 'use client'
 
 import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +43,7 @@ export function PropertyPagination({
   onPageChange,
   onPageSizeChange,
 }: PropertyPaginationProps) {
+  const { t } = useTranslation('properties')
   if (totalCount === 0 || totalPages <= 1) return null
 
   const startItem = (page - 1) * pageSize + 1
@@ -63,27 +65,27 @@ export function PropertyPagination({
               isFetching && 'opacity-40',
             )}
           >
-            Showing{' '}
+            {t('pagination.showing')}{' '}
             <span className="font-medium text-foreground tabular-nums">
               {startItem}–{endItem}
             </span>
-            {' '}of{' '}
+            {' '}{t('pagination.of')}{' '}
             <span className="font-medium text-foreground tabular-nums">
               {totalCount.toLocaleString()}
             </span>
-            {' '}{totalCount === 1 ? 'property' : 'properties'}
+            {' '}{t('pagination.property', { count: totalCount })}
           </p>
         </div>
 
         {/* ── CENTER — page navigation ──────────────────────────────────── */}
-        <nav aria-label="Pagination" className="flex items-center gap-0.5">
+        <nav aria-label={t('pagination.pagination')} className="flex items-center gap-0.5">
 
           {/* Previous */}
           <button
             type="button"
             onClick={() => onPageChange(page - 1)}
             disabled={page <= 1 || isFetching}
-            aria-label="Previous page"
+            aria-label={t('pagination.previousPage')}
             className={cn(
               'flex h-7 items-center gap-1 rounded-lg px-2',
               'text-[12px] font-medium text-muted-foreground',
@@ -94,7 +96,7 @@ export function PropertyPagination({
             )}
           >
             <ChevronLeft className="size-3.5" />
-            <span className="hidden sm:inline">Prev</span>
+            <span className="hidden sm:inline">{t('pagination.previous')}</span>
           </button>
 
           {/* Page numbers */}
@@ -114,7 +116,7 @@ export function PropertyPagination({
                   type="button"
                   onClick={() => onPageChange(item)}
                   disabled={isFetching}
-                  aria-label={`Page ${item}`}
+                  aria-label={t('pagination.page', { page: item })}
                   aria-current={item === page ? 'page' : undefined}
                   className={cn(
                     'flex h-7 w-7 items-center justify-center rounded-lg text-[12.5px]',
@@ -143,7 +145,7 @@ export function PropertyPagination({
             type="button"
             onClick={() => onPageChange(page + 1)}
             disabled={page >= totalPages || isFetching}
-            aria-label="Next page"
+            aria-label={t('pagination.nextPage')}
             className={cn(
               'flex h-7 items-center gap-1 rounded-lg px-2',
               'text-[12px] font-medium text-muted-foreground',
@@ -153,7 +155,7 @@ export function PropertyPagination({
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20',
             )}
           >
-            <span className="hidden sm:inline">Next</span>
+            <span className="hidden sm:inline">{t('pagination.next')}</span>
             <ChevronRight className="size-3.5" />
           </button>
         </nav>
@@ -169,7 +171,7 @@ export function PropertyPagination({
             )}
           >
             {startItem}–{endItem}{' '}
-            <span className="text-muted-foreground/35">of</span>{' '}
+            <span className="text-muted-foreground/35">{t('pagination.of')}</span>{' '}
             {totalCount.toLocaleString()}
           </p>
 
@@ -186,7 +188,7 @@ export function PropertyPagination({
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20',
                 )}
               >
-                {pageSize} / page
+                {t('pagination.perPage', { count: pageSize })}
                 <ChevronDown className="size-3 opacity-45" />
               </button>
             </DropdownMenuTrigger>
@@ -200,7 +202,7 @@ export function PropertyPagination({
                     size === pageSize && 'font-semibold text-primary',
                   )}
                 >
-                  {size} per page
+                  {t('pagination.perPageOption', { count: size })}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

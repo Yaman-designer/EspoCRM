@@ -8,6 +8,13 @@ export { FieldWrapper } from './FieldWrapper'
 export { GridEngine } from './GridEngine'
 export { SectionRenderer } from './SectionRenderer'
 
+/* ─── Shared section-chrome primitives ───────────────────────────── */
+export {
+  GroupCaption, getSectionCompletion, SectionCompletionBadge, isFilled,
+  pickFields, leftoverFields, fullWidthField, clusterGrid, SectionRow,
+} from './section-primitives'
+export type { SectionCompletionSummary, ClusterContext } from './section-primitives'
+
 /* ─── Registry ───────────────────────────────────────────────────── */
 export { resolveField, registerField } from './FieldRegistry'
 

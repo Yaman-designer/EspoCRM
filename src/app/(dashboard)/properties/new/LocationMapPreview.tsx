@@ -1,7 +1,8 @@
 'use client'
 
 import { useWatch, type UseFormReturn } from 'react-hook-form'
-import { MapPin } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { MapPin, Loader2 } from 'lucide-react'
 import { PropertyMap } from '@/features/properties/components/PropertyMap'
 import { NearbyPlaces } from '@/features/properties/components/NearbyPlaces'
 import { AddressSearch } from '@/features/properties/components/AddressSearch'
@@ -32,6 +33,7 @@ interface LocationMapPreviewProps {
 }
 
 export function LocationMapPreview({ form }: LocationMapPreviewProps) {
+  const { t } = useTranslation('properties')
   const locationId = useWatch({ control: form.control, name: 'locationId' }) as string | undefined
   const subRegionLocationId = useWatch({ control: form.control, name: 'subRegionLocationId' }) as string | undefined
   const regionLocationId = useWatch({ control: form.control, name: 'regionLocationId' }) as string | undefined
@@ -74,14 +76,17 @@ export function LocationMapPreview({ form }: LocationMapPreviewProps) {
       <AddressSearch onSelect={handleAddressSelect} />
 
       {isFetching && !hasPreciseCoords ? (
-        <div className="flex h-48 items-center justify-center rounded-[24px] border border-border/20 bg-muted/20 text-[13px] text-muted-foreground/60">
-          Locating on map…
+        <div className="flex h-36 items-center justify-center gap-2 rounded-2xl border border-border/20 bg-muted/20 text-[13px] text-muted-foreground/60 sm:h-44">
+          <Loader2 className="size-4 animate-spin text-muted-foreground/40" aria-hidden />
+          {t('wizard.locationMap.locating')}
         </div>
       ) : !geo ? (
-        <div className="flex h-48 flex-col items-center justify-center gap-2 rounded-[24px] border border-dashed border-border/30 bg-muted/10 text-center">
-          <MapPin className="size-5 text-muted-foreground/35" />
-          <p className="text-[12.5px] text-muted-foreground/55">
-            Search for an address above, or select a region, sub-region, or district, to preview the location.
+        <div className="flex h-36 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border/30 bg-muted/10 px-6 text-center sm:h-44">
+          <div className="flex size-9 items-center justify-center rounded-full bg-primary/8 text-primary/70">
+            <MapPin className="size-4" aria-hidden />
+          </div>
+          <p className="max-w-xs text-[12.5px] leading-relaxed text-muted-foreground/60">
+            {t('wizard.locationMap.emptyState')}
           </p>
         </div>
       ) : (
@@ -89,7 +94,7 @@ export function LocationMapPreview({ form }: LocationMapPreviewProps) {
           <PropertyMap
             latitude={geo.latitude}
             longitude={geo.longitude}
-            height={280}
+            height={320}
             draggable
             onPositionChange={handlePositionChange}
           />

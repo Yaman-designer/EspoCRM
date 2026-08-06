@@ -2,6 +2,13 @@ import { buildPropertyHealth, buildMarketDemand } from './property-health'
 import type { RealEstateProperty } from '../types/property.types'
 import type { DemandLevel } from './property-health'
 
+// This module's output (deltaLabel etc.) has no current UI consumer (see
+// usePortfolioRanks.ts) — a trivial passthrough is safe here; if a component
+// ever renders buildPropertyHealth/buildMarketDemand's label/note text via
+// this path, thread the real i18next `t` through computePortfolioRanks
+// instead of reaching for this constant.
+const PASSTHROUGH_T = (key: string) => key
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type RankTier = 'top' | 'above' | 'average' | 'below'
@@ -88,8 +95,8 @@ export function computePortfolioRanks(
 
   // Score every property once
   const scored = all.map(p => {
-    const h = buildPropertyHealth(p)
-    const d = buildMarketDemand(p)
+    const h = buildPropertyHealth(p, PASSTHROUGH_T)
+    const d = buildMarketDemand(p, PASSTHROUGH_T)
     return {
       id:          p.id,
       health:      h.score,

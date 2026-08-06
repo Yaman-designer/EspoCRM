@@ -1,11 +1,13 @@
 'use client'
 
-import Link from 'next/link'
 import { useQuery } from '@tanstack/react-query'
-import { Building2, ArrowRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { SecondaryButton } from '@/components/shared'
 import { PropertyCard } from '../PropertyCard'
 import { fetchProperties } from '../../repositories/property.repository'
 import { PROPERTIES_QUERY_KEY } from '../../domain/constants'
+import { PAGE_PADDING_X } from '../../lib/page-layout'
+import { cn } from '@/lib/utils'
 import type { RealEstateProperty } from '../../types/property.types'
 
 interface RelatedPropertiesSectionProps {
@@ -17,6 +19,7 @@ interface RelatedPropertiesSectionProps {
 }
 
 export function RelatedPropertiesSection({ currentId, type, onView, onEdit, onDelete }: RelatedPropertiesSectionProps) {
+  const { t } = useTranslation('properties')
   const { data, isLoading } = useQuery({
     queryKey: [PROPERTIES_QUERY_KEY, 'related', type, currentId],
     queryFn: async () => {
@@ -40,25 +43,44 @@ export function RelatedPropertiesSection({ currentId, type, onView, onEdit, onDe
   if (!isLoading && list.length === 0) return null
 
   return (
-    <div className="mt-12 px-6">
-      <div className="mb-4 flex items-baseline justify-between">
+    // Same shared PAGE_PADDING_X as PropertyDetailView (see lib/page-layout.ts)
+    // — this section sets its own outer inset since it's a sibling div after
+    // the page's main grid, not nested inside it, but still shares that
+    // grid's parent `max-w-450` wrapper, so it needs the identical gutter to
+    // stay edge-aligned with everything above it.
+    <div className={cn('mt-12', PAGE_PADDING_X)}>
+      <div className="mb-6 flex items-center justify-between gap-3">
         <div>
           <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground/55">
-            Similar Properties
+            {t('related.similarProperties')}
           </p>
           {!isLoading && (
             <p className="text-[11px] text-muted-foreground/45">
-              {list.length} {type ? type.toLowerCase() : 'propert'}{list.length !== 1 ? 's' : 'y'} in portfolio
+              {/* Enterprise Product Review pass (2026-07-23): the previous
+                  single suffix (`'s' : 'y'`) only pluralized correctly for
+                  the untyped "propert" stem — singular read as "apartmenty"
+                  once a real type was present, and plural read as "properts"
+                  without one. Two real noun forms instead of one stem plus
+                  a mismatched suffix. Enterprise Localization pass
+                  (2026-07-24): the "property"/"properties" fallback words and
+                  " in portfolio" suffix are now translated; `type` itself
+                  (when present) is real API data and stays untouched,
+                  English 's' pluralization suffix included — that's existing
+                  display behavior, not something this pass changes. */}
+              {t('related.inPortfolio', {
+                count: list.length,
+                type: list.length === 1
+                  ? (type ? type.toLowerCase() : t('related.propertyFallback'))
+                  : (type ? `${type.toLowerCase()}s` : t('related.propertiesFallback')),
+              })}
             </p>
           )}
         </div>
-        <Link
-          href="/properties"
-          className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted-foreground/60 transition-colors hover:text-foreground focus-visible:outline-none"
-        >
-          Browse all
-          <ArrowRight className="size-3" />
-        </Link>
+        {/* Button System — Variant 2 (Secondary Action). Same component as
+            PropertySpecsBar's "Full Specifications" and PropertyTimeline's
+            "Show all N events" — one implementation for every secondary CTA
+            in the Property Details experience. */}
+        <SecondaryButton href="/properties" label={t('related.browseAll')} />
       </div>
 
       {isLoading ? (

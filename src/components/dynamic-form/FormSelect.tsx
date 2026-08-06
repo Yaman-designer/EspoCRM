@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import type { ControllerRenderProps, FieldValues } from 'react-hook-form'
 import { useQuery } from '@tanstack/react-query'
-import { Check, ChevronsUpDown, Loader2, X } from 'lucide-react'
+import { Check, Loader2, X } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import axiosClient from '@/api/axiosClient'
 import type { EspoListResponse } from '@/api/espocrm/entityService'
 import { resourceRegistry } from '@/shared/registry'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Command,
   CommandEmpty,
@@ -18,6 +18,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { ComboboxTrigger } from '@/components/ui/combobox-trigger'
 import type { FieldConfig, SelectOption } from './types'
 
 // ── Internal hook: resolves options ───────────────────────────────────────────
@@ -100,30 +101,29 @@ export function FormSelect({ field, config }: SelectProps) {
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <ComboboxTrigger
           role="combobox"
           aria-expanded={open}
           disabled={config.disabled || config.readOnly}
-          className="h-10 w-full justify-between border-border/60 bg-background font-normal text-sm shadow-none transition-colors hover:border-border hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring/40"
+          open={open}
         >
-          <span className={selected ? 'text-foreground' : 'text-muted-foreground/70'}>
+          {/* min-w-0 truncate: see form-engine/fields/SelectField.tsx's
+              identical fix — ComboboxTrigger's own wrapper truncate can't
+              ellipsize overflow coming from a nested child's own box. */}
+          <span className={cn('min-w-0 truncate', selected ? 'text-foreground' : 'text-muted-foreground/50')}>
             {selected ? selected.label : placeholder}
           </span>
-          <div className="ml-2 flex shrink-0 items-center gap-1">
-            {selected && !config.disabled && !config.readOnly && (
-              <span
-                role="button"
-                tabIndex={-1}
-                onClick={(e) => { e.stopPropagation(); field.onChange('') }}
-                className="rounded p-0.5 text-muted-foreground/50 hover:text-muted-foreground"
-              >
-                <X className="h-3 w-3" />
-              </span>
-            )}
-            <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />
-          </div>
-        </Button>
+          {selected && !config.disabled && !config.readOnly && (
+            <span
+              role="button"
+              tabIndex={-1}
+              onClick={(e) => { e.stopPropagation(); field.onChange('') }}
+              className="ms-auto rounded p-0.5 text-muted-foreground/50 hover:text-muted-foreground"
+            >
+              <X className="h-3 w-3" />
+            </span>
+          )}
+        </ComboboxTrigger>
       </PopoverTrigger>
 
       <PopoverContent
@@ -212,20 +212,19 @@ export function FormMultiSelect({ field, config }: SelectProps) {
     <div className="space-y-2">
       <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
-          <Button
-            variant="outline"
+          <ComboboxTrigger
             role="combobox"
             aria-expanded={open}
             disabled={config.disabled || config.readOnly}
-            className="h-10 w-full justify-between border-border/60 bg-background font-normal text-sm shadow-none transition-colors hover:border-border hover:bg-muted/30"
+            open={open}
           >
-            <span className={selected.length > 0 ? 'text-foreground' : 'text-muted-foreground/70'}>
+            {/* min-w-0 truncate: same fix as the single-select above. */}
+            <span className={cn('min-w-0 truncate', selected.length > 0 ? 'text-foreground' : 'text-muted-foreground/50')}>
               {selected.length > 0
                 ? `${selected.length} selected`
                 : (config.placeholder ?? `Select ${config.label.toLowerCase()}…`)}
             </span>
-            <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
-          </Button>
+          </ComboboxTrigger>
         </PopoverTrigger>
 
         <PopoverContent
@@ -283,7 +282,7 @@ export function FormMultiSelect({ field, config }: SelectProps) {
           {selected.map((v) => {
             const label = options.find((o) => o.value === v)?.label ?? v
             return (
-              <Badge key={v} variant="secondary" className="gap-1 pr-1.5 text-[11px]">
+              <Badge key={v} variant="secondary" className="gap-1 pe-1.5 text-[11px]">
                 {label}
                 <button
                   type="button"

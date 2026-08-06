@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useQuery, keepPreviousData } from '@tanstack/react-query'
 import { Heart } from 'lucide-react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { PropertyToolbar } from '../components/PropertyToolbar'
 import { PropertyGrid } from '../components/PropertyGrid'
 import { PropertyPagination } from '../components/PropertyPagination'
@@ -12,8 +13,6 @@ import { buildWhereParams, SORT_MAP } from '../services/property.query.service'
 import { fetchProperties } from '../repositories/property.repository'
 import { PROPERTIES_QUERY_KEY, PAGE_SIZE_OPTIONS, type PageSizeOption } from '../domain/constants'
 import { useFavoriteIds } from '../hooks/useFavoriteState'
-import { getDataCompleteness } from '../lib/data-completeness'
-import { MIN_COMPLETENESS_TO_PUBLISH } from '../domain/property-lifecycle.rules'
 import { usePropertyDeletePermission } from '../hooks/usePropertyDeletePermission'
 import type { PropertyFilters, SortOption, ViewMode } from '../types/property.types'
 import type { RealEstateProperty } from '../types/property.types'
@@ -34,7 +33,6 @@ const DEFAULT_FILTERS: PropertyFilters = {
   search:    '',
   type:      'all',
   savedOnly: false,
-  readyOnly: false,
   bedrooms:  null,
   bathrooms: null,
   minPrice:  null,
@@ -51,7 +49,6 @@ function readFiltersFromUrl(): PropertyFilters {
     search:    p.get('q')    ?? '',
     type:      p.get('type') ?? 'all',
     savedOnly: p.get('saved') === 'true',
-    readyOnly: p.get('ready') === 'true',
     bedrooms:  p.has('beds')     ? (Number(p.get('beds'))     || null) : null,
     bathrooms: p.has('baths')    ? (Number(p.get('baths'))    || null) : null,
     minPrice:  p.has('minPrice') ? (Number(p.get('minPrice')) || null) : null,
@@ -82,6 +79,7 @@ export function PropertyListRenderer({
   onDelete,
 }: ListRendererProps<RealEstateProperty>) {
 
+  const { t } = useTranslation('properties')
   const router = useRouter()
 
   const onView = useCallback((p: RealEstateProperty) => {
@@ -107,11 +105,11 @@ export function PropertyListRenderer({
   const { denied: deleteDenied } = usePropertyDeletePermission()
   const handleDelete = useCallback((p: RealEstateProperty) => {
     if (deleteDenied) {
-      toast.error("You don't have permission to delete properties.")
+      toast.error(t('deleteDialog.noPermission'))
       return
     }
     onDelete(p)
-  }, [deleteDenied, onDelete])
+  }, [deleteDenied, onDelete, t])
 
   // ── Favorites (localStorage) ──────────────────────────────────────────────
   const favoriteIds = useFavoriteIds()
@@ -146,7 +144,6 @@ export function PropertyListRenderer({
     if (filters.search)              p.set('q',        filters.search)
     if (filters.type !== 'all')      p.set('type',     filters.type)
     if (filters.savedOnly)           p.set('saved',    'true')
-    if (filters.readyOnly)           p.set('ready',    'true')
     if (filters.bedrooms  !== null)  p.set('beds',     String(filters.bedrooms))
     if (filters.bathrooms !== null)  p.set('baths',    String(filters.bathrooms))
     if (filters.minPrice  !== null)  p.set('minPrice', String(filters.minPrice))
@@ -207,16 +204,6 @@ export function PropertyListRenderer({
   const isLoading   = data === undefined
   const isSavedFetching = filters.savedOnly && isFetching
 
-  // Visibility policy: "ready to publish" is computed client-side from the
-  // existing data-completeness score — EspoCRM has no queryable completeness
-  // attribute, so unlike other filters this cannot be pushed into
-  // buildWhereParams. It filters only the CURRENT fetched page, not the full
-  // server-side result set — totalCount/totalPages below stay based on the
-  // server's unfiltered total, since completeness isn't indexed there.
-  const displayedProperties = filters.readyOnly
-    ? properties.filter(p => getDataCompleteness(p).score >= MIN_COMPLETENESS_TO_PUBLISH)
-    : properties
-
   useEffect(() => {
     if (totalCount > 0 && page > totalPages) setPage(totalPages)
   }, [totalCount, page, totalPages])
@@ -225,7 +212,6 @@ export function PropertyListRenderer({
     filters.search    !== ''    ||
     filters.type      !== 'all' ||
     filters.savedOnly           ||
-    filters.readyOnly           ||
     filters.bedrooms  !== null  ||
     filters.bathrooms !== null  ||
     filters.minPrice  !== null  ||
@@ -236,7 +222,6 @@ export function PropertyListRenderer({
   const onSearchChange    = useCallback((search: string)         => { setFilters(f => ({ ...f, search }));    setPage(1) }, [])
   const onTypeChange      = useCallback((type: string)           => { setFilters(f => ({ ...f, type }));      setPage(1) }, [])
   const onSavedOnlyChange = useCallback((savedOnly: boolean)     => { setFilters(f => ({ ...f, savedOnly })); setPage(1) }, [])
-  const onReadyOnlyChange = useCallback((readyOnly: boolean)     => { setFilters(f => ({ ...f, readyOnly })); setPage(1) }, [])
   const onBedroomsChange  = useCallback((bedrooms: number|null)  => { setFilters(f => ({ ...f, bedrooms }));  setPage(1) }, [])
   const onBathroomsChange = useCallback((bathrooms: number|null) => { setFilters(f => ({ ...f, bathrooms })); setPage(1) }, [])
   const onPriceChange     = useCallback((minPrice: number|null, maxPrice: number|null) => {
@@ -262,8 +247,6 @@ export function PropertyListRenderer({
           onTypeChange={onTypeChange}
           savedOnly={filters.savedOnly}
           onSavedOnlyChange={onSavedOnlyChange}
-          readyOnly={filters.readyOnly}
-          onReadyOnlyChange={onReadyOnlyChange}
           bedrooms={filters.bedrooms}
           onBedroomsChange={onBedroomsChange}
           bathrooms={filters.bathrooms}
@@ -298,13 +281,13 @@ export function PropertyListRenderer({
               </div>
               <div className="flex flex-col gap-0.5">
                 <h2 className="text-[15px] font-semibold leading-none tracking-tight text-foreground">
-                  Saved Properties
+                  {t('listPage.savedPropertiesHeading')}
                 </h2>
                 {!isLoading && (
                   <p className="mt-0.5 text-[12px] leading-none text-muted-foreground">
                     {favoriteIds.length === 0
-                      ? 'No properties saved yet'
-                      : `${favoriteIds.length} ${favoriteIds.length === 1 ? 'property' : 'properties'} in your collection`
+                      ? t('listPage.noSavedYet')
+                      : t('listPage.collectionCount', { count: favoriteIds.length })
                     }
                   </p>
                 )}
@@ -315,42 +298,31 @@ export function PropertyListRenderer({
               onClick={onClearFilters}
               className="text-[12px] font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground"
             >
-              Browse all →
+              {t('listPage.browseAll')}
             </button>
           </div>
         )}
 
-        {/* Ready-to-publish mode — clarifies this filters the current page only */}
-        {filters.readyOnly && !isLoading && (
-          <div className="flex items-center gap-2 text-[12.5px]">
-            <span className="text-muted-foreground">
-              Showing publish-ready listings on this page —{' '}
-              <span className="font-semibold text-foreground">{displayedProperties.length}</span>
-              {' '}of {properties.length}
-            </span>
-          </div>
-        )}
-
         {/* Results context — active filter / search summary above the grid */}
-        {!isLoading && !filters.savedOnly && !filters.readyOnly && totalCount > 0 && hasFilters && (
+        {!isLoading && !filters.savedOnly && totalCount > 0 && hasFilters && (
           <div className="flex items-center gap-2 text-[12.5px]">
             {filters.search.trim() ? (
               <span className="text-muted-foreground">
-                Results for{' '}
+                {t('listPage.resultsFor')}{' '}
                 <span className="font-semibold text-foreground">&ldquo;{filters.search}&rdquo;</span>
               </span>
             ) : (
-              <span className="text-muted-foreground">Filtered results</span>
+              <span className="text-muted-foreground">{t('listPage.filteredResults')}</span>
             )}
             <span className="select-none text-border" aria-hidden>·</span>
             <span className="font-semibold tabular-nums text-foreground">{totalCount.toLocaleString()}</span>
-            <span className="text-muted-foreground">{totalCount === 1 ? 'property' : 'properties'}</span>
+            <span className="text-muted-foreground">{t('listPage.property', { count: totalCount })}</span>
           </div>
         )}
 
         <div className="min-h-75">
           <PropertyGrid
-            properties={displayedProperties}
+            properties={properties}
             viewMode={viewMode}
             isLoading={isLoading}
             hasActiveFilters={hasFilters}

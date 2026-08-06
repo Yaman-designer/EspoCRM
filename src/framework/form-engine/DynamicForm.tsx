@@ -45,11 +45,16 @@ export function DynamicForm({ schema, form, permissions = [], className }: Dynam
     setFieldOptionsState(prev => ({ ...prev, [key]: options }))
   }, [])
 
+  const [fieldOptionsLoading, setFieldOptionsLoadingState] = useState<Record<string, boolean>>({})
+  const setFieldOptionsLoading = useCallback((key: string, loading: boolean) => {
+    setFieldOptionsLoadingState(prev => ({ ...prev, [key]: loading }))
+  }, [])
+
   // Live form values for visibility / disabled evaluation
   const watchedValues = useWatch({ control: form.control }) as Record<string, unknown>
 
   // Dependency engine: watches values, executes clear / reload-options
-  useDependencyEngine(schema, form, setFieldOptions)
+  useDependencyEngine(schema, form, setFieldOptions, setFieldOptionsLoading)
 
   // Resolve sections: support both sections[] and fields[] shorthand
   const sections = schema.sections ?? [
@@ -60,11 +65,13 @@ export function DynamicForm({ schema, form, permissions = [], className }: Dynam
     permissions,
     fieldOptions,
     setFieldOptions,
+    fieldOptionsLoading,
+    setFieldOptionsLoading,
   }
 
   return (
     <DynamicFormContext.Provider value={contextValue}>
-      <div className={cn('space-y-6', className)}>
+      <div className={cn('space-y-5 sm:space-y-6', className)}>
         {sections.map((section, sectionIndex) => (
           <SectionRenderer
             key={section.id}
@@ -73,8 +80,9 @@ export function DynamicForm({ schema, form, permissions = [], className }: Dynam
             form={form}
             watchedValues={watchedValues}
             fieldOptions={fieldOptions}
+            fieldOptionsLoading={fieldOptionsLoading}
             permissions={permissions}
-            hideHeader={!schema.sections && sections.length === 1 && !section.title}
+            hideHeader={!schema.sections && sections.length === 1 && !section.titleKey}
           />
         ))}
       </div>

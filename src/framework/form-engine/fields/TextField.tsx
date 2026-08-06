@@ -1,14 +1,16 @@
 'use client'
 
 import { Controller, useWatch } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { FieldWrapper } from '../FieldWrapper'
 import { buildRules } from '../ValidationEngine'
-import { getFieldId } from '../utils'
+import { getFieldId, getFieldDescribedBy } from '../utils'
 import type { FieldComponentProps, TextField as Schema } from '../types'
 
 export function TextField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
   const value = useWatch({ control: form.control, name: schema.key }) ?? ''
   const charCount = typeof value === 'string' ? value.length : 0
 
@@ -36,12 +38,13 @@ export function TextField({ schema, form, disabled, readOnly }: FieldComponentPr
               id={getFieldId(schema.key)}
               value={field.value ?? ''}
               type="text"
-              placeholder={schema.placeholder}
+              placeholder={schema.placeholderKey ? t(schema.placeholderKey) : undefined}
               disabled={disabled}
               readOnly={readOnly}
               maxLength={schema.maxLength}
               autoComplete={schema.autocomplete}
               aria-invalid={!!fieldState.error}
+              aria-describedby={getFieldDescribedBy(schema, fieldState.error?.message)}
               className={cn(schema.prefix && 'pl-8', schema.suffix && 'pr-8')}
             />
             {schema.suffix && (

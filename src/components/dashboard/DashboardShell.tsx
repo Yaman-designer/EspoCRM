@@ -4,6 +4,7 @@ import { useLayoutEffect, useEffect, Suspense } from 'react'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { AppSidebar } from '@/components/dashboard/AppSidebar'
 import { TopNavbar } from '@/components/dashboard/navbar'
+import { BackToTopButton } from '@/components/dashboard/BackToTopButton'
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { width, mobileOpen, setMobileOpen, dragging } = useSidebarStore()
@@ -52,6 +53,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <TopNavbar />
         <main className="flex-1 p-4 sm:p-5 md:p-6">{children}</main>
       </div>
+
+      <BackToTopButton />
     </div>
   )
 }

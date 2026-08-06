@@ -1,6 +1,7 @@
 'use client'
 
 import { Controller } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { FieldWrapper } from '../FieldWrapper'
 import { buildRules } from '../ValidationEngine'
@@ -8,6 +9,7 @@ import { getFieldId } from '../utils'
 import type { FieldComponentProps, EmailField as Schema } from '../types'
 
 export function EmailField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
   return (
     <Controller
       control={form.control}
@@ -20,7 +22,7 @@ export function EmailField({ schema, form, disabled, readOnly }: FieldComponentP
             id={getFieldId(schema.key)}
             value={field.value ?? ''}
             type="email"
-            placeholder={schema.placeholder ?? 'name@example.com'}
+            placeholder={schema.placeholderKey ? t(schema.placeholderKey) : 'name@example.com'}
             disabled={disabled}
             readOnly={readOnly}
             maxLength={schema.maxLength}

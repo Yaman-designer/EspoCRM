@@ -1,0 +1,40 @@
+name: Architecture Validation
+
+# Enforces the Details-page framework's layer rules documented in
+# src/features/properties/ARCHITECTURE.md. Fails the build on any
+# violation reported by scripts/architecture-validator — see that
+# directory's own README for what each rule checks and its honest scope
+# limits. This is intentionally a separate, additive workflow: it doesn't
+# replace typecheck/lint/test, it adds an architecture-specific gate none
+# of those tools check.
+
+on:
+  pull_request:
+    paths:
+      - 'src/features/properties/**'
+      - 'src/components/shared/**'
+      - 'src/shared/detail-view/**'
+      - 'scripts/architecture-validator/**'
+  push:
+    branches: [main]
+    paths:
+      - 'src/features/properties/**'
+      - 'src/components/shared/**'
+      - 'src/shared/detail-view/**'
+      - 'scripts/architecture-validator/**'
+  workflow_dispatch: {}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run architecture validator
+        run: npm run validate:architecture
+      - name: Typecheck (architecture violations often surface as type errors first)
+        run: npx tsc --noEmit

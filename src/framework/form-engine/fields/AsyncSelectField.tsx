@@ -2,18 +2,24 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { Controller } from 'react-hook-form'
-import { Check, ChevronsUpDown, Loader2, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import { Check, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from '@/components/ui/command'
+import { ComboboxTrigger } from '@/components/ui/combobox-trigger'
 import { FieldWrapper } from '../FieldWrapper'
 import { buildRules } from '../ValidationEngine'
 import { getFieldId } from '../utils'
 import type { FieldComponentProps, AsyncSelectField as Schema, FieldOption } from '../types'
 
 export function AsyncSelectField({ schema, form, disabled, readOnly }: FieldComponentProps<Schema>) {
+  const { t } = useTranslation('properties')
+  const searchPlaceholder = schema.placeholderKey
+    ? t(schema.placeholderKey)
+    : t('wizard.common.searchPlaceholder', { label: t(schema.labelKey).toLowerCase() })
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [asyncOpts, setAsyncOpts] = useState<FieldOption[]>(
@@ -64,23 +70,20 @@ export function AsyncSelectField({ schema, form, disabled, readOnly }: FieldComp
               }}
             >
               <PopoverTrigger asChild>
-                <button
-                  type="button"
+                <ComboboxTrigger
                   id={getFieldId(schema.key)}
-                  disabled={disabled}
-                  aria-invalid={!!fieldState.error}
-                  className={cn(
-                    'flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 text-sm',
-                    'hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                    open && 'ring-2 ring-ring',
-                    (disabled || readOnly) && 'cursor-not-allowed opacity-50',
-                    fieldState.error && 'border-destructive',
-                  )}
+                  disabled={disabled || readOnly}
+                  error={!!fieldState.error}
+                  open={open}
+                  showChevron={!loading}
                 >
-                  <span className={selectedOpt ? 'text-foreground' : 'text-muted-foreground'}>
-                    {selectedOpt?.label ?? schema.placeholder ?? `Search ${schema.label.toLowerCase()}…`}
+                  {/* min-w-0 truncate: see SelectField.tsx's identical fix —
+                      the actual overflowing text lives here, not in
+                      ComboboxTrigger's own wrapper span. */}
+                  <span className={cn('min-w-0 truncate', selectedOpt ? 'text-foreground' : 'text-muted-foreground/50')}>
+                    {selectedOpt?.label ?? searchPlaceholder}
                   </span>
-                  <div className="flex items-center gap-1">
+                  <div className="ms-auto flex items-center gap-1">
                     {schema.clearable && field.value != null && (
                       <span
                         onClick={e => { e.stopPropagation(); if (!readOnly) field.onChange(null) }}
@@ -89,14 +92,14 @@ export function AsyncSelectField({ schema, form, disabled, readOnly }: FieldComp
                         <X className="h-3.5 w-3.5" />
                       </span>
                     )}
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin opacity-50" /> : <ChevronsUpDown className="h-4 w-4 opacity-40" />}
+                    {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground/70" />}
                   </div>
-                </button>
+                </ComboboxTrigger>
               </PopoverTrigger>
               <PopoverContent className="p-0 w-(--radix-popover-trigger-width)" align="start">
                 <Command shouldFilter={false}>
                   <CommandInput
-                    placeholder={`Search ${schema.label.toLowerCase()}…`}
+                    placeholder={searchPlaceholder}
                     onValueChange={search}
                   />
                   <CommandList>
@@ -106,7 +109,7 @@ export function AsyncSelectField({ schema, form, disabled, readOnly }: FieldComp
                       </div>
                     ) : (
                       <>
-                        <CommandEmpty>No results found.</CommandEmpty>
+                        <CommandEmpty>{t('wizard.common.noResultsFound')}</CommandEmpty>
                         <CommandGroup>
                           {asyncOpts.map(opt => (
                             <CommandItem

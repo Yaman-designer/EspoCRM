@@ -15,8 +15,12 @@ import 'leaflet/dist/leaflet.css'
 import {
   Copy, Navigation, Share2, LocateFixed, ExternalLink, Check, Maximize2, X, HelpCircle,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n/config'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
+import { getPropertyTypeLabel } from '../domain/property-type.registry'
+import { getStatusLabel } from './PropertyStatusBadge'
 import {
   buildGoogleMapsUrl, buildGoogleDirectionsUrl,
 } from '../services/geocoding.service'
@@ -118,6 +122,7 @@ function MapControls({
   mapsUrl: string | null
   onFullscreenClick?: () => void
 }) {
+  const { t } = useTranslation('properties')
   const map = useMap()
 
   function recenter() {
@@ -131,8 +136,8 @@ function MapControls({
           <button
             type="button"
             onClick={onFullscreenClick}
-            aria-label="View map fullscreen"
-            title="Fullscreen"
+            aria-label={t('map.viewMapFullscreen')}
+            title={t('map.fullscreen')}
             className="property-map-control-btn"
           >
             <Maximize2 size={16} />
@@ -141,8 +146,8 @@ function MapControls({
         <button
           type="button"
           onClick={recenter}
-          aria-label="Recenter map on property"
-          title="Recenter on property"
+          aria-label={t('map.recenterOnProperty')}
+          title={t('map.recenterOnProperty')}
           className="property-map-control-btn"
         >
           <LocateFixed size={16} />
@@ -152,8 +157,8 @@ function MapControls({
             href={mapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Open location in Google Maps"
-            title="Open in Google Maps"
+            aria-label={t('map.openLocationInGoogleMaps')}
+            title={t('map.openInGoogleMaps')}
             className="property-map-control-btn"
           >
             <ExternalLink size={16} />
@@ -223,7 +228,7 @@ function IconAction({
 }
 
 function PopupDivider() {
-  return <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #F0F2F4' }} />
+  return <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid #F0F2F4' }} />
 }
 
 function PropertyPopupCard({
@@ -243,6 +248,7 @@ function PropertyPopupCard({
   longitude:      number
   addressText?:   string
 }) {
+  const { t } = useTranslation('properties')
   const map = useMap()
   const { copied, copy } = useCopyToClipboard()
   const [shared, setShared] = useState(false)
@@ -264,7 +270,7 @@ function PropertyPopupCard({
     const shareUrl = mapsUrl ?? `https://www.google.com/maps?q=${latitude},${longitude}`
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: title || 'Property Location', url: shareUrl })
+        await navigator.share({ title: title || t('map.propertyLocationFallback'), url: shareUrl })
       } catch {
         // User cancelled the native share sheet — not an error, no-op.
       }
@@ -296,18 +302,18 @@ function PropertyPopupCard({
   return (
     <div
       role="dialog"
-      aria-label={`${title || 'Property'} location details`}
-      style={{ minWidth: 268, padding: '4px 2px', fontFamily: 'var(--font-sans, system-ui)' }}
+      aria-label={t('map.locationDetailsAriaLabel', { name: title || t('map.locationDetailsFallback') })}
+      style={{ position: 'relative', minWidth: 280, fontFamily: 'var(--font-sans, system-ui)' }}
     >
       <button
         type="button"
         onClick={() => map.closePopup()}
-        aria-label="Close"
+        aria-label={t('map.close')}
         style={{
-          position: 'absolute', top: 4, right: 2,
+          position: 'absolute', top: -2, right: -4,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 22, height: 22, flexShrink: 0,
-          border: 'none', borderRadius: 6, background: 'transparent', color: '#98A2B3',
+          width: 24, height: 24, flexShrink: 0,
+          border: 'none', borderRadius: 7, background: 'transparent', color: '#98A2B3',
           cursor: 'pointer',
         }}
       >
@@ -317,9 +323,14 @@ function PropertyPopupCard({
       {/* Property — name is the one thing on this card set with real
           weight; type and status sit beneath it as one quiet line, no
           filled badge boxes. */}
-      <div style={{ paddingRight: 22 }}>
+      <div style={{ paddingRight: 24 }}>
         {title && (
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#101828', lineHeight: 1.3 }}>
+          // Parity fix: PropertyMapLibreInner.tsx's sibling popup card
+          // already carries this exact weight/tracking (its own "Product
+          // Polish pass" comment: 800 rather than 700, matching Command
+          // Hub's agent name and Financial's KPI values at font-black) —
+          // this Leaflet popup (the wizard's) had drifted one step lighter.
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#101828', lineHeight: 1.3, letterSpacing: '-0.01em' }}>
             {title}
             {propertyCode && (
               <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 600, color: '#98A2B3' }}>
@@ -329,13 +340,13 @@ function PropertyPopupCard({
           </p>
         )}
         {(propertyType || status) && (
-          <p style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '4px 0 0', fontSize: 11.5, fontWeight: 600, color: '#475467' }}>
-            {propertyType && <span style={{ textTransform: 'capitalize' }}>{propertyType}</span>}
+          <p style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '5px 0 0', fontSize: 11.5, fontWeight: 600, color: '#475467' }}>
+            {propertyType && <span style={{ textTransform: 'capitalize' }}>{getPropertyTypeLabel(propertyType, t)}</span>}
             {propertyType && status && <span style={{ color: '#D0D5DD' }}>·</span>}
             {status && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: status === 'Active' ? '#12B76A' : '#98A2B3' }} />
-                {status}
+                {getStatusLabel(status, t)}
               </span>
             )}
           </p>
@@ -369,17 +380,17 @@ function PropertyPopupCard({
           <Tooltip>
             <TooltipTrigger asChild>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'default', fontWeight: 600 }}>
-                {isApproximate ? 'Approximate location' : 'Exact location'}
+                {isApproximate ? t('map.approximateLocation') : t('map.exactLocation')}
                 <HelpCircle size={10} style={{ opacity: 0.6 }} />
               </span>
             </TooltipTrigger>
             <TooltipContent side="top" style={{ maxWidth: 220 }}>
               {isApproximate
-                ? `Estimated from the property's location name, not its own stored coordinates — accurate to roughly a 350m radius${geocodeType ? ` (${geocodeType})` : ''}.`
-                : "The property's own stored exact coordinates — not estimated."}
+                ? (geocodeType ? t('map.approximateTooltipWithType', { geocodeType }) : t('map.approximateTooltipPlain'))
+                : t('map.exactTooltip')}
             </TooltipContent>
           </Tooltip>
-          {lastUpdatedLabel && <span>Updated {lastUpdatedLabel}</span>}
+          {lastUpdatedLabel && <span>{t('map.updated', { date: lastUpdatedLabel })}</span>}
         </div>
       </div>
 
@@ -389,32 +400,32 @@ function PropertyPopupCard({
           <PopupDivider />
           <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="property-popup-primary-btn" style={{ marginTop: 0 }}>
             <ExternalLink size={13} />
-            Open in Google Maps
+            {t('map.openInGoogleMaps')}
           </a>
         </div>
       )}
 
       {/* Secondary actions — Copy / Share / Directions / Locate, ghost
           icon buttons (no border box per action), evenly spaced. */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10 }}>
         <IconAction
           as="button"
           icon={Copy}
-          label={copied ? 'Copied' : addressText ? 'Copy address' : 'Copy coordinates'}
+          label={copied ? t('map.copied') : addressText ? t('map.copyAddress') : t('map.copyCoordinates')}
           done={copied}
           onClick={handleCopy}
         />
         <IconAction
           as="button"
           icon={Share2}
-          label={shared ? 'Location link copied' : 'Share location'}
+          label={shared ? t('map.locationLinkCopied') : t('map.shareLocation')}
           done={shared}
           onClick={handleShare}
         />
         {directionsUrl && (
-          <IconAction as="a" icon={Navigation} label="Get directions" href={directionsUrl} />
+          <IconAction as="a" icon={Navigation} label={t('map.getDirections')} href={directionsUrl} />
         )}
-        <IconAction as="button" icon={LocateFixed} label="Locate on map" onClick={centerMap} />
+        <IconAction as="button" icon={LocateFixed} label={t('map.locateOnMap')} onClick={centerMap} />
       </div>
     </div>
   )
@@ -482,6 +493,7 @@ export function PropertyMapLeaflet({
   nearbyPlaces,
   searchRadiusM,
 }: PropertyMapLeafletProps) {
+  const { t } = useTranslation('properties')
   const markerIcon = buildPropertyIcon()
   const poiIcon = buildPoiIcon()
   const mapsUrl = buildGoogleMapsUrl({ latitude, longitude })
@@ -575,7 +587,7 @@ export function PropertyMapLeaflet({
         position={[latitude, longitude]}
         icon={markerIcon}
         draggable={draggable}
-        alt={title ? `${title} — property location` : 'Property location'}
+        alt={title ? t('map.viewPropertyLocationNamed', { title }) : t('map.viewPropertyLocation')}
         eventHandlers={{
           ...(draggable && onPositionChange ? {
             dragend: e => {
@@ -596,7 +608,9 @@ export function PropertyMapLeaflet({
             const el = e.target.getElement()
             if (el) {
               el.setAttribute('role', 'button')
-              el.setAttribute('aria-label', title ? `${title} — view property location` : 'View property location')
+              el.setAttribute('aria-label', title
+                ? i18n.t('properties:map.viewPropertyLocationNamed', { title })
+                : i18n.t('properties:map.viewPropertyLocation'))
             }
           },
         }}

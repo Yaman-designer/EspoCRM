@@ -12,13 +12,15 @@ interface FieldRendererProps {
   readOnly?: boolean
   /** Dynamic options from the dependency engine */
   options?: FieldOption[]
+  /** True while this field's `reload-options` dependency is in flight — see useDynamicForm.ts. */
+  optionsLoading?: boolean
 }
 
 /**
  * Routes a FieldSchema to its registered component.
  * Renders an error chip for unregistered types instead of crashing.
  */
-export function FieldRenderer({ field, form, disabled, readOnly, options }: FieldRendererProps) {
+export function FieldRenderer({ field, form, disabled, readOnly, options, optionsLoading }: FieldRendererProps) {
   const registration = resolveField(field.type)
 
   if (!registration) {
@@ -41,6 +43,7 @@ export function FieldRenderer({ field, form, disabled, readOnly, options }: Fiel
       disabled={disabled}
       readOnly={readOnly}
       options={options}
+      optionsLoading={optionsLoading}
     />
   )
 }

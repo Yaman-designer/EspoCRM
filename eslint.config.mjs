@@ -2,9 +2,83 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
+// Details-page framework architecture boundaries (Enterprise Framework
+// Completion pass, 2026-07-23). Encodes the four rules the framework
+// depends on staying true as more entities (Contact/Company/Vehicle/...)
+// adopt this pattern — enforced here so a violation fails CI instead of
+// silently accumulating:
+//
+//  1. ViewModels (features/*/view-models/**) contain data only — no React,
+//     no icon-library imports, no components/.
+//  2. Presentational section components (features/*/components/sections/**)
+//     never import an entity model (RealEstateProperty) directly — they
+//     take a ViewModel. Components that legitimately own async data
+//     fetching are the one documented exception (see the allowlist below).
+//  3. Shared primitives (components/shared/**) and the shared framework
+//     utilities (shared/detail-view/**) never import feature-specific code.
+//  4. No file under shared/detail-view or components/shared reaches back
+//     into features/** (the reverse-import check).
+const architectureBoundaries = defineConfig([
+  {
+    files: ["src/features/*/view-models/**/*.ts"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [
+          {
+            group: ["react", "react-dom", "next", "next/*"],
+            message: "ViewModels are data-only — no React/Next imports. See eslint.config.mjs's architecture-boundaries note.",
+          },
+          {
+            group: ["lucide-react"],
+            message: "Icon components are a presentation concern. Emit a semantic key from the ViewModel and resolve the icon in the component instead (see hero.viewmodel.ts / construction.viewmodel.ts for the pattern).",
+          },
+          {
+            group: ["**/components/**", "@/components/**"],
+            message: "ViewModels must not import from the presentation layer (reverse import). If both need a shared type, put it in src/shared/detail-view instead.",
+          },
+        ],
+      }],
+    },
+  },
+  {
+    files: ["src/features/*/components/sections/**/*.tsx"],
+    ignores: [
+      // Documented exception: owns async geocoding/nearby-places hooks by
+      // design, not a plain presentational component. See its own
+      // in-file note ("Enterprise architecture pass, 2026-07-23").
+      "**/LocationIntelligenceCenter.tsx",
+      // Data-fetching component (useQuery for related listings), not a
+      // pure presentational leaf — out of scope for the Phase 1–3
+      // ViewModel migration for the same reason LocationIntelligenceCenter is.
+      "**/RelatedPropertiesSection.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [{
+          group: ["**/types/property.types", "**/types/property.types.ts"],
+          importNames: ["RealEstateProperty"],
+          message: "Presentational section components take a ViewModel, not the entity model, directly. Build the ViewModel in the container (PropertyDetailView.tsx) instead — see the framework's own sections for the pattern.",
+        }],
+      }],
+    },
+  },
+  {
+    files: ["src/components/shared/**/*.{ts,tsx}", "src/shared/detail-view/**/*.ts"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [{
+          group: ["**/features/**", "@/features/**"],
+          message: "Shared framework code (components/shared, shared/detail-view) must never import feature-specific code — that's the reverse of the intended dependency direction (Shared → Framework → ViewModels → Containers → Presentational Components).",
+        }],
+      }],
+    },
+  },
+]);
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  ...architectureBoundaries,
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

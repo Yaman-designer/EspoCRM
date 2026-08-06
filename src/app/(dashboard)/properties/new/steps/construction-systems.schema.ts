@@ -22,18 +22,20 @@ import {
 // kept strictly adjacent per spec — this resolves the naming-clash risk by
 // proximity only; none of the three is renamed or merged.
 
+const S = 'wizard.steps.constructionSystems.sections'
+
 export const constructionSystemsSchema: StepSchema = {
   sections: [
-    section({ id: 'condition', title: 'Condition', icon: Wrench }).fields([
+    section({ id: 'condition', titleKey: `${S}.condition.title`, icon: Wrench }).fields([
       // Backend name preserved exactly as specified ("cUnderConstriction",
       // not "cUnderConstriction" — the misspelling is intentional, not
       // "fixed" during migration).
-      field.switch('cUnderConstriction', 'Under Construction')
+      field.switch('cUnderConstriction', `${S}.condition.fields.cUnderConstriction.label`)
         .half()
         .visibleWhen(NOT_LAND_CATEGORY).clearWhenHidden()
         .build(),
       // Root of the 3-field renovation chain — must precede Renovated.
-      field.switch('itNeedsRenovation', 'Needs Renovation')
+      field.switch('itNeedsRenovation', `${S}.condition.fields.itNeedsRenovation.label`)
         .half()
         .visibleWhen(NOT_LAND_CATEGORY).clearWhenHidden()
         .build(),
@@ -41,14 +43,20 @@ export const constructionSystemsSchema: StepSchema = {
       // AND Category ≠ Land — see NOT_NEEDS_RENOVATION_AND_NOT_LAND. Kept
       // directly beneath its trigger; this is the field most likely to have
       // its condition accidentally flipped by a careless copy-paste move.
-      field.switch('renovated', 'Renovated')
-        .half()
+      // Composition pass: .full() (was .half()) — renovated=false is the
+      // common initial state, where this field would otherwise be the sole
+      // visible member of a 3-field .half() run (2 base switches above +
+      // this one), stranded alone with dead space beside it. Its own reveal
+      // below is full() for the same reason, so the pair always stacks
+      // cleanly however many of the two are visible at once.
+      field.switch('renovated', `${S}.condition.fields.renovated.label`)
+        .full()
         .visibleWhen(NOT_NEEDS_RENOVATION_AND_NOT_LAND).clearWhenHidden()
         .build(),
       // Terminal chain node — visible only when Renovated = true. Max 2100,
       // no minimum defined (not invented).
-      field.number('yearOfRenovation', 'Year of Renovation')
-        .half().max(2100)
+      field.number('yearOfRenovation', `${S}.condition.fields.yearOfRenovation.label`)
+        .full().max(2100)
         .visibleWhen(RENOVATED_TRUE).clearWhenHidden()
         .build(),
       // Field TYPE changed from Boolean/switch to Enum/select 2026-07-12
@@ -71,9 +79,13 @@ export const constructionSystemsSchema: StepSchema = {
       // "RealEstate" module enforcing "furniture status is meaningless for
       // land parcels." visibleWhen added so the Wizard stops offering a
       // control whose value the server silently throws away.
-      field.select('furnished', 'Furnished')
-        .third()
-        .placeholder('Select furnished status…')
+      // Composition pass: .full() (was .third()) — this is the only
+      // .third()-width field in the section, with no peer of matching width
+      // to share a row with, so it was stranded with dead space on either
+      // side. Presentation-only.
+      field.select('furnished', `${S}.condition.fields.furnished.label`)
+        .full()
+        .placeholder(`${S}.condition.fields.furnished.placeholder`)
         .options(FURNISHED_OPTIONS)
         .clearable()
         .visibleWhen(NOT_LAND_CATEGORY).clearWhenHidden()
@@ -83,7 +95,7 @@ export const constructionSystemsSchema: StepSchema = {
       // FURNISHED_HAS_VALUE — furnished has a value AND that value != 'no'
       // — see that ConditionNode's own comment for the case-mismatch
       // conflict this resolves against the Dynamic Logic export.
-      field.multiSelect('cFurnitureElectricalAppliances', 'Furniture & Electrical Appliances')
+      field.multiSelect('cFurnitureElectricalAppliances', `${S}.condition.fields.cFurnitureElectricalAppliances.label`)
         .full()
         .options(FURNITURE_ELECTRICAL_APPLIANCES_OPTIONS)
         .visibleWhen(FURNISHED_HAS_VALUE)
@@ -91,10 +103,15 @@ export const constructionSystemsSchema: StepSchema = {
         .build(),
     ]),
 
-    section({ id: 'energy-heating', title: 'Energy & Heating', icon: Flame }).fields([
+    section({ id: 'energy-heating', titleKey: `${S}.energyHeating.title`, icon: Flame }).fields([
       // Business rule: Visibility AND Required both Category ≠ Land.
-      field.select('energyClass', 'Energy Class')
-        .third()
+      // Composition pass: .half() (was .third()) — pairs it with
+      // cHeatingMedium (also .half()) as a clean, perfectly-filled row at
+      // every container tier, instead of the previous mismatch where
+      // .third() only partially summed against its neighbor's width once
+      // the container passed the 3-up breakpoint.
+      field.select('energyClass', `${S}.energyHeating.fields.energyClass.label`)
+        .half()
         .options(ENERGY_CLASS_OPTIONS)
         .clearable()
         .visibleWhen(NOT_LAND_CATEGORY).clearWhenHidden()
@@ -103,7 +120,7 @@ export const constructionSystemsSchema: StepSchema = {
       // First of the heating trio — kept strictly adjacent to
       // cHeatingController/cAdditionalheating below, resolving the naming-
       // clash risk by proximity only (none renamed).
-      field.select('cHeatingMedium', 'Heating Medium')
+      field.select('cHeatingMedium', `${S}.energyHeating.fields.cHeatingMedium.label`)
         .half()
         .options(HEATING_MEDIUM_OPTIONS)
         .clearable()
@@ -112,8 +129,11 @@ export const constructionSystemsSchema: StepSchema = {
       // Distinct field from cHeatingMedium (heating system control type, not
       // energy medium). Required Category ≠ Land AND Category ≠ Other.
       // Values/labels preserved exactly — do not "correct" spelling of
-      // 'automic'/'autonomus', do not translate the Greek label.
-      field.select('cHeatingController', 'Τύπος θέρμανσης (Heating Type)')
+      // 'automic'/'autonomus', do not translate the Greek label. The en/el
+      // translation entries for this key are intentionally identical
+      // (verbatim "Τύπος θέρμανσης (Heating Type)") to honor that rule
+      // while still routing the string through i18n like every other field.
+      field.select('cHeatingController', `${S}.energyHeating.fields.cHeatingController.label`)
         .full()
         .options(HEATING_CONTROLLER_OPTIONS)
         .clearable()
@@ -122,7 +142,7 @@ export const constructionSystemsSchema: StepSchema = {
         .build(),
       // Multi-Enum, zero or more values. Visibility Category ≠ Land only (no
       // required rule). Closes the heating trio.
-      field.multiSelect('cAdditionalheating', 'Additional heating')
+      field.multiSelect('cAdditionalheating', `${S}.energyHeating.fields.cAdditionalheating.label`)
         .full()
         .options([
           { value: 'air conditioning', label: 'Air Conditioning' },
@@ -133,17 +153,22 @@ export const constructionSystemsSchema: StepSchema = {
         .build(),
     ]),
 
-    section({ id: 'windows-doors-finishes', title: 'Windows, Doors & Finishes', icon: DoorOpen }).fields([
+    section({ id: 'windows-doors-finishes', titleKey: `${S}.windowsDoorsFinishes.title`, icon: DoorOpen }).fields([
       // PDF label "Frames" (not "Window Frames"). Values/labels preserved
       // exactly. Visibility Category ≠ Land.
-      field.select('frames', 'Frames')
-        .half()
+      // Composition pass: .full() (was .half()) — the next field (door) is
+      // itself .full(), so a lone .half() frames left dead space beside it
+      // before the row break. Matches door's own width, reads as a clean
+      // consecutive pair of full-width selects (same pattern already used
+      // by cHeatingController/cAdditionalheating above).
+      field.select('frames', `${S}.windowsDoorsFinishes.fields.frames.label`)
+        .full()
         .options(FRAMES_OPTIONS)
         .clearable()
         .visibleWhen(NOT_LAND_CATEGORY).clearWhenHidden()
         .build(),
       // PDF label "Door" (not "Entry Door"). Visibility Category ≠ Land.
-      field.select('door', 'Door')
+      field.select('door', `${S}.windowsDoorsFinishes.fields.door.label`)
         .full()
         .options(DOOR_OPTIONS)
         .clearable()
@@ -152,13 +177,13 @@ export const constructionSystemsSchema: StepSchema = {
       // Relocated from features.schema.ts — no category gate, unlike its new
       // neighbors here. Preserved exactly; do not accidentally add one
       // during migration.
-      field.switch('doubleGlass', 'Double Glass')
+      field.switch('doubleGlass', `${S}.windowsDoorsFinishes.fields.doubleGlass.label`)
         .half()
         .build(),
       // PDF business rule: Visibility Category ≠ Land only. Values/labels
       // preserved exactly — spaces are not replaced with underscores/
       // hyphens, no capitalization changes.
-      field.select('floorType', 'Floor Type')
+      field.select('floorType', `${S}.windowsDoorsFinishes.fields.floorType.label`)
         .half()
         .options(FLOOR_TYPE_OPTIONS)
         .clearable()
@@ -166,7 +191,7 @@ export const constructionSystemsSchema: StepSchema = {
         .build(),
       // Distinct field from floorType above (bedroom-specific flooring,
       // different value vocabulary). Visibility Category ≠ Land only.
-      field.select('bedroomsFloorType', 'Bedrooms Floor Type')
+      field.select('bedroomsFloorType', `${S}.windowsDoorsFinishes.fields.bedroomsFloorType.label`)
         .half()
         .options(BEDROOMS_FLOOR_TYPE_OPTIONS)
         .clearable()
@@ -174,7 +199,7 @@ export const constructionSystemsSchema: StepSchema = {
         .build(),
       // Relocated from features.schema.ts. PDF label "Warehouse" (not
       // "Storage Space"). Visibility Category ≠ Land.
-      field.select('cStorageSpace', 'Warehouse')
+      field.select('cStorageSpace', `${S}.windowsDoorsFinishes.fields.cStorageSpace.label`)
         .half()
         .options(STORAGE_SPACE_OPTIONS)
         .clearable()
@@ -185,17 +210,17 @@ export const constructionSystemsSchema: StepSchema = {
       // cross-referenced by name here (not by step number, which is still
       // moving during this migration), not merged. Visibility Category ≠
       // Land only.
-      field.select('cGarage', 'Parking Type')
+      field.select('cGarage', `${S}.windowsDoorsFinishes.fields.cGarage.label`)
         .half()
         .options(PARKING_TYPE_OPTIONS)
         .clearable()
-        .helperText('Type/location of parking. See also "Garage" in the Outdoor, Building & Amenities step later in this wizard.')
+        .helperText(`${S}.windowsDoorsFinishes.fields.cGarage.helperText`)
         .visibleWhen(NOT_LAND_CATEGORY).clearWhenHidden()
         .build(),
       // Relocated from features.schema.ts. Label humanized 2026-07-12 (CR-10)
       // — the PDF gives no human label for this field either, so no PDF
       // wording is being overridden; any reasonable label is safe here.
-      field.switch('hasElectricalDevices', 'Electrical Devices')
+      field.switch('hasElectricalDevices', `${S}.windowsDoorsFinishes.fields.hasElectricalDevices.label`)
         .half()
         .visibleWhen(NOT_LAND_CATEGORY).clearWhenHidden()
         .build(),

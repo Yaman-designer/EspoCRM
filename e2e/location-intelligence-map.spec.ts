@@ -48,35 +48,6 @@ const PROPERTY_SLUG = 'dvl68656'
 
 test.describe('Location Intelligence Center — MapLibre runtime verification', () => {
   test('mounts a real MapLibre canvas with successful style/tile loading and applied overrides', async ({ page, baseURL }) => {
-    await page.addInitScript(() => {
-      const w = window as unknown as { __markerListenerLog: string[] }
-      w.__markerListenerLog = []
-      const orig = EventTarget.prototype.addEventListener
-      EventTarget.prototype.addEventListener = function (type, listener, opts) {
-        const el = this as unknown as HTMLElement
-        if (type === 'click' && el?.classList?.contains?.('property-map-marker')) {
-          w.__markerListenerLog.push(`attached click listener, el id=${el.getAttribute('aria-label')}`)
-          const wrapped = function (this: unknown, ...args: unknown[]) {
-            w.__markerListenerLog.push('listener INVOKED')
-            try {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const r = (listener as any).apply(this, args)
-              w.__markerListenerLog.push(
-                'listener returned normally, popups in DOM right now: '
-                + document.querySelectorAll('.maplibregl-popup').length,
-              )
-              return r
-            } catch (err) {
-              w.__markerListenerLog.push('listener THREW: ' + String(err) + ' | ' + (err as Error)?.stack)
-              throw err
-            }
-          }
-          return orig.call(this, type, wrapped as EventListener, opts)
-        }
-        return orig.call(this, type, listener, opts)
-      }
-    })
-
     await loginViaApi(page.context().request, baseURL!)
 
     const mapTilerRequests: { url: string; status: number; ok: boolean; resourceType: string }[] = []
@@ -154,8 +125,8 @@ test.describe('Location Intelligence Center — MapLibre runtime verification', 
     expect(overrides).not.toBeNull()
     expect(overrides!.waterColor).toBe('hsl(208, 22%, 90%)')
     expect(overrides!.waterShadowColor).toBe('hsl(205, 16%, 82%)')
-    expect(overrides!.buildingOpacity).toBe(0.55)
-    expect(overrides!.buildingTopOpacity).toBe(0.4)
+    expect(overrides!.buildingOpacity).toBe(0.65)
+    expect(overrides!.buildingTopOpacity).toBe(0.5)
     expect(overrides!.forestColor).toBe('hsla(140, 14%, 85%, 0.55)')
     expect(overrides!.roadOutlineOpacity).toBe(0.9)
     expect(overrides!.oceanLabelsVisibility).toBe('none')
@@ -171,36 +142,14 @@ test.describe('Location Intelligence Center — MapLibre runtime verification', 
     await expect(page.locator('.leaflet-popup')).toHaveCount(0)
 
     // Popup: click the property marker, confirm the executive card renders.
-    // The marker happens to sit near the map's top-left corner for this
-    // property/viewport combination, under the always-visible fullscreen/
-    // locate control cluster (`absolute top-4 left-4` inside the map card,
-    // independent of page scroll) — real coordinate-based clicks land on
-    // whichever element is topmost at that pixel. dispatchEvent fires the
-    // marker's own click listener directly, the same one a real click would
-    // trigger, without depending on unobstructed screen geometry.
+    // dispatchEvent rather than a coordinate-based click — the marker can
+    // land under the map's own always-visible fullscreen/locate control
+    // cluster depending on where this property's coordinates project, and a
+    // real user simply clicks the part of the pin that is on top; this
+    // fires the same listener a real click does without depending on
+    // unobstructed screen geometry at a specific viewport/scroll position.
     const marker = page.locator('.property-map-marker').first()
-    await page.evaluate(() => {
-      (window as unknown as { __clickLog: string[] }).__clickLog = []
-      document.addEventListener('click', e => {
-        (window as unknown as { __clickLog: string[] }).__clickLog.push(
-          (e.target as HTMLElement)?.className ?? String(e.target),
-        )
-      }, true)
-    })
-    await marker.evaluate(el => (el as HTMLElement).click())
-    const clickLog = await page.evaluate(() => (window as unknown as { __clickLog: string[] }).__clickLog)
-    console.log('[popup debug] document click log:', JSON.stringify(clickLog))
-    const listenerLog = await page.evaluate(() => (window as unknown as { __markerListenerLog: string[] }).__markerListenerLog)
-    console.log('[popup debug] marker listener attach log:', JSON.stringify(listenerLog))
-    await page.waitForTimeout(300)
-    const debugAfterClick = await page.evaluate(() => ({
-      anyMaplibrePopup: document.querySelectorAll('.maplibregl-popup').length,
-      anyPropertyPopup: document.querySelectorAll('.property-popup').length,
-      markerHtml: document.querySelector('.property-map-marker')?.outerHTML.slice(0, 200),
-    }))
-    console.log('[popup debug]', JSON.stringify(debugAfterClick, null, 2))
-    console.log('[popup debug] console errors so far:', JSON.stringify(consoleErrors, null, 2))
-    console.log('[popup debug] page errors so far:', JSON.stringify(pageErrors, null, 2))
+    await marker.dispatchEvent('click')
     await expect(page.locator('.property-popup')).toBeVisible({ timeout: 5_000 })
 
     await page.screenshot({ path: 'e2e-artifacts/location-map-after-popup.png' })

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Expand, Grid3x3 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { getWebAssetUrl, FALLBACK_IMAGE } from '@/lib/image-url'
@@ -26,6 +27,7 @@ export function PropertyHeroGallery({
   type,
   propertyCode,
 }: PropertyHeroGalleryProps) {
+  const { t } = useTranslation('properties')
   const allIds = mainImageId
     ? [mainImageId, ...imageIds.filter(id => id !== mainImageId)]
     : imageIds
@@ -50,7 +52,7 @@ export function PropertyHeroGallery({
       >
         <Image
           src={src(activeIndex)}
-          alt={title || 'Property'}
+          alt={title || t('gallery.propertyFallback')}
           fill
           priority
           unoptimized
@@ -86,7 +88,7 @@ export function PropertyHeroGallery({
         {/* ── TOP-RIGHT: Fullscreen ────────────────────────────────────── */}
         <button
           type="button"
-          aria-label="View full screen"
+          aria-label={t('gallery.viewFullScreen')}
           onClick={e => { e.stopPropagation(); setLightboxOpen(true) }}
           className={cn(
             'absolute right-5 top-5 z-20',
@@ -104,7 +106,7 @@ export function PropertyHeroGallery({
           <>
             <button
               type="button"
-              aria-label="Previous image"
+              aria-label={t('gallery.previousImage')}
               onClick={e => { e.stopPropagation(); prev() }}
               className={cn(
                 'absolute left-4 top-1/2 z-20 -translate-y-1/2',
@@ -119,7 +121,7 @@ export function PropertyHeroGallery({
             </button>
             <button
               type="button"
-              aria-label="Next image"
+              aria-label={t('gallery.nextImage')}
               onClick={e => { e.stopPropagation(); next() }}
               className={cn(
                 'absolute right-4 top-1/2 z-20 -translate-y-1/2',
@@ -159,7 +161,7 @@ export function PropertyHeroGallery({
                 >
                   <Image
                     src={src(i)}
-                    alt={`${title || 'Property'} ${i + 1}`}
+                    alt={`${title || t('gallery.propertyFallback')} ${i + 1}`}
                     fill
                     unoptimized
                     className="object-cover"
@@ -173,7 +175,7 @@ export function PropertyHeroGallery({
             {/* Photo count pill */}
             <button
               type="button"
-              aria-label="View all photos"
+              aria-label={t('gallery.viewAllPhotos')}
               onClick={e => { e.stopPropagation(); setLightboxOpen(true) }}
               className={cn(
                 'hidden sm:flex items-center gap-1.5',
@@ -183,7 +185,7 @@ export function PropertyHeroGallery({
               )}
             >
               <Grid3x3 className="size-3" />
-              {images.length} Photos
+              {t('gallery.photoCount', { count: images.length })}
             </button>
           </div>
         )}
@@ -193,11 +195,11 @@ export function PropertyHeroGallery({
       {/* ── Lightbox ──────────────────────────────────────────────────────── */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-5xl border-none bg-black/97 p-0 shadow-none">
-          <DialogTitle className="sr-only">{title ?? 'Property gallery'}</DialogTitle>
+          <DialogTitle className="sr-only">{title ?? t('gallery.propertyGalleryFallback')}</DialogTitle>
           <div className="relative flex h-[82vh] items-center justify-center">
             <Image
               src={src(activeIndex)}
-              alt={title || 'Property'}
+              alt={title || t('gallery.propertyFallback')}
               fill
               unoptimized
               className="object-contain"
@@ -208,7 +210,7 @@ export function PropertyHeroGallery({
               <>
                 <button
                   type="button"
-                  aria-label="Previous image"
+                  aria-label={t('gallery.previousImage')}
                   onClick={prev}
                   className="absolute left-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/22"
                 >
@@ -216,7 +218,7 @@ export function PropertyHeroGallery({
                 </button>
                 <button
                   type="button"
-                  aria-label="Next image"
+                  aria-label={t('gallery.nextImage')}
                   onClick={next}
                   className="absolute right-4 top-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/22"
                 >

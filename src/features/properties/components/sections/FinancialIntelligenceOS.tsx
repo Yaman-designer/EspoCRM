@@ -1,9 +1,13 @@
 'use client'
 
-import { LineChart, Tag, Ruler, CalendarDays, Wallet, Copy, Check, type LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { LineChart, Copy, Check, TrendingUp } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { fmtPrice } from '../../lib/display'
 import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
+import { SectionHeader, DefinitionList } from '@/components/shared'
+import type { FinancialDetailCluster, FinancialViewModel, InvestmentOpportunity } from '../../view-models/financial.viewmodel'
 
 // Property Details Sprint 2 — Data Authenticity Certification. Previously:
 // `barPct()` generated bar heights from a deterministic hash of price + area
@@ -25,127 +29,140 @@ import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
 // for the one thing this listing genuinely doesn't have — price history.
 // No field was added, removed, or renamed; every number here already
 // existed in the component's own props.
-
-// ── Types ──────────────────────────────────────────────────────────────────────
-
-interface FinancialIntelligenceOSProps {
-  price?:      number
-  square?:     number
-  type?:       string
-  requestType?: string
-  yearBuilt?:  number
-  createdAt?:  string
-  modifiedAt?: string
-  // Property Details Completion (2026-07-17) — Financial Detail sub-block.
-  // Each row below only renders when its own value/gate is present, mirroring
-  // the Wizard's own visibility rules (investment gates cRentalprice,
-  // withinMonthlyUtilities gates cAverageMonthlyUtilities, cConsideration
-  // gates cCompensationFactor).
-  initialPrice?: number
-  objectiveValue?: number
-  lowerPriceLimit?: number
-  vat?: boolean
-  cRemuneration?: number
-  investment?: boolean
-  cRentalprice?: number
-  withinMonthlyUtilities?: boolean
-  cAverageMonthlyUtilities?: number
-  exchangeScheme?: boolean
-  exchangeSchemePercentage?: number
-  cConsideration?: boolean
-  cCompensationFactor?: number
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-function fmtDate(iso?: string): string {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-}
+//
+// Information Architecture refinement (2026-07-22, first pass). The
+// right-hand "Executive Snapshot" KPI column was removed — it duplicated
+// this very component's own left card (Asking Price, Price/m² shown twice
+// inside one section) plus Quick Specifications (Year Built) and Command
+// Hub (Type/Request Type, via the "Listing" tile). The freshness row's
+// "Built" stat was removed too — year built is a physical spec, exclusively
+// owned by Quick Specifications, not a financial date; Listed/Updated stay
+// here since this component is this app's one designated owner of listing
+// timeline dates (Command Hub's own Created/Updated line was removed to
+// match — see OperationsCommandHub.tsx's own IA note).
+//
+// Information Architecture refinement (2026-07-22, second pass). Removing
+// that column left the section a single, full-width card with real empty
+// margin beside it at desktop width. The brief was explicit: don't
+// reintroduce duplicated information to fill that space — instead check
+// whether real, already-fetched financial fields can occupy it. They can:
+// the "Financial Detail" cluster below (Negotiation Range / Tax & Fees /
+// Conditional Terms) was previously a second full-width card, stacked
+// beneath the price card, competing for the same reading column. It is
+// exactly this component's own remaining financial data with nowhere else
+// to live — moved into the second column instead of invented content. When
+// a property has none of those fields populated, the column doesn't render
+// and the price card reclaims the full width — no permanent empty shell for
+// data-sparse listings.
+//
+// Enterprise architecture pass (2026-07-23). Field selection, the price/m²
+// calculation, date formatting, and the three-cluster grouping used to live
+// inline in this component; all of it now arrives pre-shaped via
+// `FinancialViewModel` (see view-models/financial.viewmodel.ts) — this
+// component only renders.
+//
+// Enterprise UX Architecture pass (2026-07-24) — contrast remediation, not a
+// palette change. Every `text-muted-foreground` (rgb 102,112,133) instance
+// here that additionally applied a /35–/55 opacity was computed (WCAG
+// relative-luminance formula, against this card's actual white background)
+// to land between 1.6:1 and 2.8:1 — nowhere near the 4.5:1 (normal text) or
+// 3:1 (large text/non-text) floors, and in some cases below even a casual
+// glance threshold. `muted-foreground` at its own full, undiluted opacity
+// already sits at ~4.97:1 — a real, if tight, pass — so the fix is removing
+// the *extra* opacity stacked on top of an already-correctly-muted token,
+// not picking a new color. Where full-opacity `muted-foreground` still read
+// as too close to the historical/freshness text above it, `foreground` at a
+// verified-passing partial opacity was used instead (pricePerSqm/70 → 6.6:1,
+// /m² unit at /65 → 5.5:1) so the secondary-vs-primary size/weight hierarchy
+// stays intact through contrast, not through failing it. The price copy
+// icon and its press feedback are a second, separate fix: it was
+// `opacity-0` until `:hover`, meaning touch users never saw it at all (no
+// hover state exists on touch) — now dimly visible by default (still passes
+// the lower 3:1 non-text-contrast bar) and brightens on hover/focus, with
+// `active:scale` press feedback on this app's shared motion tokens instead
+// of a bare `transition-colors`.
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export function FinancialIntelligenceOS({
-  price,
-  square,
-  type,
-  requestType,
-  yearBuilt,
-  createdAt,
-  modifiedAt,
-  initialPrice,
-  objectiveValue,
-  lowerPriceLimit,
-  vat,
-  cRemuneration,
-  investment,
-  cRentalprice,
-  withinMonthlyUtilities,
-  cAverageMonthlyUtilities,
-  exchangeScheme,
-  exchangeSchemePercentage,
-  cConsideration,
-  cCompensationFactor,
-}: FinancialIntelligenceOSProps) {
-  const pricePerSqm = price != null && square ? Math.round(price / square) : null
+// Structural layout pass (2026-07-26). Financial Detail used to be a real
+// `<aside>`, absolutely positioned into a reserved right-hand margin beside
+// the price card at `xl` (see git history for the full prior rationale) —
+// explicitly justified at the time as "this element's height must not gate
+// its siblings," with the overlap that causes on a data-heavy listing
+// (all four clusters) accepted as a known tradeoff. Lived experience of
+// that tradeoff: the overlap reads as the *next* section (Location
+// Intelligence's map) starting underneath a sticky-looking sidebar rather
+// than as its own chapter — the out-of-flow win wasn't worth that cost.
+//
+// Reworked into two ordinary, full-width, in-flow chapters instead: no
+// absolute positioning, no reserved margin, nothing that can ever overlap
+// whatever comes next — the next section starts exactly at this one's true
+// bottom edge, always. Same component, same anchor
+// (`#section-financial` in PropertyDetailView), same reading position in
+// the IA — only the internal structure changed:
+//   1. "Property Pricing"       — the price card, unchanged content.
+//   2. "Financial Intelligence" — Investment Opportunity + the three
+//      clusters (Negotiation Range / Tax & Fees / Conditional Terms),
+//      previously stacked in one tall card, now a horizontal dashboard of
+//      equal-weight tiles (FinancialDetailGrid below) instead of a vertical
+//      list — a "chapter," not a sidebar.
+// `space-y-10` between them (vs. this page's usual `space-y-4`/`gap-4`) is
+// deliberate — these two read as genuinely separate chapters, not adjacent
+// cards in the same zone, and need more air than the standard rhythm gives
+// same-zone siblings.
+export function FinancialIntelligenceOS({ data }: { data: FinancialViewModel }) {
+  const { t } = useTranslation('properties')
+  const { price, requestType, pricePerSqm, listedLabel, updatedLabel, investmentOpportunity, hasFinancialDetail, detailClusters } = data
   const { copied, copy } = useCopyToClipboard()
 
-  const listingType = [type, requestType].filter(Boolean).join(' · ')
-
   return (
-    <section className="space-y-4">
+    <section className="space-y-10">
 
-      {/* ── Section header ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-black text-foreground tracking-tight font-heading">
-            Financial Intelligence OS
-          </h2>
-          <p className="text-xs text-muted-foreground font-semibold mt-0.5">
-            Property financial overview · listing data
-          </p>
-        </div>
-      </div>
+      {/* ── Chapter 1 — Property Pricing ──────────────────────────────────── */}
+      <div className="space-y-4">
+        <SectionHeader title={t('financial.pricingTitle')} subtitle={t('financial.pricingSubtitle')} />
 
-      <div className="grid grid-cols-12 gap-5 items-start">
-
-        {/* ── LEFT: The financial story — price, freshness, history ────────── */}
-        <div className="col-span-12 xl:col-span-8 bg-card border border-border/40 rounded-2xl shadow-design-xs p-6 sm:p-7">
+        <div className="bg-card border border-border/40 rounded-2xl shadow-design-xs p-6 sm:p-7">
 
           {/* Price — same baseline-aligned cluster as the Hero, the app's
               one established "premium price" pattern, reused here instead
               of a second bespoke treatment. */}
           <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 pb-6 mb-6 border-b border-border/25">
             <div>
-              <p className="text-[10px] font-semibold text-primary/55 uppercase tracking-wider mb-2">
-                Asking Price{requestType ? ` · For ${requestType}` : ''}
+              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-2">
+                {t('financial.askingPrice')}{requestType ? ` · ${t('common.for')} ${requestType}` : ''}
               </p>
               {price != null ? (
                 <button
                   type="button"
                   onClick={() => copy(String(price))}
-                  aria-label={copied ? 'Price copied' : 'Copy asking price'}
-                  className="group/price flex items-center gap-2 text-4xl sm:text-5xl font-black text-foreground font-heading tracking-tighter leading-none transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 rounded-lg"
+                  aria-label={copied ? t('financial.priceCopied') : t('financial.copyAskingPrice')}
+                  className={cn(
+                    'group/price flex items-center gap-2 text-[26px] min-[360px]:text-4xl sm:text-5xl font-black text-foreground font-heading tracking-tighter leading-none rounded-lg',
+                    'transition-[color,transform] duration-(--duration-fast) ease-(--ease-premium)',
+                    'hover:text-primary active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
+                  )}
                 >
                   {fmtPrice(price, false)}
                   {copied ? (
                     <Check className="size-4 text-emerald-600" />
                   ) : (
-                    <Copy className="size-4 text-muted-foreground/30 opacity-0 transition-opacity group-hover/price:opacity-100" />
+                    <Copy className="size-4 text-muted-foreground/85 opacity-70 transition-opacity duration-(--duration-fast) ease-(--ease-premium) group-hover/price:opacity-100 motion-reduce:transition-none" />
                   )}
                 </button>
               ) : (
-                <p className="text-xl font-black text-muted-foreground/40 font-heading tracking-tighter leading-none">
-                  Not provided
+                <p className="text-xl font-black text-muted-foreground/85 font-heading tracking-tighter leading-none">
+                  {t('common.notProvided')}
                 </p>
               )}
             </div>
             {pricePerSqm != null && (
               <div className="flex items-baseline gap-1 pl-6 border-l border-border/25">
-                <span className="text-base font-bold text-muted-foreground/55 tracking-tight tabular-nums">
+                <span className="text-base font-bold text-foreground/70 tracking-tight tabular-nums">
                   {pricePerSqm.toLocaleString('en-US')}
                 </span>
-                <span className="text-[10px] font-semibold text-muted-foreground/35">/m²</span>
+                <span className="text-[10px] font-semibold text-foreground/65">/{t('common.sqmUnit')}</span>
               </div>
             )}
           </div>
@@ -158,61 +175,39 @@ export function FinancialIntelligenceOS({
               <LineChart className="size-4.5 text-muted-foreground/40" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11.5px] font-bold text-foreground/70">No historical price trend available</p>
-              <p className="mt-0.5 text-[11px] font-medium text-muted-foreground/50">
-                Price history isn&rsquo;t part of the current listing data — there&rsquo;s nothing to chart yet.
+              <p className="text-[11.5px] font-bold text-foreground/70">{t('financial.noHistoricalTitle')}</p>
+              <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+                {t('financial.noHistoricalDesc')}
               </p>
             </div>
           </div>
 
-          {/* Listing freshness — Built / Listed / Updated as one calm row
-              instead of three heavily bordered pills competing with the
-              price above them. */}
-          {(yearBuilt != null || createdAt || modifiedAt) && (
+          {/* Listing freshness — Listed / Updated. "Built" (year built) was
+              removed here — see top-of-file IA note; it is a physical spec,
+              exclusively owned by Quick Specifications. */}
+          {(listedLabel || updatedLabel) && (
             <div className="flex items-center flex-wrap gap-x-8 gap-y-2.5 border-t border-border/20 pt-5">
-              {yearBuilt != null && <FreshnessStat label="Built" value={String(yearBuilt)} />}
-              {createdAt && <FreshnessStat label="Listed" value={fmtDate(createdAt)} />}
-              {modifiedAt && <FreshnessStat label="Updated" value={fmtDate(modifiedAt)} />}
+              {listedLabel && <FreshnessStat label={t('financial.listed')} value={listedLabel} />}
+              {updatedLabel && <FreshnessStat label={t('financial.updated')} value={updatedLabel} />}
             </div>
           )}
         </div>
-
-        {/* ── RIGHT: Executive Snapshot — KPI tiles, same recipe as the
-            Hero's own KPI cards, top-aligned rather than stretched to
-            match the left card's height (a shorter card that ends where
-            its content ends reads as intentional; a stretched one with
-            empty middle space does not). ── */}
-        <div className="col-span-12 xl:col-span-4 bg-card border border-border/40 rounded-2xl shadow-design-xs p-6">
-          <p className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-widest mb-4">
-            Executive Snapshot
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            <SnapshotKpi icon={Wallet} label="Asking Price" value={price != null ? fmtPrice(price, true) : '—'} accent />
-            <SnapshotKpi icon={Ruler} label="Price / m²" value={pricePerSqm != null ? `${pricePerSqm.toLocaleString('en-US')}/m²` : '—'} />
-            <SnapshotKpi icon={CalendarDays} label="Year Built" value={yearBuilt != null ? String(yearBuilt) : '—'} />
-            <SnapshotKpi icon={Tag} label="Listing" value={listingType || '—'} />
-          </div>
-        </div>
       </div>
 
-      {/* Financial Detail — Property Details Completion (2026-07-17). Each
-          row conditional on its own value/gate, same pattern as the
-          Wizard's own visibleWhen rules. */}
-      <FinancialDetailBlock
-        initialPrice={initialPrice}
-        objectiveValue={objectiveValue}
-        lowerPriceLimit={lowerPriceLimit}
-        vat={vat}
-        cRemuneration={cRemuneration}
-        investment={investment}
-        cRentalprice={cRentalprice}
-        withinMonthlyUtilities={withinMonthlyUtilities}
-        cAverageMonthlyUtilities={cAverageMonthlyUtilities}
-        exchangeScheme={exchangeScheme}
-        exchangeSchemePercentage={exchangeSchemePercentage}
-        cConsideration={cConsideration}
-        cCompensationFactor={cCompensationFactor}
-      />
+      {/* ── Chapter 2 — Financial Intelligence (horizontal dashboard) ──────
+          Property Details Completion (2026-07-17) originally placed this
+          data in a second full-width card stacked beneath the price card;
+          the 2026-07-22 IA pass moved it into a sidebar column instead. This
+          pass keeps that IA decision (same data, same grouping, same
+          reading position right after Property Pricing) but rejects both
+          prior *layouts* — full-width dashboard of equal-weight tiles,
+          neither a tall vertical stack nor a sidebar. */}
+      {hasFinancialDetail && (
+        <div className="space-y-4">
+          <SectionHeader title={t('financial.title')} subtitle={t('financial.subtitle')} />
+          <FinancialDetailGrid clusters={detailClusters} investmentOpportunity={investmentOpportunity} />
+        </div>
+      )}
     </section>
   )
 }
@@ -222,128 +217,95 @@ export function FinancialIntelligenceOS({
 function FreshnessStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="text-[9px] font-semibold text-muted-foreground/45 uppercase tracking-wider">{label}</span>
+      <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</span>
       <span className="text-[12.5px] font-bold text-foreground/75 tabular-nums">{value}</span>
     </div>
   )
 }
 
-// ── SnapshotKpi ───────────────────────────────────────────────────────────────
-// Deliberately the same recipe as the Hero's SummaryKpi tile — icon chip,
-// quiet label, bold value, soft hover lift — so the Financial section reads
-// as the same dashboard system rather than a second, competing style.
-
-function SnapshotKpi({
-  icon: Icon, label, value, accent,
-}: {
-  icon:    LucideIcon
-  label:   string
-  value:   string
-  accent?: boolean
-}) {
-  const isEmpty = value === '—'
-  return (
-    <div className={cn(
-      'flex items-center gap-3 min-w-0 rounded-xl border border-border/35 bg-muted/3 px-4 py-3.5',
-      'transition-all duration-200 ease-out',
-      'hover:border-border/60 hover:-translate-y-px hover:shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08)]',
-      'motion-reduce:transition-none motion-reduce:hover:translate-y-0',
-    )}>
-      <div className={cn('flex size-8 shrink-0 items-center justify-center rounded-lg', accent ? 'bg-primary/8' : 'bg-muted/50')}>
-        <Icon className={cn('size-4', accent ? 'text-primary/70' : 'text-muted-foreground/50')} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[9px] font-bold text-muted-foreground/45 uppercase tracking-wider mb-0.5">{label}</p>
-        <p className={cn(
-          'text-[14px] font-black tracking-tight truncate',
-          isEmpty ? 'text-muted-foreground/35' : 'text-foreground',
-        )}>
-          {value}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// ── Financial Detail block ───────────────────────────────────────────────────
-
-interface FinancialDetailBlockProps {
-  initialPrice?: number
-  objectiveValue?: number
-  lowerPriceLimit?: number
-  vat?: boolean
-  cRemuneration?: number
-  investment?: boolean
-  cRentalprice?: number
-  withinMonthlyUtilities?: boolean
-  cAverageMonthlyUtilities?: number
-  exchangeScheme?: boolean
-  exchangeSchemePercentage?: number
-  cConsideration?: boolean
-  cCompensationFactor?: number
-}
-
-type FinancialRow = { label: string; value: string }
+// ── Financial Detail grid ────────────────────────────────────────────────────
 
 // IA Sprint 3 (2026-07-18). Previously one flat grid of up to 13 fields
 // mixing negotiation range, tax facts, and 4 independent conditional
 // pairs (e.g. "Investment Opportunity: Yes" next to "Expected Rental
 // Price: €X" read as two unrelated facts instead of one relationship).
-// Grouped into 3 labeled clusters — same data, same card, no fields
-// added or removed, each conditional pair now reads together.
-function FinancialDetailBlock(props: FinancialDetailBlockProps) {
-  const {
-    initialPrice, objectiveValue, lowerPriceLimit, vat, cRemuneration,
-    investment, cRentalprice, withinMonthlyUtilities, cAverageMonthlyUtilities,
-    exchangeScheme, exchangeSchemePercentage, cConsideration, cCompensationFactor,
-  } = props
-
-  const negotiationRows: FinancialRow[] = [
-    initialPrice    != null && { label: 'Initial Price',      value: fmtPrice(initialPrice, true) },
-    objectiveValue  != null && { label: 'Objective Value',    value: fmtPrice(objectiveValue, true) },
-    lowerPriceLimit != null && { label: 'Lower Price Limit',  value: fmtPrice(lowerPriceLimit, true) },
-  ].filter((r): r is FinancialRow => !!r)
-
-  const taxRows: FinancialRow[] = [
-    vat           != null && { label: 'VAT', value: vat ? 'Applicable' : 'Not applicable' },
-    cRemuneration != null && { label: 'Remuneration', value: String(cRemuneration) },
-  ].filter((r): r is FinancialRow => !!r)
-
-  const conditionalRows: FinancialRow[] = [
-    investment && { label: 'Investment Opportunity', value: cRentalprice != null ? `Yes · Expected rent ${fmtPrice(cRentalprice, true)}` : 'Yes' },
-    withinMonthlyUtilities && { label: 'Utilities Included', value: cAverageMonthlyUtilities != null ? `Yes · Avg. ${fmtPrice(cAverageMonthlyUtilities, true)}/mo` : 'Yes' },
-    exchangeScheme && { label: 'Exchange Scheme', value: exchangeSchemePercentage != null ? `Yes · ${exchangeSchemePercentage}%` : 'Yes' },
-    cConsideration && { label: 'Under Consideration', value: cCompensationFactor != null ? `Yes · Factor ${cCompensationFactor}` : 'Yes' },
-  ].filter((r): r is FinancialRow => !!r)
-
-  const clusters: Array<{ label: string; rows: FinancialRow[] }> = [
-    { label: 'Negotiation Range', rows: negotiationRows },
-    { label: 'Tax & Fees',        rows: taxRows },
-    { label: 'Conditional Terms', rows: conditionalRows },
-  ].filter(c => c.rows.length > 0)
-
-  if (clusters.length === 0) return null
+// Grouped into 3 labeled clusters — same data, no fields added or removed,
+// each conditional pair reads together. Investment Refinement pass
+// (2026-07-26) split Investment Opportunity out of the conditionalTerms
+// Row[] list into its own typed field (see financial.viewmodel.ts's note).
+//
+// Structural layout pass (2026-07-26, same day). All of the above used to
+// live stacked inside one shared vertical card — Investment Opportunity as
+// a tinted badge at the top, each cluster below it separated by a
+// `border-t` divider, the whole thing then absolutely positioned as a
+// sidebar beside the price card (see FinancialIntelligenceOS's own comment
+// for why that was reworked). Rebuilt as a horizontal dashboard: every
+// cluster, plus Investment Opportunity, is now its own equal-weight tile
+// (FinancialTile) in a responsive grid — up to 4 tiles, matching the up to
+// 4 independent facts this data actually is (never more than one
+// relationship's worth of Row[] per tile), not one long column pretending
+// they're a single narrative.
+//
+// Container-width breakpoints, not viewport ones (`@[..]`, not `sm:`/`xl:`):
+// this grid's parent column is full page width below `xl` but narrows to
+// ~62% beside Command Hub's sticky aside at `xl`+ (see PropertyDetailView's
+// own grid comment) — a viewport breakpoint would misjudge the space
+// actually available here. Same reasoning this exact cluster-grid's own
+// prior comment already documented for an identical problem, just applied
+// to the outer grid too now instead of only DefinitionList's inner one.
+// 560px / 900px are real content floors, not round numbers: a tile reads
+// comfortably at 2-up from (560 − 16px gap) / 2 ≈ 272px, at 4-up from
+// (900 − 3×16px gap) / 4 ≈ 213px — DefinitionList's own rows need roughly
+// that much to avoid wrapping.
+function FinancialDetailGrid({
+  clusters, investmentOpportunity,
+}: {
+  clusters: FinancialDetailCluster[]
+  investmentOpportunity: InvestmentOpportunity | null
+}) {
+  const { t } = useTranslation('properties')
+  if (clusters.length === 0 && !investmentOpportunity) return null
 
   return (
-    <div className="bg-card border border-border/40 rounded-2xl shadow-design-xs p-6 space-y-5">
-      <p className="text-[9px] font-semibold text-muted-foreground/50 uppercase tracking-widest">
-        Financial Detail
-      </p>
-      {clusters.map((cluster, i) => (
-        <div key={cluster.label} className={i > 0 ? 'border-t border-border/20 pt-5' : ''}>
-          <p className="text-[8px] font-semibold text-muted-foreground/50 uppercase tracking-wider mb-3">
-            {cluster.label}
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {cluster.rows.map(row => (
-              <div key={row.label}>
-                <div className="text-[8px] font-bold text-muted-foreground/45 uppercase tracking-wider mb-1">{row.label}</div>
-                <div className="text-sm font-black text-foreground">{row.value}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+    <div className="@container">
+      <div className="grid grid-cols-1 gap-4 @[560px]:grid-cols-2 @[900px]:grid-cols-4">
+        {investmentOpportunity && (
+          <FinancialTile label={t('financial.rows.investmentOpportunity')}>
+            <div className="flex items-center gap-2">
+              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/12 text-primary">
+                <TrendingUp className="size-3.5" />
+              </span>
+              <span className="text-sm font-black text-foreground">
+                {investmentOpportunity.expectedRentAmount != null
+                  ? t('financial.rows.investmentYesRent', { price: investmentOpportunity.expectedRentAmount })
+                  : t('financial.rows.investmentYes')}
+              </span>
+            </div>
+          </FinancialTile>
+        )}
+
+        {clusters.map(cluster => (
+          <FinancialTile key={cluster.key} label={t(`financial.clusters.${cluster.key}`)}>
+            <DefinitionList rows={cluster.rows} />
+          </FinancialTile>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Every tile — Investment Opportunity and the three data clusters alike —
+// shares this exact chrome so all four read as one equal-weight family at a
+// glance, per the explicit "similar visual weight" brief; only what's
+// inside (`children`) differs. `rounded-xl`, one radius tier below
+// Property Pricing's own `rounded-2xl` card, matches this page's existing
+// hierarchy convention for a tile nested one level down (see
+// PropertySpecsBar's own spec-item tiles for the same pattern).
+function FinancialTile({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-border/40 bg-card p-5 shadow-design-xs">
+      <p className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">{label}</p>
+      {children}
     </div>
   )
 }

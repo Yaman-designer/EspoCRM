@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/providers/AuthProvider"
 import { QueryProvider } from "@/providers/QueryProvider"
 import { I18nProvider } from "@/i18n/I18nProvider"
+import { TouchActivator } from "@/components/TouchActivator"
 import "./globals.css"
 
 const poppins = Poppins({
@@ -73,6 +74,17 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col">
+        {/* Mobile UX pass (2026-07-24): iOS Safari never triggers CSS
+            :active on tap unless some element on the page has a registered
+            touch listener — a long-standing WebKit quirk, not a bug in any
+            one component. Without this, every `active:` press state this
+            app relies on for touch feedback (buttons, cards, document rows,
+            tabs) would work on Android/desktop and silently never fire on
+            iPhone/iPad. A Client Component (RootLayout itself stays a
+            Server Component — DOM event props aren't allowed here, see
+            TouchActivator's own note) whose only job is registering that
+            listener once. */}
+        <TouchActivator />
         <AuthProvider>
           <QueryProvider>
             <I18nProvider>

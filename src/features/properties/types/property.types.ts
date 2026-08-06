@@ -433,7 +433,6 @@ export interface PropertyFilters {
   search:    string
   type:      string        // 'all' or a specific type value from API
   savedOnly: boolean       // heart toggle — filters by localStorage favorites
-  readyOnly: boolean       // visibility policy: show only publish-ready listings (data-completeness score-based, client-side)
   bedrooms:  number | null // minimum bedroom count; null = no filter
   bathrooms: number | null // minimum bathroom count; null = no filter
   minPrice:  number | null // null = no lower bound

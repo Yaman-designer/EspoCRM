@@ -29,6 +29,19 @@ function readFileAsDataUrl(file: File): Promise<string> {
   })
 }
 
+// Keyed by File identity (not content) — every File this app ever uploads to
+// a RealEstateProperty attachment field comes from exactly one field's own
+// picker (gallery vs. banner vs. document), so the same File instance is
+// never legitimately destined for two different fields. Retrying a failed
+// property submit (see property-form.transform.ts's submitPropertyForm)
+// re-calls this with the SAME File objects RHF/lastSubmitDataRef already
+// held — without this cache, that retry would re-POST and create a brand
+// new orphaned Attachment for every image already uploaded by the failed
+// attempt. WeakMap so a File that's no longer referenced anywhere (form
+// reset/discarded) is free to be garbage-collected along with its cache
+// entry — no manual cleanup needed.
+const uploadCache = new WeakMap<File, Promise<UploadedAttachment>>()
+
 /**
  * Uploads a single image File to EspoCRM's Attachment entity.
  * `field` names the target RealEstateProperty attachment attribute —
@@ -36,16 +49,27 @@ function readFileAsDataUrl(file: File): Promise<string> {
  * pass e.g. 'cBannerphoto' to target a different single-image field.
  */
 export async function uploadPropertyImage(file: File, field: string = 'images'): Promise<UploadedAttachment> {
-  const dataUrl = await readFileAsDataUrl(file)
-  const res = await axiosClient.post<{ id: string }>('/Attachment', {
-    name: file.name,
-    type: file.type,
-    role: 'Attachment',
-    relatedType: 'RealEstateProperty',
-    field,
-    file: dataUrl,
-  })
-  return { id: res.data.id }
+  const cached = uploadCache.get(file)
+  if (cached) return cached
+
+  const upload = (async () => {
+    const dataUrl = await readFileAsDataUrl(file)
+    const res = await axiosClient.post<{ id: string }>('/Attachment', {
+      name: file.name,
+      type: file.type,
+      role: 'Attachment',
+      relatedType: 'RealEstateProperty',
+      field,
+      file: dataUrl,
+    })
+    return { id: res.data.id }
+  })()
+
+  uploadCache.set(file, upload)
+  // A failed upload must be retryable on its own next attempt, not
+  // permanently poisoned by a cached rejection.
+  upload.catch(() => uploadCache.delete(file))
+  return upload
 }
 
 /**

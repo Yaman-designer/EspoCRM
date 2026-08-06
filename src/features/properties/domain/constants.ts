@@ -93,3 +93,14 @@ export const PROPERTY_STATUS_REGISTRY: PropertyStatusDef[] = PROPERTY_STATUSES.m
   priority: STATUS_PRIORITY[value] ?? 8,
   isDefault: value === 'Under Approval',
 }))
+
+// C1 fix (Enterprise Production Certification, Critical): single source of
+// truth for "what status does a new listing start at" — identity-governance.
+// schema.ts's `status` field already declared `.default(DEFAULT_PROPERTY_STATUS)`,
+// but nothing ever read that declaration into the wizard's actual RHF
+// defaultValues (PropertyFormPage.tsx's create-mode object never listed
+// `status` at all), so the rendered select showed an empty placeholder
+// instead of its documented default. Derived from the registry's own
+// `isDefault` flag rather than a third hardcoded 'Under Approval' literal.
+export const DEFAULT_PROPERTY_STATUS: string =
+  PROPERTY_STATUS_REGISTRY.find(s => s.isDefault)?.value ?? PROPERTY_STATUSES[0]

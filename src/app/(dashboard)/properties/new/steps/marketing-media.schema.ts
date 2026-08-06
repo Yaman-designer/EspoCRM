@@ -27,27 +27,38 @@ import { getWebAssetUrl } from '@/lib/image-url'
 // still resolves the Audit's 4-way text-field confusion finding), just a
 // sibling section rather than a nested one.
 
+const S = 'wizard.steps.marketingMedia.sections'
+
 export const marketingMediaSchema: StepSchema = {
   sections: [
-    section({ id: 'listing-quality', title: 'Listing Quality', icon: Sparkles }).fields([
-      field.switch('isFeatured', 'Featured').third().build(),
-      field.switch('isVerified', 'Verified').third().build(),
-      field.switch('isPremium', 'Premium').third().build(),
-      field.switch('isNewListing', 'New Listing').third().build(),
+    // Composition pass: 4 peer switches at .third() complete a 3-up row and
+    // then strand the 4th alone on its own row (dead space on both sides,
+    // confirmed live) — .quarter() instead lets all 4 complete one clean
+    // row (this section renders full-width, comfortably past .quarter()'s
+    // own 4-up breakpoint). Presentation-only.
+    section({ id: 'listing-quality', titleKey: `${S}.listingQuality.title`, icon: Sparkles }).fields([
+      field.switch('isFeatured', `${S}.listingQuality.fields.isFeatured.label`).quarter().build(),
+      field.switch('isVerified', `${S}.listingQuality.fields.isVerified.label`).quarter().build(),
+      field.switch('isPremium', `${S}.listingQuality.fields.isPremium.label`).quarter().build(),
+      field.switch('isNewListing', `${S}.listingQuality.fields.isNewListing.label`).quarter().build(),
     ]),
 
-    section({ id: 'listing-copy', title: 'Listing Copy', icon: FileText }).fields([
+    section({ id: 'listing-copy', titleKey: `${S}.listingCopy.title`, icon: FileText }).fields([
       // Relocated from identity.schema.ts. No dynamic logic, never
       // required, no validation.
-      field.textarea('description', 'Description')
+      field.textarea('description', `${S}.listingCopy.fields.description.label`)
         .full()
         .rows(3)
         .build(),
       // Relocated from identity.schema.ts. Label and default value are the
       // PDF's exact Greek text — do not translate, trim, reformat, or
-      // normalize. Actual on-create default applied via useForm()'s
-      // defaultValues in PropertyFormPage.tsx (unchanged from before).
-      field.textarea('cDescriptionGr', 'Περιγραφή (Ελληνικά) 🇬🇷')
+      // normalize. The label's en/el translation entries are intentionally
+      // identical (verbatim) to honor that rule while still routing it
+      // through i18n. `.default(...)` is the field's actual submitted
+      // content (not UI chrome) — left as a literal, not a key. Actual
+      // on-create default applied via useForm()'s defaultValues in
+      // PropertyFormPage.tsx (unchanged from before).
+      field.textarea('cDescriptionGr', `${S}.listingCopy.fields.cDescriptionGr.label`)
         .full()
         .rows(3)
         .default('Πατήστε το πλήκτρο κεραυνού στα δεξιά αφού αποθηκεύσετε την αγγελία σας, ώστε να συμπληρωθεί η περιγραφή αυτόματα μέσω του Βοηθού ΑΙ.')
@@ -56,40 +67,45 @@ export const marketingMediaSchema: StepSchema = {
 
     section({
       id: 'internal-only',
-      title: 'Internal Only',
-      description: 'Agent/back-office text — never shown on the public listing.',
+      titleKey: `${S}.internalOnly.title`,
+      descriptionKey: `${S}.internalOnly.description`,
       icon: Lock,
       collapsible: true,
       defaultCollapsed: true,
     }).fields([
       // Relocated from identity.schema.ts. No dynamic logic, never
       // required, no validation, no maximum/minimum length.
-      field.textarea('cOfficeNotes', 'Office Notes')
+      field.textarea('cOfficeNotes', `${S}.internalOnly.fields.cOfficeNotes.label`)
         .full()
         .rows(3)
         .build(),
       // Relocated from identity.schema.ts. Label is the PDF's exact Greek
-      // text — do not translate.
-      field.textarea('cPropertyEvaluatorAI', 'Αυτόματος Εκτιμητής Ακινήτου')
+      // text — do not translate; en/el entries for this key are
+      // intentionally identical (verbatim).
+      field.textarea('cPropertyEvaluatorAI', `${S}.internalOnly.fields.cPropertyEvaluatorAI.label`)
         .full()
         .rows(3)
         .build(),
     ]),
 
-    section({ id: 'media', title: 'Media', icon: Camera }).fields([
+    section({ id: 'media', titleKey: `${S}.media.title`, icon: Camera }).fields([
       // Relocated from identity.schema.ts — now sits directly above its own
       // reveal (cBannerphoto), no longer a cross-step condition. Actual
       // on-create default (true) applied via useForm()'s defaultValues in
       // PropertyFormPage.tsx (unchanged from before). Tooltip text is
       // exactly as specified in the PDF — do not rewrite, translate, or
-      // summarize it.
-      field.switch('cBanner', 'Banner')
-        .half()
+      // summarize it; en/el entries for this key are intentionally
+      // identical (verbatim).
+      // Composition pass: .full() (was .half()) — the only field in this
+      // section at .half() width, always alone (its reveal, cBannerphoto,
+      // is .full()), so it left dead space beside it in every state.
+      field.switch('cBanner', `${S}.media.fields.cBanner.label`)
+        .full()
         .default(true)
-        .tooltip('Η ανάρτηση πανό εξασφαλίζει την προμήθεια 100%.')
+        .tooltip(`${S}.media.fields.cBanner.tooltip`)
         .build(),
       // Visible only while cBanner (now in this same step) is true.
-      field.image('cBannerphoto', 'Banner Photo')
+      field.image('cBannerphoto', `${S}.media.fields.cBannerphoto.label`)
         .full()
         .visibleWhen(CBANNER_TRUE)
         .resolvePreviewSrc(id => getWebAssetUrl(id))
@@ -98,12 +114,12 @@ export const marketingMediaSchema: StepSchema = {
       // real stored attachment ids (plain strings), which aren't directly
       // servable URLs — getWebAssetUrl() resolves them for preview display
       // only; the field's submitted value stays the raw id either way.
-      field.multiImage('imagesIds', 'Property Photos')
+      field.multiImage('imagesIds', `${S}.media.fields.imagesIds.label`)
         .full()
         .maxFiles(30)
         .maxSize(10 * 1024 * 1024)
         .accept(['image/jpeg', 'image/png', 'image/webp'])
-        .helperText('The first photo becomes the cover image.')
+        .helperText(`${S}.media.fields.imagesIds.helperText`)
         .resolvePreviewSrc(id => getWebAssetUrl(id))
         .build(),
     ]),
@@ -118,18 +134,18 @@ export const marketingMediaSchema: StepSchema = {
     // deleting anything — see document-upload.service.ts.
     section({
       id: 'documents',
-      title: 'Documents',
-      description: 'Contracts, floor plans, certificates — attached to this listing, not shown publicly.',
+      titleKey: `${S}.documents.title`,
+      descriptionKey: `${S}.documents.description`,
       icon: Paperclip,
       collapsible: true,
       defaultCollapsed: true,
     }).fields([
-      field.file('documents', 'Documents')
+      field.file('documents', `${S}.documents.fields.documents.label`)
         .full()
         .multiple()
         .maxSize(10 * 1024 * 1024)
         .accept(['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp', '.rtf', '.csv', '.md', '.txt', '.zip', 'image/*'])
-        .helperText('Uploaded when you save.')
+        .helperText(`${S}.documents.fields.documents.helperText`)
         .build(),
       // Wave 7 (2026-07-15, Attachments). Live entityDefs: type 'file',
       // links.cDocumentassignment confirms belongsTo Attachment — the same
@@ -140,7 +156,7 @@ export const marketingMediaSchema: StepSchema = {
       // use this field. Uploaded via the same uploadPropertyImage() path as
       // cBannerphoto, just a different target field — see
       // attachUploadedMedia() in property-form.transform.ts.
-      field.file('cDocumentassignment', 'Assignment Document')
+      field.file('cDocumentassignment', `${S}.documents.fields.cDocumentassignment.label`)
         .full()
         .maxSize(10 * 1024 * 1024)
         .accept(['image/*', '.zip', '.pdf', '.odt', '.ods', '.odp', '.docx', '.xlsx', '.pptx', '.doc', '.xls', '.ppt', '.rtf', '.csv', '.md', '.txt'])

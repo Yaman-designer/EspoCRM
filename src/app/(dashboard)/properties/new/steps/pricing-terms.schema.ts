@@ -15,9 +15,11 @@ import {
 // Pricing section; its Listing Quality section (4 badges) is Phase 6 scope
 // too, migrated separately into marketing-media.schema.ts.
 
+const S = 'wizard.steps.pricingTerms.sections'
+
 export const pricingTermsSchema: StepSchema = {
   sections: [
-    section({ id: 'pricing', title: 'Pricing', icon: CircleDollarSign }).fields([
+    section({ id: 'pricing', titleKey: `${S}.pricing.title`, icon: CircleDollarSign }).fields([
       // Wave 4 (2026-07-14, Pricing Reconciliation): migrated from
       // field.number().prefix('$') — a pre-existing comment in this file
       // already flagged this as "a separate, un-fixed finding" alongside
@@ -32,31 +34,33 @@ export const pricingTermsSchema: StepSchema = {
       // asking price would represent, so a €0 listing is a data-entry
       // mistake this guard catches, not a valid state the server permits
       // that we're wrongly blocking.
-      field.currency('price', 'Asking Price')
+      field.currency('price', `${S}.pricing.fields.price.label`)
         .required().full()
         .currencyCode('EUR').min(1)
         .build(),
       // Relocated from identity.schema.ts — now sits directly above its own
       // reveal (cRentalprice), no longer 3 steps away. No dynamic logic on
       // this field itself.
-      field.switch('investment', 'Investment')
+      field.switch('investment', `${S}.pricing.fields.investment.label`)
         .half()
         .build(),
       // PDF types this field "Integer" (not Currency) — plain number input,
       // no min/max/default invented. Visible only when Investment = true.
-      field.number('cRentalprice', 'Rental price')
+      field.number('cRentalprice', `${S}.pricing.fields.cRentalprice.label`)
         .half()
         .visibleWhen(INVESTMENT_TRUE)
         .build(),
       // Relocated from identity.schema.ts — now sits directly above its own
       // reveal (cAverageMonthlyUtilities).
-      field.switch('withinMonthlyUtilities', 'Within Monthly Utilities')
+      field.switch('withinMonthlyUtilities', `${S}.pricing.fields.withinMonthlyUtilities.label`)
         .half()
         .build(),
       // PDF types this field "Integer" — plain number input, no
       // min/max/default invented. Visible only when Within Monthly
-      // Utilities = true.
-      field.number('cAverageMonthlyUtilities', 'Μέσα μηνιαία κοινόχρηστα')
+      // Utilities = true. Field's canonical PDF/entityDefs name is Greek
+      // ("Μέσα μηνιαία κοινόχρηστα") — preserved verbatim in the el locale,
+      // with a plain English gloss in en.
+      field.number('cAverageMonthlyUtilities', `${S}.pricing.fields.cAverageMonthlyUtilities.label`)
         .half()
         .visibleWhen(WITHIN_MONTHLY_UTILITIES_TRUE)
         .build(),
@@ -73,25 +77,25 @@ export const pricingTermsSchema: StepSchema = {
       // (PATCH with a USD companion returns a validCurrency 400; EUR
       // succeeds). See property-form.transform.ts's Currency-companion
       // comment for the payload-level half of this fix.
-      field.currency('initialPrice', 'Initial Price')
+      field.currency('initialPrice', `${S}.pricing.fields.initialPrice.label`)
         .half()
         .currencyCode('EUR')
         .build(),
       // Referenced by the VAT tooltip below as the transfer-tax basis.
-      field.currency('objectiveValue', 'Objective Value')
+      field.currency('objectiveValue', `${S}.pricing.fields.objectiveValue.label`)
         .half()
         .currencyCode('EUR')
         .build(),
-      field.switch('vat', 'VAT')
+      field.switch('vat', `${S}.pricing.fields.vat.label`)
         .full()
-        .tooltip('The sale of a property, by a natural or legal person exercising an economic activity, is subject to VAT of 24% on the sale price, as long as the transfer includes a new building. Any building that is transferred before its first use is generally considered new, as long as its building permit was issued or revised from January 1, 2006 onwards. In case the property is not new (i.e., it has already been used or transferred) or in any case where the seller does not carry out an economic activity, the buyer is charged with Real Estate Transfer Tax (VAT) of 3.09% on the greater of the objective value and the market price. Natural persons can, under certain conditions and up to an amount, be exempt from paying VAT or FMA, if they buy a first home.')
+        .tooltip(`${S}.pricing.fields.vat.tooltip`)
         .build(),
     ]),
 
     section({
       id: 'negotiation',
-      title: 'Negotiation',
-      description: 'Internal financial levers, never shown to a buyer.',
+      titleKey: `${S}.negotiation.title`,
+      descriptionKey: `${S}.negotiation.description`,
       icon: Handshake,
       collapsible: true,
       defaultCollapsed: true,
@@ -104,15 +108,20 @@ export const pricingTermsSchema: StepSchema = {
       // widget and bug class. `price` shared this exact bug class too
       // (field.number() with a manual '$' prefix, not this widget) —
       // migrated to the same field.currency() widget in Wave 4 (2026-07-14).
-      field.currency('lowerPriceLimit', 'Lower Price Limit')
-        .half()
+      // Composition pass: rendered alone at the top of NegotiationBody
+      // (PricingTermsStepView.tsx) as a deliberate visual "rhyme" with
+      // Asking Price — .full() (matching `price`'s own span above) removes
+      // the dead half-row space a lone .half() field would leave; before
+      // this it contradicted its own stated intent.
+      field.currency('lowerPriceLimit', `${S}.negotiation.fields.lowerPriceLimit.label`)
+        .full()
         .currencyCode('EUR')
         .build(),
       // Wave 4 (2026-07-14, Pricing Reconciliation): real Dynamic Logic
       // boolean gate for exchangeSchemePercentage below — the detail field
       // already existed (added 2026-07-12), the gate itself did not. Same
       // "toggle beside its reveal" placement as investment/withinMonthlyUtilities.
-      field.switch('exchangeScheme', 'Exchange Scheme')
+      field.switch('exchangeScheme', `${S}.negotiation.fields.exchangeScheme.label`)
         .half()
         .build(),
       // Enterprise Phase 3.2, Finding 2 (resolved: always visible, matching
@@ -127,9 +136,9 @@ export const pricingTermsSchema: StepSchema = {
       // placement unconditionally. A visibleWhen gate invented client-side
       // for this field therefore does not match live behavior — removed.
       // Minimum 0 only; no maximum invented.
-      field.number('exchangeSchemePercentage', 'Exchange Scheme Percentage')
+      field.number('exchangeSchemePercentage', `${S}.negotiation.fields.exchangeSchemePercentage.label`)
         .half().min(0)
-        .helperText('Only applies when Exchange Scheme is enabled.')
+        .helperText(`${S}.negotiation.fields.exchangeSchemePercentage.helperText`)
         .build(),
       // Financial business group, added 2026-07-12. PDF: "Αμοιβή (σε € ή %)"
       // — Integer, and the PDF's own authors flag that one Integer field
@@ -138,7 +147,9 @@ export const pricingTermsSchema: StepSchema = {
       // min/max. Placed in Negotiation (not the main Pricing section) since
       // it is agent-commission-facing, matching this section's existing
       // "internal financial levers" framing.
-      field.number('cRemuneration', 'Αμοιβή (σε € ή %)')
+      // Field's canonical PDF/entityDefs name is Greek ("Αμοιβή (σε € ή %)")
+      // — preserved verbatim in the el locale, English gloss in en.
+      field.number('cRemuneration', `${S}.negotiation.fields.cRemuneration.label`)
         .half()
         .build(),
       // Wave 4 (2026-07-14, Pricing Reconciliation): real Dynamic Logic gate
@@ -147,7 +158,7 @@ export const pricingTermsSchema: StepSchema = {
       // field, per the Gate 1→2 Impact Analysis) and is consumed here
       // cross-step, the same pattern NOT_LAND_CATEGORY already establishes
       // for `category`. Live entityDefs: Integer, no min/max.
-      field.number('cCompensationFactor', 'Compensation Factor')
+      field.number('cCompensationFactor', `${S}.negotiation.fields.cCompensationFactor.label`)
         .half()
         .visibleWhen(CCONSIDERATION_TRUE).clearWhenHidden()
         .build(),

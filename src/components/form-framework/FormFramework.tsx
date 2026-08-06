@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { FieldValues } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,6 +57,7 @@ function LayoutShell<T extends FieldValues>({
   plugins,
   enableNavigationGuard,
 }: LayoutShellProps<T>) {
+  const { t } = useTranslation('common')
   const ctx = useFormFramework()
   const {
     config,
@@ -103,6 +105,29 @@ function LayoutShell<T extends FieldValues>({
   const guardedCancel = useCallback(() => {
     requestNavigation(() => callbacks.onCancel?.())
   }, [requestNavigation, callbacks])
+
+  /* ── Discard Draft dialog ──
+     When onDiscardDraft is supplied, the action bar's Discard button always
+     asks for confirmation (regardless of dirty state — this is a deliberate
+     "wipe my in-progress entry" action, not the generic leave-page guard)
+     and resets the wizard's own navigation state after the caller clears its
+     draft storage / resets the form. Falls back to guardedCancel when no
+     onDiscardDraft is given, so this is a no-op for any other consumer. ── */
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
+
+  const discardOrCancel = useCallback(() => {
+    if (callbacks.onDiscardDraft) {
+      setShowDiscardDialog(true)
+    } else {
+      guardedCancel()
+    }
+  }, [callbacks, guardedCancel])
+
+  const confirmDiscard = useCallback(async () => {
+    setShowDiscardDialog(false)
+    await callbacks.onDiscardDraft?.()
+    ctx._resetWizardState()
+  }, [callbacks, ctx])
 
   /* ── beforeunload: warn on browser close when dirty ── */
   useEffect(() => {
@@ -222,7 +247,7 @@ function LayoutShell<T extends FieldValues>({
     >
       {/* ── Top stepper section ── */}
       <div className="border-b border-border/25">
-        <div className="mx-auto max-w-6xl px-4 py-3.5 sm:px-6 sm:pt-5 sm:pb-4">
+        <div className="mx-auto max-w-6xl px-4 py-3.5 sm:px-6 sm:pt-5 sm:pb-4 lg:max-w-7xl">
           <FormStepper />
         </div>
       </div>
@@ -230,9 +255,29 @@ function LayoutShell<T extends FieldValues>({
       {/* ── Step page header — display title, description, metadata badges ── */}
       <FormPageHeader />
 
-      {/* ── Main workspace ── */}
-      <main className="flex-1 px-5 pb-8 pt-6 sm:px-6 sm:pb-28 sm:pt-6">
-        <div className="mx-auto max-w-6xl">
+      {/* ── Main workspace ──
+          Bottom padding is driven by --ff-action-bar-h, a CSS var the sticky
+          FormActionBar publishes from its own measured (ResizeObserver)
+          height — see usePublishBarHeight in FormActionBar.tsx. The bar's
+          height genuinely differs by breakpoint (2-row mobile stack vs. a
+          single desktop row) and by content (safe-area inset, autosave
+          label appearing/disappearing), so a hardcoded padding constant
+          per breakpoint drifts out of sync with the bar it's meant to
+          clear — that mismatch is exactly what let fields hide behind the
+          bar. Deriving it from the bar's real size fixes that structurally
+          instead of re-guessing better constants. The 11rem fallback only
+          matters for the first paint before the observer runs. */}
+      <main
+        // pt-4 (down from pt-5): FormPageHeader already contributes its own
+        // pb-3.5/sm:pb-4 below the heading, so this is the SECOND padding
+        // stacking on top of that gap before the first card — full
+        // header-to-card gap is now ~30px mobile / ~32px desktop (was
+        // ~34px/40px). Still a deliberate gap, not zero — polish pass, not
+        // the structural fix that landed the first tightening.
+        className="flex-1 px-5 pt-4 sm:px-6"
+        style={{ paddingBottom: 'calc(var(--ff-action-bar-h, 11rem) + 1.5rem)' }}
+      >
+        <div className="mx-auto max-w-6xl lg:max-w-7xl">
 
           {/* Plugin above-card content */}
           {aboveCardSlots.map((slot, i) => (
@@ -249,7 +294,8 @@ function LayoutShell<T extends FieldValues>({
       {/* ── Sticky bottom action bar ── */}
       <FormActionBar
         onSubmit={handleSubmit}
-        onCancel={guardedCancel}
+        onCancel={discardOrCancel}
+        isDiscardAction={!!callbacks.onDiscardDraft}
         plugins={plugins}
       />
 
@@ -264,12 +310,12 @@ function LayoutShell<T extends FieldValues>({
           {/* Content zone — generous vertical breathing room */}
           <AlertDialogHeader className="px-7 pb-7 pt-8">
             <AlertDialogTitle className="text-[19px] font-semibold tracking-tight text-foreground">
-              Leave without saving?
+              {t('formFramework.leaveGuard.title')}
             </AlertDialogTitle>
             <AlertDialogDescription className="mt-4 text-[13.5px] leading-relaxed text-muted-foreground/70">
-              You have unsaved changes.
+              {t('formFramework.leaveGuard.description1')}
               <br />
-              If you leave now, any edits since the last save will be lost.
+              {t('formFramework.leaveGuard.description2')}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -297,7 +343,7 @@ function LayoutShell<T extends FieldValues>({
                 'sm:h-11 sm:w-auto sm:min-w-32',
               )}
             >
-              Leave Page
+              {t('formFramework.leaveGuard.leavePage')}
             </AlertDialogAction>
 
             {/* Continue Editing — hero primary action */}
@@ -314,8 +360,63 @@ function LayoutShell<T extends FieldValues>({
                 'sm:h-11 sm:w-auto sm:min-w-40',
               )}
             >
-              Continue Editing
+              {t('formFramework.leaveGuard.continueEditing')}
             </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ── Discard draft dialog ── */}
+      <AlertDialog open={showDiscardDialog} onOpenChange={setShowDiscardDialog}>
+        <AlertDialogContent
+          className={cn(
+            'w-[calc(100%-2rem)] max-w-sm gap-0 overflow-hidden rounded-2xl p-0',
+            'shadow-[0_12px_48px_rgba(16,24,40,0.14),0_3px_12px_rgba(16,24,40,0.08)]',
+          )}
+        >
+          <AlertDialogHeader className="px-7 pb-7 pt-8">
+            <AlertDialogTitle className="text-[19px] font-semibold tracking-tight text-foreground">
+              {t('formFramework.discardDialog.title')}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="mt-4 text-[13.5px] leading-relaxed text-muted-foreground/70">
+              {t('formFramework.discardDialog.description1')}
+              <br />
+              {t('formFramework.discardDialog.description2')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="border-t border-border/20" />
+
+          <AlertDialogFooter className="mx-0 mb-0 border-t-0 gap-3 bg-muted/40 px-6 pb-6 pt-5 sm:items-center">
+            <AlertDialogCancel
+              variant="ghost"
+              className={cn(
+                'h-12 w-full rounded-xl px-5 text-[13px] font-medium',
+                'border border-border/50 bg-background text-foreground/65',
+                'hover:border-border/70 hover:bg-muted/60 hover:text-foreground/90',
+                'active:bg-muted/80',
+                'focus-visible:ring-2 focus-visible:ring-ring/25',
+                'shadow-none transition-all duration-200',
+                'sm:h-11 sm:w-auto sm:min-w-32',
+              )}
+            >
+              {t('formFramework.discardDialog.keepEditing')}
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={confirmDiscard}
+              variant="destructive"
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus
+              className={cn(
+                'h-12 w-full rounded-xl px-6 text-[13.5px] font-semibold',
+                'shadow-[0_1px_3px_rgba(0,0,0,0.10)]',
+                'transition-all duration-200',
+                'sm:h-11 sm:w-auto sm:min-w-40',
+              )}
+            >
+              {t('formFramework.discardDialog.discardDraft')}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -367,6 +468,7 @@ export function FormFramework<T extends FieldValues = FieldValues>({
   onSubmitError,
   onDraftSaved,
   onValidationFailed,
+  onDiscardDraft,
   className,
 }: FormFrameworkProps<T>) {
   const stepElements = Children.toArray(children).filter(
@@ -390,6 +492,7 @@ export function FormFramework<T extends FieldValues = FieldValues>({
     onSubmitError,
     onDraftSaved,
     onValidationFailed,
+    onDiscardDraft,
   }
 
   const enableNavigationGuard = config.navigationGuard !== false

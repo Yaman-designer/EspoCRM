@@ -1,6 +1,7 @@
 'use client'
 
 import { Star, BadgeCheck, Gem, Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import type { ComponentType } from 'react'
 import type { RealEstateProperty } from '../types/property.types'
@@ -50,14 +51,16 @@ export function PropertyIndicatorPills({
   isNewListing,
   size = 'sm',
 }: IndicatorProps & { size?: 'sm' | 'md' }) {
+  const { t } = useTranslation('properties')
+
   if (!isFeatured && !isVerified && !isPremium && !isNewListing) return null
 
   return (
     <>
-      {isFeatured   && <IndicatorPill icon={Star}       label="Featured" size={size} colorClass="border-amber-200/70 bg-amber-50 text-amber-600" />}
-      {isVerified   && <IndicatorPill icon={BadgeCheck} label="Verified" size={size} colorClass="border-emerald-200/70 bg-emerald-50 text-emerald-600" />}
-      {isPremium    && <IndicatorPill icon={Gem}        label="Premium"  size={size} colorClass="border-violet-200/70 bg-violet-50 text-violet-600" />}
-      {isNewListing && <IndicatorPill icon={Sparkles}   label="New"      size={size} colorClass="border-primary/15 bg-primary/8 text-primary" />}
+      {isFeatured   && <IndicatorPill icon={Star}       label={t('indicators.featured')} size={size} colorClass="border-amber-200/70 bg-amber-50 text-amber-600" />}
+      {isVerified   && <IndicatorPill icon={BadgeCheck} label={t('indicators.verified')} size={size} colorClass="border-emerald-200/70 bg-emerald-50 text-emerald-600" />}
+      {isPremium    && <IndicatorPill icon={Gem}        label={t('indicators.premium')}  size={size} colorClass="border-violet-200/70 bg-violet-50 text-violet-600" />}
+      {isNewListing && <IndicatorPill icon={Sparkles}   label={t('indicators.new')}      size={size} colorClass="border-primary/15 bg-primary/8 text-primary" />}
     </>
   )
 }

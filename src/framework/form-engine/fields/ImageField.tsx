@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useLayoutEffect, useState } from 'react'
 import { useController } from 'react-hook-form'
 import { useDropzone } from 'react-dropzone'
 import { ImageIcon, Trash2, UploadCloud } from 'lucide-react'
@@ -32,8 +32,37 @@ export function ImageField({ schema, form, disabled, readOnly }: FieldComponentP
     disabled: disabled || readOnly,
   })
 
+  // Blob-URL lifecycle for a locally-picked File: created only when the File
+  // reference itself changes (not on every render — this step re-renders on
+  // every keystroke anywhere in the form, since DynamicForm watches the
+  // whole form), and revoked via the effect's own cleanup whenever the File
+  // is replaced/cleared (including externally, e.g. Discard Draft's
+  // form.reset()) or this field unmounts. useLayoutEffect (not useEffect) so
+  // the URL is set before paint — same frame the old synchronous
+  // `URL.createObjectURL()`-in-render call would have painted, so there's no
+  // visible flash of the empty dropzone.
+  //
+  // This is React's own documented pattern for synchronizing a local blob
+  // URL with an external value (see "Synchronizing with Effects"/the
+  // createObjectURL example) — the object URL is a real external-system
+  // resource (a browser-level allocation) whose lifetime must track
+  // `field.value`, which can change from outside this component's own event
+  // handlers (a programmatic form.reset()), so an effect is the correct
+  // tool here, not a plain render-time/event-handler-only computation.
+  const [objectUrl, setObjectUrl] = useState<string | null>(null)
+  useLayoutEffect(() => {
+    if (!(field.value instanceof File)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- see comment above the effect
+      setObjectUrl(null)
+      return
+    }
+    const url = URL.createObjectURL(field.value)
+    setObjectUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [field.value])
+
   const preview = field.value instanceof File
-    ? URL.createObjectURL(field.value)
+    ? objectUrl
     : typeof field.value === 'string' && field.value
     ? (schema.resolvePreviewSrc ? schema.resolvePreviewSrc(field.value) : field.value)
     : null

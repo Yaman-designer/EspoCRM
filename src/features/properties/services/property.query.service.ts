@@ -120,6 +120,11 @@ export async function fetchPropertyOptions(): Promise<PropertyOptions> {
     }
   } catch { /* fall through to defaults */ }
 
+  // EspoCRM's enum field metadata includes '' as the unset/placeholder
+  // option (its own admin UI's "-- select --" marker) alongside the real
+  // values — not a selectable business value, so it's dropped before it
+  // reaches the filter as a blank, non-functional chip.
+  typeValues = typeValues.filter(v => v.trim() !== '')
   if (typeValues.length === 0) typeValues = [...DEFAULT_TYPE_FALLBACK]
 
   const types: TypeOption[] = typeValues.map(value => ({ value, label: value, count: null }))

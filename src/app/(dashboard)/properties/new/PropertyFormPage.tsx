@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
   Building2, MapPin, CircleDollarSign, Sparkles, Camera, ClipboardCheck, Ruler, Wrench,
@@ -16,12 +17,12 @@ import {
   createKeyboardPlugin,
   type FormFrameworkConfig,
 } from '@/components/form-framework'
-import { DynamicForm, type StepSchema } from '@/framework/form-engine'
+import { DynamicForm, isFieldVisible, getFieldId, getFieldError, type StepSchema } from '@/framework/form-engine'
 
 import { useUsers } from '@/shared/resources/useUsers'
 import { useRegionLocations } from '@/shared/resources/useRegionLocations'
 import { useContacts } from '@/shared/resources/useContacts'
-import { PROPERTY_STATUS_REGISTRY, PROPERTIES_QUERY_KEY } from '@/features/properties/domain/constants'
+import { PROPERTY_STATUS_REGISTRY, PROPERTIES_QUERY_KEY, DEFAULT_PROPERTY_STATUS } from '@/features/properties/domain/constants'
 import { submitPropertyForm, submitPropertyEdit } from '@/features/properties/lib/property-form.transform'
 import { presentApiError } from '@/lib/errors/presentApiError'
 import type { RealEstateProperty } from '@/features/properties/types/property.types'
@@ -38,8 +39,32 @@ import {
   pricingTermsSchema,
   marketingMediaSchema,
 } from './steps'
-import { LocationMapPreview } from './LocationMapPreview'
-import { saveDraft, loadDraft, clearDraft } from './draft-storage'
+import { IdentityGovernanceStepView } from './steps/IdentityGovernanceStepView'
+import { LocationZoningStepView } from './steps/LocationZoningStepView'
+import { PricingTermsStepView } from './steps/PricingTermsStepView'
+import { saveDraft, clearDraft } from './draft-storage'
+
+// Required-step-validation helper (wizard workflow only — no RHF/Zod rule
+// changes). Walks a StepSchema exactly the way SectionRenderer/GridEngine
+// render it (sections → fields, both visibility-gated, hidden fields
+// excluded) and returns the field keys that are actually on screen for the
+// given form values, so `form.trigger()` below only ever validates fields
+// the user can currently see — a required field hidden by a conditional
+// visibility rule never blocks navigation.
+function collectVisibleFieldKeys(schema: StepSchema | undefined, values: Record<string, unknown>): string[] {
+  if (!schema) return []
+  const sections = schema.sections ?? (schema.fields ? [{ fields: schema.fields, visibility: undefined }] : [])
+  const keys: string[] = []
+  for (const section of sections) {
+    if (section.visibility && !isFieldVisible(section.visibility, values)) continue
+    for (const field of section.fields) {
+      if (field.type === 'hidden') continue
+      if (field.visibility && !isFieldVisible(field.visibility, values)) continue
+      keys.push(field.key)
+    }
+  }
+  return keys
+}
 
 // Property Wizard reorg (Engineering Execution Plan, Phases 2-6, complete;
 // Phase 8 cleanup complete) is done: all 84 fields live in their approved
@@ -64,6 +89,7 @@ interface PropertyFormPageProps {
 }
 
 export function PropertyFormPage({ mode = 'create', property }: PropertyFormPageProps) {
+  const { t } = useTranslation('properties')
   const router = useRouter()
   const queryClient = useQueryClient()
   const isEdit = mode === 'edit'
@@ -152,26 +178,37 @@ export function PropertyFormPage({ mode = 'create', property }: PropertyFormPage
     return {
       cBanner: true,
       cDescriptionGr: 'Πατήστε το πλήκτρο κεραυνού στα δεξιά αφού αποθηκεύσετε την αγγελία σας, ώστε να συμπληρωθεί η περιγραφή αυτόματα μέσω του Βοηθού ΑΙ.',
+      // C1 fix (Enterprise Production Certification, Critical): status.schema
+      // already declared `.default(DEFAULT_PROPERTY_STATUS)`, but nothing
+      // ever seeded it into the wizard's real defaultValues — the same
+      // manual-mirroring pattern cBanner/cDescriptionGr above already use
+      // for their own declared defaults, just missing for this field.
+      status: DEFAULT_PROPERTY_STATUS,
     }
   }, [isEdit, property])
 
   const form = useForm<Record<string, unknown>>({ defaultValues })
 
-  // Draft restore - create mode only. draft-storage.ts is explicitly a
-  // create-only mechanism (one global, unscoped localStorage key); restoring
-  // it into an Edit session could overwrite live record data with an
-  // unrelated in-progress draft.
-  const restoredRef = useRef(false)
+  // Draft lifecycle — create mode only. draft-storage.ts is explicitly a
+  // create-only mechanism (one global, unscoped localStorage key); it must
+  // never leak into an Edit session's live record data.
+  //
+  // No mount-time restore: a "Create Property" session always starts from a
+  // blank wizard, regardless of how the previous session ended (Discard,
+  // successful creation, Cancel, closing the tab, or a hard refresh) — see
+  // the Draft Lifecycle requirements. The autosave plugin below still writes
+  // to localStorage during the session (so the in-progress draft survives an
+  // accidental step-navigation reload within THIS session), but nothing ever
+  // reads it back into a later session's form.
+  //
+  // This cleanup also actively clears storage the moment the wizard is left
+  // via any in-app navigation (Cancel, Discard, or after a successful
+  // create) — belt-and-suspenders for the same "never inherit an abandoned
+  // draft" rule; it's a no-op if storage is already empty.
   useEffect(() => {
-    if (isEdit || restoredRef.current) return
-    restoredRef.current = true
-    const draft = loadDraft()
-    if (draft && Object.keys(draft).length > 0) {
-      form.reset(draft)
-      toast.info('Restored your unfinished draft')
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (isEdit) return
+    return () => { clearDraft() }
+  }, [isEdit])
 
   const plugins = useMemo(() => {
     const base = [createKeyboardPlugin({ arrowKeys: true })]
@@ -189,111 +226,103 @@ export function PropertyFormPage({ mode = 'create', property }: PropertyFormPage
   // navigationGuard (unsaved-changes confirmation on Cancel) defaults to true
   // in FormFrameworkConfig - intentionally not overridden here.
   const config: FormFrameworkConfig = {
-    title: isEdit ? 'Edit Property Listing' : 'New Property Listing',
-    subtitle: isEdit
-      ? 'Update the listing details, location, and media for this asset.'
-      : 'Define the core identity, location, and media for this asset.',
-    entityLabel: 'Property',
+    title: isEdit ? t('wizard.page.editTitle') : t('wizard.page.createTitle'),
+    subtitle: isEdit ? t('wizard.page.editSubtitle') : t('wizard.page.createSubtitle'),
+    entityLabel: t('wizard.page.entityLabel'),
     mode,
-    submitLabel: isEdit ? 'Save Changes' : undefined,
-    // Steady-state 8 - Phase 6 dissolved the last holding step
-    // (identity-legacy). The wizard now matches the approved final
-    // 8-step structure; Phase 7 only verifies and removes dead imports.
-    totalPhasesCount: 8,
+    submitLabel: isEdit ? t('wizard.page.saveChanges') : undefined,
     breadcrumbs: isEdit && property
       ? [
-          { label: 'Properties', href: '/properties' },
-          { label: property.title ?? property.propertyCode ?? 'Property', href: '/properties/' + (property.propertyCode ?? property.id).toLowerCase() },
-          { label: 'Edit' },
+          { label: t('wizard.page.breadcrumbProperties'), href: '/properties' },
+          { label: property.title ?? property.propertyCode ?? t('common.propertyFallback'), href: '/properties/' + (property.propertyCode ?? property.id).toLowerCase() },
+          { label: t('wizard.page.breadcrumbEdit') },
         ]
       : [
-          { label: 'Properties', href: '/properties' },
-          { label: 'New Property' },
+          { label: t('wizard.page.breadcrumbProperties'), href: '/properties' },
+          { label: t('wizard.page.breadcrumbNewProperty') },
         ],
     steps: [
       {
         id: 'identity',
-        title: 'Identity & Governance',
-        displayTitle: 'Identity & Governance',
-        description: 'Classify the listing, then set ownership and lifecycle status.',
+        title: t('wizard.page.steps.identity.title'),
+        displayTitle: t('wizard.page.steps.identity.title'),
+        description: t('wizard.page.steps.identity.description'),
         icon: Building2,
         requiredCount: 6,
-        estTime: '2 min',
-        completion: 12,
+        estTime: t('wizard.page.estTime', { count: 2 }),
       },
       {
         id: 'location',
-        title: 'Location & Zoning',
-        displayTitle: 'Location & Zoning',
-        description: 'Where is this property, broadest area to narrowest district, plus zoning notes.',
+        title: t('wizard.page.steps.location.title'),
+        displayTitle: t('wizard.page.steps.location.title'),
+        description: t('wizard.page.steps.location.description'),
         icon: MapPin,
         requiredCount: 1,
-        estTime: '2 min',
-        completion: 30,
+        estTime: t('wizard.page.estTime', { count: 2 }),
       },
       {
         id: 'financial',
-        title: 'Pricing & Terms',
-        displayTitle: 'Pricing & Financial Terms',
-        description: 'Asking price, and any investment or utilities terms.',
+        title: t('wizard.page.steps.financial.title'),
+        displayTitle: t('wizard.page.steps.financial.displayTitle'),
+        description: t('wizard.page.steps.financial.description'),
         icon: CircleDollarSign,
         requiredCount: 1,
-        estTime: '1 min',
-        completion: 42,
+        estTime: t('wizard.page.estTime', { count: 1 }),
       },
       {
         id: 'size-rooms-structure',
-        title: 'Size, Rooms & Structure',
-        displayTitle: 'Size, Rooms & Structure',
-        description: 'How big, how many rooms, and where in the building.',
+        title: t('wizard.page.steps.sizeRoomsStructure.title'),
+        displayTitle: t('wizard.page.steps.sizeRoomsStructure.title'),
+        description: t('wizard.page.steps.sizeRoomsStructure.description'),
         icon: Ruler,
         requiredCount: 1,
-        estTime: '2 min',
-        completion: 48,
+        estTime: t('wizard.page.estTime', { count: 2 }),
       },
       {
         id: 'construction-systems',
-        title: 'Construction & Systems',
-        displayTitle: 'Construction & Systems',
-        description: 'Condition, energy rating, heating, and finishes.',
+        title: t('wizard.page.steps.constructionSystems.title'),
+        displayTitle: t('wizard.page.steps.constructionSystems.title'),
+        description: t('wizard.page.steps.constructionSystems.description'),
         icon: Wrench,
-        optional: true,
-        requiredCount: 0,
-        estTime: '2 min',
-        completion: 55,
+        // Not optional: energyClass/cHeatingController are
+        // .requiredWhen(NOT_LAND_CATEGORY/NOT_LAND_OR_OTHER_CATEGORY) in
+        // construction-systems.schema.ts — required for every category
+        // except Land (Other also exempts the second field). Previously
+        // marked optional/0-required here, which contradicted the step's
+        // actual validation once Continue started enforcing required
+        // fields — see the Enterprise Production Certification Audit, C1.
+        requiredCount: 2,
+        estTime: t('wizard.page.estTime', { count: 2 }),
       },
       {
         id: 'features',
-        title: 'Outdoor, Building & Amenities',
-        displayTitle: 'Outdoor, Building & Amenities',
-        description: "What's around it, and what else does it offer?",
+        title: t('wizard.page.steps.features.title'),
+        displayTitle: t('wizard.page.steps.features.title'),
+        description: t('wizard.page.steps.features.description'),
         icon: Sparkles,
         optional: true,
         requiredCount: 0,
-        estTime: '2 min',
-        completion: 65,
+        estTime: t('wizard.page.estTime', { count: 2 }),
       },
       {
         id: 'media',
-        title: 'Marketing & Media',
-        displayTitle: 'Marketing & Media',
-        description: 'Badges, listing copy, banner, and photos - the last step before Review.',
+        title: t('wizard.page.steps.media.title'),
+        displayTitle: t('wizard.page.steps.media.title'),
+        description: t('wizard.page.steps.media.description'),
         icon: Camera,
         optional: true,
         requiredCount: 0,
-        estTime: '3 min',
-        completion: 85,
+        estTime: t('wizard.page.estTime', { count: 3 }),
       },
       {
         id: 'review',
-        title: 'Review',
-        displayTitle: isEdit ? 'Review & Save' : 'Review & Publish',
-        description: 'Check completeness and listing quality before saving.',
+        title: t('wizard.page.steps.review.title'),
+        displayTitle: isEdit ? t('wizard.page.steps.review.displayTitleEdit') : t('wizard.page.steps.review.displayTitleCreate'),
+        description: t('wizard.page.steps.review.description'),
         icon: ClipboardCheck,
         optional: true,
         requiredCount: 0,
-        estTime: '1 min',
-        completion: 100,
+        estTime: t('wizard.page.estTime', { count: 1 }),
       },
     ],
   }
@@ -313,17 +342,85 @@ export function PropertyFormPage({ mode = 'create', property }: PropertyFormPage
     if (isEdit && property) {
       await submitPropertyEdit(property.id, data, form.formState.dirtyFields, session?.user?.id)
       queryClient.invalidateQueries({ queryKey: [PROPERTIES_QUERY_KEY] })
-      toast.success('Property updated')
+      toast.success(t('wizard.page.propertyUpdated'))
       const slug = property.propertyCode?.toLowerCase() ?? property.id
       router.push('/properties/' + encodeURIComponent(slug))
       return
     }
     const created = await submitPropertyForm(data, session?.user?.id)
     queryClient.invalidateQueries({ queryKey: [PROPERTIES_QUERY_KEY] })
+    // Successful creation wipes the entire wizard lifecycle: draft storage,
+    // autosave's backing store (same key), and RHF's own state — so if this
+    // component were ever kept mounted, or the next mount somehow raced the
+    // navigation below, there is nothing left to accidentally inherit.
     clearDraft()
-    toast.success('Property created')
+    form.reset()
+    lastSubmitDataRef.current = null
+    toast.success(t('wizard.page.propertyCreated'))
     const slug = created.propertyCode?.toLowerCase() ?? created.id
     router.push('/properties/' + encodeURIComponent(slug))
+  }
+
+  // Screen-reader-only announcement of how many fields on the current step
+  // failed validation — sighted users already see this via the red
+  // asterisks on every invalid field plus the stepper's error-state bubble;
+  // a screen-reader user landing on just the first invalid field (below)
+  // had no way to know N-1 others also needed attention. role="alert" is
+  // implicitly aria-live="assertive" + aria-atomic="true", matching the
+  // same pattern FormFieldShell already uses for a single field's own error.
+  const [stepErrorAnnouncement, setStepErrorAnnouncement] = useState('')
+
+  // Required-step navigation guard — Continue only advances past fields the
+  // user can currently see (collectVisibleFieldKeys mirrors the same
+  // sections/visibility walk SectionRenderer/GridEngine already render
+  // through, so a required field hidden by a conditional-visibility rule is
+  // never triggered). No RHF/Zod rule changes: this only calls the existing
+  // `form.trigger()` on a narrower field list than "everything registered."
+  // The `review` step (index 7) has no entry in dataSteps, so it's always
+  // schema === undefined → always allowed through, matching its
+  // optional/requiredCount: 0 config below.
+  const handleBeforeNext = async (stepIndex: number, formInstance: typeof form) => {
+    const schema = dataSteps[stepIndex]
+    if (!schema) return true
+    const values = formInstance.getValues()
+    const visibleKeys = collectVisibleFieldKeys(schema, values)
+    if (visibleKeys.length === 0) return true
+
+    const valid = await formInstance.trigger(visibleKeys)
+    if (valid) {
+      setStepErrorAnnouncement('')
+      return true
+    }
+
+    const errors = formInstance.formState.errors
+    const invalidKeys = visibleKeys.filter(key => getFieldError(errors, key))
+    const firstInvalidKey = invalidKeys[0]
+    if (firstInvalidKey) {
+      const el = document.getElementById(getFieldId(firstInvalidKey))
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      if (el instanceof HTMLElement) el.focus({ preventScroll: true })
+    }
+    // Cleared first so a screen reader re-announces even when the exact
+    // same count of errors is hit twice in a row (e.g. clicking Continue
+    // again without changing anything) — role="alert" only fires on a
+    // genuine content change.
+    setStepErrorAnnouncement('')
+    window.setTimeout(() => {
+      setStepErrorAnnouncement(t('wizard.page.stepValidationErrors', { count: invalidKeys.length }))
+    }, 50)
+    return false
+  }
+
+  // Discard Draft — create mode only (an Edit session has no draft; its
+  // Discard/Cancel button falls back to FormFramework's guarded-cancel/
+  // router.back() instead, since onDiscardDraft is undefined there).
+  // Clears storage and resets RHF back to the pristine create-mode
+  // defaults; FormFramework resets its own step/completion state right
+  // after this resolves (see context.tsx's _resetWizardState).
+  const handleDiscardDraft = isEdit ? undefined : () => {
+    clearDraft()
+    form.reset(defaultValues)
+    toast.success(t('wizard.page.draftDiscarded'))
   }
 
   // Not memoized — deliberately mirrors handleSubmit/handleSaveDraft above,
@@ -333,17 +430,22 @@ export function PropertyFormPage({ mode = 'create', property }: PropertyFormPage
       entityLabel: 'property',
       onRetry: () => { void handleSubmit(lastSubmitDataRef.current ?? {}) },
       onRecover: () => router.push('/properties'),
-      recoveryLabel: 'Back to properties',
+      recoveryLabel: t('wizard.page.backToProperties'),
     })
   }
 
   const handleSaveDraft = isEdit ? undefined : async (data: Record<string, unknown>) => {
     saveDraft(data)
-    toast.success('Draft saved')
+    toast.success(t('wizard.page.draftSaved'))
   }
 
   return (
-    <div className="-mx-4 -mt-4 sm:mx-0 sm:mt-0">
+    // -mb-* cancels DashboardShell's own p-4/p-5/p-6 bottom padding at every
+    // tier (not just mobile, unlike -mx-4/-mt-4 above) — otherwise it stacks
+    // underneath FormActionBar's sticky bottom-0 bar as dead space between
+    // the bar and the real viewport edge.
+    <div className="-mx-4 -mt-4 -mb-4 sm:mx-0 sm:mt-0 sm:-mb-5 md:-mb-6">
+      <div role="alert" className="sr-only">{stepErrorAnnouncement}</div>
       <FormFramework
         config={config}
         form={form}
@@ -352,20 +454,19 @@ export function PropertyFormPage({ mode = 'create', property }: PropertyFormPage
         onSubmitError={handleSubmitError}
         onSaveDraft={handleSaveDraft}
         onCancel={() => router.back()}
+        onBeforeNext={handleBeforeNext}
+        onDiscardDraft={handleDiscardDraft}
       >
         <FormStep id="identity">
-          <DynamicForm schema={identityGovernanceSchema} form={form} />
+          <IdentityGovernanceStepView schema={identityGovernanceSchema} form={form} />
         </FormStep>
 
         <FormStep id="location">
-          <DynamicForm schema={locationZoningSchema} form={form} />
-          <div className="mt-6">
-            <LocationMapPreview form={form} />
-          </div>
+          <LocationZoningStepView schema={locationZoningSchema} form={form} />
         </FormStep>
 
         <FormStep id="financial">
-          <DynamicForm schema={pricingTermsSchema} form={form} />
+          <PricingTermsStepView schema={pricingTermsSchema} form={form} />
         </FormStep>
 
         <FormStep id="size-rooms-structure">
@@ -385,7 +486,7 @@ export function PropertyFormPage({ mode = 'create', property }: PropertyFormPage
         </FormStep>
 
         <FormStep id="review">
-          <ReviewStep form={form} steps={dataSteps} />
+          <ReviewStep form={form} steps={dataSteps} userOptions={userOptions} />
         </FormStep>
       </FormFramework>
     </div>

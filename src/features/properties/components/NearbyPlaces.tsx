@@ -1,6 +1,7 @@
 'use client'
 
 import { School, Building2, ShoppingBag, Utensils, Bus, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { useNearbyPlaces } from '../hooks/usePropertyLocation'
 import {
@@ -13,18 +14,18 @@ import {
 // ── Category config ───────────────────────────────────────────────────────────
 
 type CategoryConfig = {
-  label: string
-  icon:  React.ComponentType<{ className?: string }>
-  color: string
-  bg:    string
+  labelKey: string
+  icon:     React.ComponentType<{ className?: string }>
+  color:    string
+  bg:       string
 }
 
 const CATEGORY_CONFIG: Record<PlaceCategory, CategoryConfig> = {
-  school:     { label: 'Schools',           icon: School,      color: 'text-blue-600',   bg: 'bg-blue-500/8'   },
-  hospital:   { label: 'Healthcare',        icon: Building2,   color: 'text-rose-600',   bg: 'bg-rose-500/8'   },
-  shopping:   { label: 'Shopping',          icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-500/8' },
-  restaurant: { label: 'Cafes & Dining',   icon: Utensils,    color: 'text-amber-600',  bg: 'bg-amber-500/8'  },
-  metro:      { label: 'Transit Stations', icon: Bus,          color: 'text-emerald-600',bg: 'bg-emerald-500/8'},
+  school:     { labelKey: 'school',     icon: School,      color: 'text-blue-600',   bg: 'bg-blue-500/8'   },
+  hospital:   { labelKey: 'hospital',   icon: Building2,   color: 'text-rose-600',   bg: 'bg-rose-500/8'   },
+  shopping:   { labelKey: 'shopping',   icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-500/8' },
+  restaurant: { labelKey: 'restaurant', icon: Utensils,    color: 'text-amber-600',  bg: 'bg-amber-500/8'  },
+  metro:      { labelKey: 'metro',      icon: Bus,         color: 'text-emerald-600',bg: 'bg-emerald-500/8'},
 }
 
 const CATEGORY_ORDER: PlaceCategory[] = ['school', 'hospital', 'shopping', 'restaurant', 'metro']
@@ -88,13 +89,14 @@ interface NearbyPlacesProps {
 }
 
 export function NearbyPlaces({ latitude, longitude, maxPerCategory = 4 }: NearbyPlacesProps) {
+  const { t } = useTranslation('properties')
   const { data, isLoading, isError } = useNearbyPlaces(latitude, longitude)
 
   if (isLoading) {
     return (
       <div>
         <p className="mb-4 text-[10.5px] font-bold uppercase tracking-[0.12em] text-muted-foreground/38">
-          Nearby Places
+          {t('nearbyPlaces.title')}
         </p>
         <NearbyPlacesSkeleton />
       </div>
@@ -106,7 +108,7 @@ export function NearbyPlaces({ latitude, longitude, maxPerCategory = 4 }: Nearby
       <div className="flex items-center gap-3 rounded-[16px] border border-border/18 bg-muted/10 px-5 py-4">
         <AlertCircle className="size-4 shrink-0 text-muted-foreground/30" />
         <p className="text-[13px] text-muted-foreground/45">
-          Nearby places could not be loaded right now.
+          {t('nearbyPlaces.loadError')}
         </p>
       </div>
     )
@@ -131,7 +133,7 @@ export function NearbyPlaces({ latitude, longitude, maxPerCategory = 4 }: Nearby
       <div className="flex flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border/20 bg-muted/6 py-10 text-center">
         <Bus className="size-5 text-muted-foreground/22" />
         <p className="text-[13px] text-muted-foreground/45">
-          No nearby places found within 2 km
+          {t('nearbyPlaces.noneFound')}
         </p>
       </div>
     )
@@ -140,11 +142,11 @@ export function NearbyPlaces({ latitude, longitude, maxPerCategory = 4 }: Nearby
   return (
     <div>
       <p className="mb-4 text-[10.5px] font-bold uppercase tracking-[0.12em] text-muted-foreground/38">
-        Nearby Places
+        {t('nearbyPlaces.title')}
       </p>
       <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
         {groups.map(({ category, places: catPlaces }) => {
-          const { label, icon: Icon, color, bg } = CATEGORY_CONFIG[category]
+          const { labelKey, icon: Icon, color, bg } = CATEGORY_CONFIG[category]
           return (
             <div key={category}>
               <div className="mb-2 flex items-center gap-2">
@@ -152,7 +154,7 @@ export function NearbyPlaces({ latitude, longitude, maxPerCategory = 4 }: Nearby
                   <Icon className={cn('size-3', color)} />
                 </div>
                 <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/45">
-                  {label}
+                  {t(`nearbyPlaces.categories.${labelKey}`)}
                 </p>
               </div>
               {catPlaces.map(place => (

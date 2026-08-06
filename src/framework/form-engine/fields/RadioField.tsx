@@ -2,6 +2,8 @@
 
 import { Controller } from 'react-hook-form'
 import { cn } from '@/lib/utils'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 import { FieldWrapper } from '../FieldWrapper'
 import { buildRules } from '../ValidationEngine'
 import { getFieldId } from '../utils'
@@ -136,32 +138,47 @@ export function RadioField({ schema, form, disabled, readOnly, options }: FieldC
                 })}
               </div>
             ) : (
-              <div className="flex flex-col gap-3">
+              // Default (plain) layout — mirrors Pipeline's FormRadio exactly:
+              // the shared ui/radio-group.tsx primitive, not a hand-rolled
+              // native input. 'card'/'horizontal' above stay bespoke — they
+              // have no Pipeline equivalent to converge to and aren't reached
+              // by any current wizard schema, so left untouched here.
+              <RadioGroup
+                value={field.value != null ? String(field.value) : undefined}
+                onValueChange={val => {
+                  if (readOnly) return
+                  const opt = opts.find(o => String(o.value) === val)
+                  field.onChange(opt?.value ?? val)
+                }}
+                disabled={disabled || readOnly}
+                className="gap-3"
+              >
                 {opts.map(opt => (
-                  <label
+                  <div
                     key={String(opt.value)}
                     className={cn(
-                      'flex cursor-pointer items-center gap-2.5',
+                      'flex items-start gap-2.5',
                       (disabled || opt.disabled) && 'cursor-not-allowed opacity-50',
                     )}
                   >
-                    <input
-                      type="radio"
+                    <RadioGroupItem
                       value={String(opt.value)}
-                      checked={field.value === opt.value || field.value === String(opt.value)}
-                      onChange={() => !readOnly && field.onChange(opt.value)}
+                      id={`${getFieldId(schema.key)}-${opt.value}`}
                       disabled={disabled || opt.disabled}
-                      className="h-4 w-4 accent-primary"
+                      className="mt-0.5"
                     />
-                    <div>
-                      <p className="text-sm text-foreground">{opt.label}</p>
+                    <Label
+                      htmlFor={`${getFieldId(schema.key)}-${opt.value}`}
+                      className="flex-col items-start gap-0.5 font-normal cursor-pointer"
+                    >
+                      <span className="text-sm text-foreground">{opt.label}</span>
                       {opt.description && (
-                        <p className="text-xs text-muted-foreground">{opt.description}</p>
+                        <span className="text-xs font-normal text-muted-foreground">{opt.description}</span>
                       )}
-                    </div>
-                  </label>
+                    </Label>
+                  </div>
                 ))}
-              </div>
+              </RadioGroup>
             )}
           </fieldset>
         </FieldWrapper>

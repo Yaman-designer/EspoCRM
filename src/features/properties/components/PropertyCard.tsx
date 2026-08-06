@@ -2,6 +2,7 @@
 
 import { useState, memo, type ComponentType } from 'react'
 import Image from 'next/image'
+import { useTranslation } from 'react-i18next'
 import {
   BedDouble, Bath, MapPin, Maximize2,
   Pencil, Trash2, Heart, ArrowRight, Camera,
@@ -12,16 +13,9 @@ import { fmtPrice, getDisplayName, getDisplayLocation } from '../lib/display'
 import { PropertyStatusBadge } from './PropertyStatusBadge'
 import { PropertyIndicatorPills } from './PropertyIndicators'
 import { useFavoriteState } from '../hooks/useFavoriteState'
+import { IconActionButton } from '@/components/shared/IconActionButton'
+import { getPropertyTypeLabel } from '../domain/property-type.registry'
 import type { RealEstateProperty } from '../types/property.types'
-
-// ── Utility ───────────────────────────────────────────────────────────────────
-
-function toTitleCase(str: string): string {
-  return str
-    .split(' ')
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ')
-}
 
 // ── StatChip ──────────────────────────────────────────────────────────────────
 // Shared metric chip used in both grid and list views.
@@ -75,38 +69,6 @@ function StatChip({
   )
 }
 
-// ── QuickAction ───────────────────────────────────────────────────────────────
-// Icon-only action button — grid card footer and list right panel.
-
-function QuickAction({
-  onClick,
-  label,
-  Icon,
-  destructive,
-}: {
-  onClick: () => void
-  label: string
-  Icon: ComponentType<{ className?: string }>
-  destructive?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className={cn(
-        'flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
-        destructive
-          ? 'text-muted-foreground/35 hover:bg-destructive/10 hover:text-destructive'
-          : 'text-muted-foreground/50 hover:bg-muted hover:text-foreground',
-      )}
-    >
-      <Icon className="size-3.5" />
-    </button>
-  )
-}
-
 // ── PropertyCard (grid view) ──────────────────────────────────────────────────
 //
 // Mobile scan order:  Image → Price (content) → Type → Location → ID → Stats → CTA
@@ -130,6 +92,7 @@ export const PropertyCard = memo(function PropertyCard({
   onEdit,
   onDelete,
 }: PropertyCardProps) {
+  const { t } = useTranslation('properties')
   const {
     price, type, status,
     square, bedroomCount, bathroomCount,
@@ -153,26 +116,26 @@ export const PropertyCard = memo(function PropertyCard({
     <article
       aria-label={heading}
       className={cn(
-        'group flex h-full w-full min-w-0 cursor-default flex-col overflow-hidden rounded-3xl bg-card',
-        'border border-border/18 sm:border-border/25',
-        // Mobile shadow: three-layer depth + inset top highlight for glass-panel luxury feel
-        'shadow-[0_2px_8px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.09),0_20px_48px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.08)] sm:shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05),0_12px_32px_rgba(0,0,0,0.07)]',
-        'transition-[transform,border-color,box-shadow] duration-300 ease-out',
+        'group flex h-full w-full min-w-0 cursor-default flex-col overflow-hidden rounded-2xl bg-card',
+        'border border-border/10 sm:border-border/15',
+        // Mobile shadow: soft, low-contrast three-layer depth + inset top highlight
+        'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05),0_12px_28px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.06)] sm:shadow-[0_1px_2px_rgba(0,0,0,0.03),0_3px_8px_rgba(0,0,0,0.035),0_8px_20px_rgba(0,0,0,0.04)]',
+        'transition-[transform,border-color,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
         'active:scale-[0.985] active:shadow-[0_1px_4px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05)] sm:active:scale-100',
-        'hover:-translate-y-1 hover:border-border/50 hover:ring-1 hover:ring-primary/10',
-        'hover:shadow-[0_4px_16px_rgba(0,0,0,0.08),0_12px_32px_rgba(0,0,0,0.10),0_24px_48px_rgba(0,0,0,0.08)]',
+        'hover:-translate-y-[3px] hover:border-border/30',
+        'hover:shadow-[0_6px_20px_rgba(0,0,0,0.04),0_20px_48px_rgba(0,0,0,0.05),0_40px_80px_rgba(0,0,0,0.04)]',
       )}
     >
 
       {/* ── Image — 4:3 hero on mobile, deeper zoom on hover ─────────────────── */}
-      <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden rounded-t-3xl bg-muted will-change-transform">
+      <div className="relative aspect-4/3 w-full shrink-0 overflow-hidden rounded-t-2xl bg-muted">
         <Image
           src={imgSrc}
           alt={heading}
           fill
           unoptimized
           draggable={false}
-          className="select-none object-cover brightness-[1.03] contrast-[1.04] saturate-[1.10] transition-transform duration-300 ease-out group-hover:scale-[1.06]"
+          className="select-none object-cover brightness-[1.03] contrast-[1.04] saturate-[1.10] transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.03]"
           sizes="(max-width: 639px) 100vw, (max-width: 871px) 33vw, (max-width: 1167px) 25vw, 20vw"
           loading="lazy"
           onError={() => setImgSrc(FALLBACK_IMAGE)}
@@ -196,32 +159,35 @@ export const PropertyCard = memo(function PropertyCard({
 
         {/* Status badge — top-left */}
         <div className="absolute left-3 top-3 z-10">
-          <PropertyStatusBadge status={status} variant="overlay" />
+          <PropertyStatusBadge status={status} variant="overlay" compact />
         </div>
 
-        {/* Favourite — top-right, glass morphism (not a dark blob) */}
+        {/* Favourite — top-right, glass morphism (not a dark blob). Button
+            System Variant 3 (Icon Action), 'glass' surface. */}
         <div className="absolute right-3 top-3 z-10" onClick={e => e.stopPropagation()}>
-          <button
-            type="button"
-            aria-label={favorited ? 'Remove from favourites' : 'Add to favourites'}
+          <IconActionButton
+            icon={Heart}
+            label={favorited ? t('card.removeFromFavourites') : t('card.addToFavourites')}
             onClick={toggleFav}
-            className={cn(
-              'flex h-9 w-9 items-center justify-center rounded-full transition-colors duration-150 sm:h-8 sm:w-8',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50',
-              'active:scale-90',
-              favorited
-                ? 'bg-rose-500 text-white'
-                : 'border border-white/18 bg-black/55 text-white hover:bg-black/70',
-            )}
-          >
-            <Heart className={cn('size-4 transition-colors duration-150 sm:size-3.5', favorited ? 'fill-current' : 'fill-transparent')} />
-          </button>
+            surface="glass"
+            active={favorited}
+            size="sm"
+            className="sm:h-8 sm:w-8 duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            iconClassName="size-4 sm:size-3.5"
+          />
         </div>
 
-        {/* Price badge — desktop only. Mobile price lives in the content area. */}
+        {/* Price badge — desktop only. Mobile price lives in the content area.
+
+            Uses backdrop-blur intentionally.
+            This is the only permanent compositor layer in the card.
+            Do not remove unless replacing the frosted-glass design.
+            Unlike the previous image-wrapper bug, this element is
+            inset from the rounded clipping edge and therefore
+            cannot produce compositor seam artifacts during scrolling. */}
         {price != null ? (
           <div className="absolute inset-x-0 bottom-0 z-10 hidden px-3 pb-3 sm:block">
-            <div className="inline-flex items-center rounded-xl border border-white/18 bg-black/52 px-3.5 py-2 shadow-[0_2px_16px_rgba(0,0,0,0.32)] backdrop-blur-sm">
+            <div className="inline-flex items-center rounded-xl border border-white/18 bg-gray-400/25 px-3.5 py-2 shadow-[0_2px_16px_rgba(0,0,0,0.32)] backdrop-blur-md">
               <p className="truncate text-[22px] font-bold leading-none tracking-tight text-white tabular-nums [text-shadow:0_1px_6px_rgba(0,0,0,0.35)]">
                 {fmtPrice(price)}
               </p>
@@ -230,7 +196,7 @@ export const PropertyCard = memo(function PropertyCard({
         ) : (
           <div className="absolute inset-x-0 bottom-0 z-10 hidden px-3 pb-3 sm:block">
             <div className="inline-flex items-center rounded-2xl border border-white/15 bg-white/18 px-3 py-1.5">
-              <p className="text-[11px] font-medium italic text-white/60">Price on request</p>
+              <p className="text-[11px] font-medium italic text-white/60">{t('card.priceOnRequest')}</p>
             </div>
           </div>
         )}
@@ -249,15 +215,15 @@ export const PropertyCard = memo(function PropertyCard({
               {fmtPrice(price)}
             </p>
           ) : (
-            <p className="text-[13px] italic text-muted-foreground/40">Price on request</p>
+            <p className="text-[13px] italic text-muted-foreground/70">{t('card.priceOnRequest')}</p>
           )}
         </div>
 
         {/* Property type — mobile: understated luxury label; desktop: accent chip */}
         {type ? (
           <div className="order-1 mb-2 sm:order-3 sm:mb-1.5">
-            <span className="inline-flex cursor-default select-none items-center whitespace-nowrap rounded-full border border-foreground/8 bg-transparent px-2.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-widest text-foreground/45 sm:border-accent/40 sm:bg-accent/60 sm:px-2.5 sm:py-1 sm:text-[9px] sm:font-semibold sm:uppercase sm:tracking-widest sm:text-accent-foreground">
-              {toTitleCase(type)}
+            <span className="inline-flex cursor-default select-none items-center whitespace-nowrap rounded-full border border-foreground/14 bg-transparent px-2.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-widest text-foreground/70 sm:border-accent/40 sm:bg-accent/60 sm:px-2.5 sm:py-1 sm:text-[9px] sm:font-semibold sm:uppercase sm:tracking-widest sm:text-accent-foreground">
+              {getPropertyTypeLabel(type, t, { compact: true })}
             </span>
           </div>
         ) : displayLocation ? (
@@ -268,7 +234,7 @@ export const PropertyCard = memo(function PropertyCard({
 
         {/* Reference — mobile: compact agent code (order-2); desktop: primary heading (order-1) */}
         <div className="order-2 mb-1.5 min-w-0 sm:order-1 sm:mb-1">
-          <span className="block max-w-full truncate text-[10.5px] font-semibold tracking-wider text-muted-foreground/45 tabular-nums sm:hidden">
+          <span className="block max-w-full truncate text-[10.5px] font-semibold tracking-wider text-muted-foreground/75 tabular-nums sm:hidden">
             {heading}
           </span>
           <p className="hidden min-w-0 truncate text-[19px] font-bold tracking-tight text-foreground sm:block">
@@ -303,7 +269,7 @@ export const PropertyCard = memo(function PropertyCard({
             <span className="text-[15px] font-bold leading-none tabular-nums text-foreground">{bedroomCount ?? '—'}</span>
             <div className="mt-1.5 flex items-center gap-0.5">
               <BedDouble className="size-3 text-muted-foreground/45" />
-              <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted-foreground/50">Beds</span>
+              <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted-foreground/50">{t('card.beds')}</span>
             </div>
           </div>
           <div className="w-px self-stretch bg-border/30" />
@@ -311,7 +277,7 @@ export const PropertyCard = memo(function PropertyCard({
             <span className="text-[15px] font-bold leading-none tabular-nums text-foreground">{bathroomCount ?? '—'}</span>
             <div className="mt-1.5 flex items-center gap-0.5">
               <Bath className="size-3 text-muted-foreground/45" />
-              <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted-foreground/50">Baths</span>
+              <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted-foreground/50">{t('card.baths')}</span>
             </div>
           </div>
           <div className="w-px self-stretch bg-border/30" />
@@ -319,16 +285,16 @@ export const PropertyCard = memo(function PropertyCard({
             <span className="text-[15px] font-bold leading-none tabular-nums text-foreground">{square != null ? square.toLocaleString() : '—'}</span>
             <div className="mt-1.5 flex items-center gap-0.5">
               <Maximize2 className="size-3 text-muted-foreground/45" />
-              <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted-foreground/50">m²</span>
+              <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted-foreground/50">{t('common.sqmUnit')}</span>
             </div>
           </div>
         </div>
 
         {/* Stats — desktop: StatChip row */}
         <div className="order-6 hidden gap-1.5 sm:flex">
-          <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                           label="Beds"  variant="grid" />
-          <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                           label="Baths" variant="grid" />
-          <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : '—'} label="m²"   variant="grid" />
+          <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                           label={t('card.beds')}  variant="grid" />
+          <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                           label={t('card.baths')} variant="grid" />
+          <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : '—'} label={t('common.sqmUnit')}   variant="grid" />
         </div>
 
       </div>
@@ -342,46 +308,40 @@ export const PropertyCard = memo(function PropertyCard({
           {/* Details — h-12 primary CTA on mobile; sm: compact outlined ghost */}
           <button
             type="button"
-            aria-label="View property details"
+            aria-label={t('card.viewPropertyDetails')}
             onClick={() => onView(property)}
             className={cn(
-              'group/det flex min-w-0 flex-1 items-center justify-center gap-2 transition-[background-color,border-color,box-shadow,transform] duration-200',
+              'group/det flex min-w-0 flex-1 items-center justify-center gap-2 transition-[background-color,border-color,box-shadow,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
               'h-12 rounded-2xl bg-primary px-3 text-primary-foreground shadow-[0_2px_12px_rgba(59,130,246,0.28)] sm:h-7 sm:rounded-full sm:border sm:border-primary/30 sm:bg-primary/8 sm:text-primary sm:shadow-none',
               'hover:bg-primary/90 sm:hover:-translate-y-px sm:hover:border-primary/45 sm:hover:bg-primary/14 sm:hover:shadow-[0_3px_10px_rgba(0,0,0,0.10)]',
               'active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             )}
           >
-            <span className="text-[14px] font-semibold tracking-wide sm:text-[10.5px] sm:font-semibold">View Property</span>
-            <ArrowRight className="size-4 shrink-0 transition-transform duration-200 ease-out group-hover/det:translate-x-0.5 sm:size-3" />
+            <span className="text-[14px] font-semibold tracking-wide sm:text-[10.5px] sm:font-semibold">{t('card.viewProperty')}</span>
+            <ArrowRight className="size-4 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/det:translate-x-0.5 sm:size-3" />
           </button>
 
-          {/* Edit — secondary: outlined ghost on mobile; icon-only ghost on desktop */}
-          <button
-            type="button"
-            aria-label="Edit property"
+          {/* Edit / Delete — Button System Variant 3 (Icon Action), 'card'
+              surface, 'lg' size (mobile footer, beside the Primary CTA)
+              shrinking to the standard 'sm' desktop size via className. */}
+          <IconActionButton
+            icon={Pencil}
+            label={t('card.editProperty')}
             onClick={() => onEdit(property)}
-            className={cn(
-              'flex h-12 w-11 shrink-0 items-center justify-center rounded-2xl transition-colors duration-150 sm:h-8 sm:w-8 sm:rounded-full',
-              'border border-border/25 bg-transparent text-foreground/45 sm:border-0 sm:bg-transparent sm:text-muted-foreground/55 sm:hover:bg-muted sm:hover:text-foreground',
-              'active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
-            )}
-          >
-            <Pencil className="size-4 sm:size-3.5" />
-          </button>
+            size="lg"
+            className="sm:h-8 sm:w-8 sm:rounded-full sm:bg-transparent sm:text-muted-foreground/55 duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            iconClassName="sm:size-3.5"
+          />
 
-          {/* Delete — minimal danger: no fill on mobile so it reads tertiary; ghost on desktop */}
-          <button
-            type="button"
-            aria-label="Delete property"
+          <IconActionButton
+            icon={Trash2}
+            label={t('card.deleteProperty')}
             onClick={() => onDelete(property)}
-            className={cn(
-              'flex h-12 w-11 shrink-0 items-center justify-center rounded-2xl transition-colors duration-150 sm:h-8 sm:w-8 sm:rounded-full',
-              'border border-destructive/15 bg-transparent text-destructive/40 hover:border-destructive/30 hover:text-destructive/65 sm:border-0 sm:bg-transparent sm:text-muted-foreground/50 sm:hover:bg-destructive/8 sm:hover:text-destructive',
-              'active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
-            )}
-          >
-            <Trash2 className="size-4 sm:size-3.5" />
-          </button>
+            size="lg"
+            tone="destructive"
+            className="sm:h-8 sm:w-8 sm:rounded-full sm:bg-transparent sm:text-muted-foreground/50 duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            iconClassName="sm:size-3.5"
+          />
 
         </div>
       </div>
@@ -418,6 +378,7 @@ export const PropertyListRow = memo(function PropertyListRow({
   onEdit,
   onDelete,
 }: PropertyListRowProps) {
+  const { t } = useTranslation('properties')
   const {
     price, type, status,
     square, bedroomCount, bathroomCount,
@@ -456,7 +417,7 @@ export const PropertyListRow = memo(function PropertyListRow({
       {/* ── LEFT: Image ─────────────────────────────────────────────────────── */}
       {/* w-36 (144px) mobile — never shrinks below 140px spec.                 */}
       {/* w-52 (208px) desktop — substantial visual hero.                       */}
-      <div className="relative w-36 shrink-0 self-stretch overflow-hidden rounded-l-[20px] sm:w-52 will-change-transform">
+      <div className="relative w-36 shrink-0 self-stretch overflow-hidden rounded-l-[20px] sm:w-52">
         <Image
           src={imgSrc}
           alt={heading}
@@ -473,26 +434,24 @@ export const PropertyListRow = memo(function PropertyListRow({
 
         {/* Status — bottom-left */}
         <div className="absolute bottom-3 left-3 z-10">
-          <PropertyStatusBadge status={status} variant="overlay" />
+          <PropertyStatusBadge status={status} variant="overlay" compact />
         </div>
 
-        {/* Favourite — top-right */}
+        {/* Favourite — top-right. Button System Variant 3 (Icon Action),
+            'glass' surface — same component and press/hover behavior as the
+            grid card's Favorite, so a toggle that appears in both views
+            doesn't feel like two different controls. */}
         <div className="absolute right-2.5 top-2.5 z-10" onClick={e => e.stopPropagation()}>
-          <button
-            type="button"
-            aria-label={favorited ? 'Remove from favourites' : 'Add to favourites'}
+          <IconActionButton
+            icon={Heart}
+            label={favorited ? t('card.removeFromFavourites') : t('card.addToFavourites')}
             onClick={toggleFav}
-            className={cn(
-              'flex h-8 w-8 items-center justify-center rounded-full',
-              'transition-colors duration-150 active:scale-95',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50',
-              favorited
-                ? 'bg-rose-500 text-white'
-                : 'border border-white/18 bg-black/55 text-white/75 hover:bg-rose-500 hover:text-white',
-            )}
-          >
-            <Heart className={cn('size-3.5 transition-colors duration-150', favorited && 'fill-current')} />
-          </button>
+            surface="glass"
+            active={favorited}
+            size="sm"
+            className="h-8 w-8"
+            iconClassName="size-3.5"
+          />
         </div>
       </div>
 
@@ -511,7 +470,7 @@ export const PropertyListRow = memo(function PropertyListRow({
               {fmtPrice(price)}
             </p>
           ) : (
-            <p className="text-[11px] italic text-muted-foreground/50">Price on request</p>
+            <p className="text-[11px] italic text-muted-foreground/50">{t('card.priceOnRequest')}</p>
           )}
 
           {/* 2 — Reference + quality signals — 4px below price */}
@@ -543,7 +502,7 @@ export const PropertyListRow = memo(function PropertyListRow({
           {type && (
             <div className="mt-2">
               <span className="inline-flex cursor-default select-none items-center rounded-full border border-accent/60 bg-accent px-3 py-1 text-[11px] font-medium tracking-wide text-accent-foreground">
-                {toTitleCase(type)}
+                {getPropertyTypeLabel(type, t, { compact: true })}
               </span>
             </div>
           )}
@@ -571,17 +530,35 @@ export const PropertyListRow = memo(function PropertyListRow({
           </div>
           {/* Desktop: horizontal stat chips with icon + value + label */}
           <div className="mt-2.5 hidden items-center gap-1.5 @[260px]:gap-2 sm:flex">
-            <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                           label="Beds"  variant="list" />
-            <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                           label="Baths" variant="list" />
-            <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : '—'} label="m²"    variant="list" />
+            <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                           label={t('card.beds')}  variant="list" />
+            <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                           label={t('card.baths')} variant="list" />
+            <StatChip Icon={Maximize2} value={square != null ? square.toLocaleString() : '—'} label={t('common.sqmUnit')}    variant="list" />
           </div>
 
         </div>
 
-        {/* Action buttons — aligned to start, never inflate content height */}
+        {/* Action buttons — aligned to start, never inflate content height.
+            Button System Variant 3 (Icon Action), 'card' surface — fixed at
+            32px ('sm' size, h-8 w-8 override) to match Favorite above and
+            the grid card's own desktop-tier icon actions, resolving what was
+            previously a 32px-Favorite-vs-36px-Edit/Delete mismatch inside
+            this same row. */}
         <div className="flex shrink-0 flex-col gap-0.5" onClick={e => e.stopPropagation()}>
-          <QuickAction onClick={() => onDelete(property)} label="Delete property" Icon={Trash2} destructive />
-          <QuickAction onClick={() => onEdit(property)}   label="Edit property"   Icon={Pencil} />
+          <IconActionButton
+            icon={Trash2}
+            label={t('card.deleteProperty')}
+            onClick={() => onDelete(property)}
+            size="sm"
+            tone="destructive"
+            className="h-8 w-8"
+          />
+          <IconActionButton
+            icon={Pencil}
+            label={t('card.editProperty')}
+            onClick={() => onEdit(property)}
+            size="sm"
+            className="h-8 w-8"
+          />
         </div>
 
       </div>
