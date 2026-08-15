@@ -57,6 +57,27 @@ export function OperationsCommandHub({ viewModel, onEdit }: OperationsCommandHub
     ? t('operations.completenessMissing', { fields: completenessMissingFields.join(', ') })
     : t('operations.completenessComplete', { count: completenessTotalFields })
 
+  // Collapse-empty-rows pass. Listing Information used to always render all
+  // 6 cells, showing "—" for whichever weren't set on this property — reads
+  // as an unfilled form, not a summary. Filtered here (icons are
+  // component-local; the view-model layer stays pure data, per its own
+  // "no UI concerns" boundary) so the grid — and the section entirely, if
+  // nothing survives — only ever shows fields that actually have a value.
+  const listingInfoRows = [
+    { key: 'availableFrom', icon: <CalendarClock className="size-3.5 text-muted-foreground/38" />, label: t('operations.listingInfo.availableFrom'), value: listingInfo.availableFrom },
+    { key: 'nextUpdate',    icon: <CalendarClock className="size-3.5 text-muted-foreground/38" />, label: t('operations.listingInfo.nextUpdate'),    value: listingInfo.nextUpdate },
+    { key: 'keysHeld',      icon: <KeyRound className="size-3.5 text-muted-foreground/38" />,       label: t('operations.listingInfo.keysHeld'),      value: yesNo(listingInfo.keysHeld) },
+    { key: 'sold',          icon: <CheckCircle2 className="size-3.5 text-muted-foreground/38" />,   label: t('operations.listingInfo.sold'),          value: yesNo(listingInfo.sold) },
+    { key: 'ownerAccount',  icon: <Building2 className="size-3.5 text-muted-foreground/38" />,      label: t('operations.listingInfo.ownerAccount'),  value: listingInfo.ownerAccount },
+    { key: 'teams',         icon: <Layers className="size-3.5 text-muted-foreground/38" />,         label: t('operations.listingInfo.teams'),         value: listingInfo.teams },
+    // availableFrom/nextUpdate go through the shared formatDateGB() (see
+    // operations.viewmodel.ts), which returns the literal '—' placeholder
+    // for a missing date rather than '' — that utility is shared with other
+    // consumers that DO want an inline dash, so it stays as-is; filtered out
+    // here instead, alongside the plain-empty-string case from the other
+    // fields.
+  ].filter(row => row.value !== '' && row.value !== '—')
+
   return (
     <div className="space-y-4 xl:sticky xl:top-20">
 
@@ -153,16 +174,19 @@ export function OperationsCommandHub({ viewModel, onEdit }: OperationsCommandHub
           )}
         </div>
 
-        {/* ── Listing Information ── */}
-        <SectionHeader label={t('operations.sections.listingInformation')} />
-        <div className="px-5 pb-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5">
-          <CompactRow icon={<CalendarClock className="size-3.5 text-muted-foreground/38" />} label={t('operations.listingInfo.availableFrom')} value={listingInfo.availableFrom} />
-          <CompactRow icon={<CalendarClock className="size-3.5 text-muted-foreground/38" />} label={t('operations.listingInfo.nextUpdate')} value={listingInfo.nextUpdate} />
-          <CompactRow icon={<KeyRound className="size-3.5 text-muted-foreground/38" />} label={t('operations.listingInfo.keysHeld')} value={yesNo(listingInfo.keysHeld)} />
-          <CompactRow icon={<CheckCircle2 className="size-3.5 text-muted-foreground/38" />} label={t('operations.listingInfo.sold')} value={yesNo(listingInfo.sold)} />
-          <CompactRow icon={<Building2 className="size-3.5 text-muted-foreground/38" />} label={t('operations.listingInfo.ownerAccount')} value={listingInfo.ownerAccount} />
-          <CompactRow icon={<Layers className="size-3.5 text-muted-foreground/38" />} label={t('operations.listingInfo.teams')} value={listingInfo.teams} />
-        </div>
+        {/* ── Listing Information — hidden entirely when this property has
+            none of these 6 fields set, collapsed to just the rows that do
+            (see listingInfoRows above) rather than a full grid of dashes. ── */}
+        {listingInfoRows.length > 0 && (
+          <>
+            <SectionHeader label={t('operations.sections.listingInformation')} />
+            <div className="px-5 pb-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5">
+              {listingInfoRows.map(row => (
+                <CompactRow key={row.key} icon={row.icon} label={row.label} value={row.value} />
+              ))}
+            </div>
+          </>
+        )}
 
         {/* ── Assigned Agent ── */}
         <SectionHeader label={t('operations.sections.assignedAgent')} />
@@ -297,7 +321,9 @@ function SectionHeader({ label, divider = false }: { label: string; divider?: bo
   )
 }
 
-// ── CompactRow — single-line label/value ─────────────────────────────────────
+// ── CompactRow — single-line label/value. Callers only ever pass rows that
+// already have a value (see listingInfoRows' filter above), so there's no
+// empty-state branch to handle here. ─────────────────────────────────────
 
 function CompactRow({
   icon, label, value,
@@ -306,16 +332,12 @@ function CompactRow({
   label: string
   value: string
 }) {
-  const isEmpty = !value
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <span className={cn(isEmpty && 'opacity-40')}>{icon}</span>
+      {icon}
       <span className="text-[10.5px] font-semibold text-muted-foreground/60 truncate">{label}</span>
-      <span className={cn(
-        'ml-auto shrink-0 text-[11.5px] font-black truncate max-w-24',
-        isEmpty ? 'text-muted-foreground/30' : 'text-foreground/80',
-      )}>
-        {isEmpty ? '—' : value}
+      <span className="ml-auto shrink-0 text-[11.5px] font-black truncate max-w-24 text-foreground/80">
+        {value}
       </span>
     </div>
   )

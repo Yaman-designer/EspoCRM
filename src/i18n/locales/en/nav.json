@@ -19,5 +19,7 @@
   "users": "Users",
   "teams": "Teams",
   "chat": "Chat",
-  "email": "Email"
+  "email": "Email",
+  "meetings": "Meetings",
+  "primaryNavigation": "Primary navigation"
 }

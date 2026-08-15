@@ -93,12 +93,14 @@ export function PropertySectionNav({ items }: PropertySectionNavProps) {
   // empty bar. Real number thereafter, including `items.length` (every tab
   // fits, no trigger rendered at all).
   const [visibleCount, setVisibleCount] = useState<number | null>(null)
+  const [isStuck, setIsStuck] = useState(false)
 
   const visibleRef  = useRef<Map<string, boolean>>(new Map())
   const containerRef = useRef<HTMLElement>(null)
   const measureRowRef = useRef<HTMLDivElement>(null)
   const measureMoreRef = useRef<HTMLButtonElement>(null)
   const rafRef = useRef<number | null>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   // ── Active-section tracking — unchanged from prior passes. Independent
   // of layout; drives both the pinned tabs' `aria-current` and, when the
@@ -125,6 +127,23 @@ export function PropertySectionNav({ items }: PropertySectionNavProps) {
     elements.forEach(el => observer.observe(el))
     return () => observer.disconnect()
   }, [items])
+
+  // ── "Stuck" tracking for the sticky shadow ───────────────────────────────
+  // A 1px sentinel rendered immediately above the nav in normal flow: once
+  // it scrolls past the header and out of view, the nav itself is genuinely
+  // pinned (not just sticky-but-still-in-place), so this is when the shadow
+  // should appear — same IntersectionObserver approach as active-section
+  // tracking above, not a scroll listener.
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsStuck(!entry.isIntersecting),
+      { rootMargin: '-57px 0px 0px 0px', threshold: 0 },
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [])
 
   // ── Width measurement + fit computation ─────────────────────────────────
   // A second, identical row of buttons renders off-screen (visibility:
@@ -199,14 +218,64 @@ export function PropertySectionNav({ items }: PropertySectionNavProps) {
     useSlidingIndicator<HTMLDivElement>(indicatorActiveId, indicatorItemIds)
 
   return (
+    <>
+    {/* Sentinel for the "stuck" shadow — see the IntersectionObserver effect
+        above. Zero-height, purely a scroll-position marker. */}
+    <div ref={sentinelRef} aria-hidden="true" className="h-px" />
     <nav
       ref={containerRef}
       aria-label={t('nav.sectionNavigation')}
       className={cn(
-        'relative z-30 -mx-4 flex items-center gap-0.5 overflow-hidden px-4 py-3',
+        'relative z-30 -mx-4 flex items-center gap-0.5 overflow-hidden px-4 py-2.5',
         'sm:-mx-5 sm:px-5 md:-mx-6 md:px-6 lg:-mx-7 lg:px-7 xl:-mx-8 xl:px-8',
-        'border-b border-border/40 bg-background/85 backdrop-blur-md',
-        'lg:sticky lg:top-16',
+        // sticky at every breakpoint, not just lg+ — 56px matches the real
+        // app header's own height (TopNavbar in
+        // src/components/dashboard/navbar/index.tsx is `h-14`, not the
+        // unused DashboardHeader.tsx component); keep these two in sync if
+        // that header height ever changes.
+        'sticky top-14',
+        // Floating-layer polish (2026-08-07). Depth is introduced only once
+        // the nav is genuinely pinned (isStuck, from the sentinel above),
+        // not as a permanent fixture — at rest, `bg-background` alone is
+        // visually identical to the page behind it (same token), so the bar
+        // reads as flat/attached; only once content is actually scrolling
+        // beneath it does it separate into a distinct, lightweight surface.
+        // border-color/background-color/box-shadow are cheap paint
+        // properties, so they're the ones that transition smoothly
+        // (duration/easing match this app's own hover-transition tokens,
+        // not an invented curve); `backdrop-blur-sm` itself is toggled as a
+        // hard class swap rather than animated — animating `filter` is
+        // genuinely expensive, and there's nothing to blur before the nav
+        // is actually stuck (no content sits under it yet), so there's
+        // nothing lost by not easing it in.
+        'bg-background border-b border-transparent',
+        'transition-[background-color,border-color,box-shadow] duration-(--duration-standard) ease-(--ease-premium)',
+        // Desktop surface pass (2026-08-08). Below `lg` (small screens
+        // benefit from the visual separation), pinning still introduces the
+        // floating-card surface exactly as before — `max-lg:` scopes every
+        // class in this group to media (max-width: 1023.98px), so none of
+        // them emit any rule active at `lg`+ in the first place. That's
+        // deliberate, not equivalent to applying them unconditionally and
+        // trying to cancel them with a later `lg:` override, which was the
+        // first thing tried here and confirmed live NOT to work: a plain
+        // `shadow-design-sm` (this app's hand-authored `@layer utilities`
+        // class in globals.css, not a Tailwind `@utility`) can't have a
+        // `max-lg:`/`lg:` variant generated for it at all — Tailwind's JIT
+        // only generates variants for utilities it recognizes, and a raw
+        // hand-written CSS class isn't one, so `max-lg:shadow-design-sm`
+        // silently produced no CSS rule and the shadow vanished everywhere,
+        // not just at `lg`+. `shadow-(--shadow-sm)` is Tailwind's own
+        // CSS-variable-shorthand syntax instead — fully variant-aware —
+        // pointed at the exact same `--shadow-sm` custom property
+        // `shadow-design-sm` itself reads, so it's still the one design
+        // token, not a duplicated literal box-shadow value.
+        isStuck && 'max-lg:bg-background/92 max-lg:backdrop-blur-sm max-lg:border-border/40 max-lg:shadow-(--shadow-sm)',
+        // `lg`+: the nav integrates into the page instead of floating over
+        // it — no surface, no blur, no shadow (nothing above sets them at
+        // this width once isStuck's classes are max-lg-scoped, so there's
+        // nothing to override), just a hairline divider faint enough to
+        // read as part of the page rather than a card edge.
+        'lg:bg-transparent lg:border-border/15',
       )}
     >
       <div ref={indicatorRowRef} className="relative flex items-center gap-0.5">
@@ -220,7 +289,7 @@ export function PropertySectionNav({ items }: PropertySectionNavProps) {
           <span
             aria-hidden="true"
             className={cn(
-              'pointer-events-none absolute -bottom-px h-[1.5px] rounded-full bg-primary',
+              'pointer-events-none absolute -bottom-px h-0.5 rounded-full bg-primary',
               'transition-[transform,width] duration-(--duration-large) ease-(--ease-spring)',
               'motion-reduce:transition-none',
             )}
@@ -249,12 +318,12 @@ export function PropertySectionNav({ items }: PropertySectionNavProps) {
                 type="button"
                 aria-label={activeOverflowItem ? t('nav.sectionMenu', { label: activeOverflowItem.label }) : t('nav.moreSections')}
                 className={cn(
-                  'relative shrink-0 flex items-center gap-1 rounded-md px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wide',
-                  'transition-colors duration-200 ease-out',
+                  'relative shrink-0 flex items-center gap-1 rounded-md px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide',
+                  'transition-colors duration-(--duration-medium) ease-(--ease-premium)',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                   activeInOverflow
                     ? 'text-foreground'
-                    : 'text-muted-foreground/50 hover:bg-muted/25 hover:text-foreground/80',
+                    : 'text-muted-foreground/45 hover:bg-muted/25 hover:text-foreground/80',
                   // Discoverability: a quiet tint whenever the menu holds the
                   // active section, even before it's opened — the trigger
                   // shouldn't look identical to an inert "nothing new here"
@@ -305,7 +374,7 @@ export function PropertySectionNav({ items }: PropertySectionNavProps) {
               key={item.id}
               type="button"
               tabIndex={-1}
-              className="relative shrink-0 rounded-md px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wide"
+              className="relative shrink-0 rounded-md px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide"
             >
               {item.label}
             </button>
@@ -315,7 +384,7 @@ export function PropertySectionNav({ items }: PropertySectionNavProps) {
           ref={measureMoreRef}
           type="button"
           tabIndex={-1}
-          className="relative shrink-0 flex items-center gap-1 rounded-md px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wide"
+          className="relative shrink-0 flex items-center gap-1 rounded-md px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide"
         >
           {/* Widest realistic trigger label — an active item's own name can
               be longer than the literal word "More"; measuring against the
@@ -328,6 +397,7 @@ export function PropertySectionNav({ items }: PropertySectionNavProps) {
         </button>
       </div>
     </nav>
+    </>
   )
 }
 
@@ -340,12 +410,12 @@ const NavTabButton = forwardRef<HTMLButtonElement, { item: SectionNavItem; activ
         onClick={onClick}
         aria-current={active ? 'true' : undefined}
         className={cn(
-          'relative shrink-0 rounded-md px-3.5 py-2 text-[11px] font-semibold uppercase tracking-wide',
-          'transition-colors duration-200 ease-out',
+          'relative shrink-0 rounded-md px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide',
+          'transition-colors duration-(--duration-medium) ease-(--ease-premium)',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
           active
             ? 'text-foreground'
-            : 'text-muted-foreground/50 hover:bg-muted/25 hover:text-foreground/80',
+            : 'text-muted-foreground/45 hover:bg-muted/25 hover:text-foreground/80',
         )}
       >
         {item.label}

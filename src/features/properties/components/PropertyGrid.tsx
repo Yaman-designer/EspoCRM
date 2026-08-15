@@ -109,14 +109,21 @@ export const PropertyGrid = memo(function PropertyGrid({
   // auto-fill keeps the unused tracks in the layout so leftover space stays
   // empty on the right instead, regardless of item count.
 
-  // List view — each card lays out a horizontal image + content row side by
-  // side (see PropertyListRow below); --card-list-min-w (globals.css) is the
-  // narrowest width that combination reads comfortably at, live-verified
-  // against the existing w-36/w-52 image rail.
+  // List view — sm:+ each card lays out a horizontal image + content row
+  // side by side (see PropertyListRow below); --card-list-min-w (globals.css)
+  // is the narrowest width that combination reads comfortably at, live-
+  // verified against the existing w-36/w-52 image rail. Below sm, the grid
+  // is forced to a single full-width column instead of reusing that
+  // auto-fill/minmax template: a phone viewport is routinely narrower than
+  // --card-list-min-w (420px) once shell padding is subtracted, and
+  // minmax()'s lower bound doesn't shrink to fit — it overflows the
+  // container instead. PropertyListRow itself absorbs sub-420px widths via
+  // its own container query (switching to a stacked composition), so this
+  // single mobile column is never narrower than the grid's own live width.
   if (viewMode === 'list') {
     return (
       <div className="w-full">
-        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(var(--card-list-min-w),1fr))]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(var(--card-list-min-w),1fr))]">
           {properties.map(p => (
             <PropertyListRow
               key={p.id}

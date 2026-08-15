@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Poppins, Geist_Mono } from "next/font/google"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
@@ -63,6 +63,17 @@ export const metadata: Metadata = {
   // Dashboard pages are behind auth — don't index them by default.
   // Individual public pages (login) override this with robots: { index: true }.
   robots: { index: false, follow: true },
+}
+
+// BottomNav.tsx and DashboardShell.tsx both position/pad against
+// `env(safe-area-inset-bottom)` (the iOS home-indicator/notch clearance) —
+// that only ever resolves to a non-zero value when the viewport opts into
+// `viewport-fit=cover`. Without it (the framework default), Safari never
+// extends the layout viewport under the safe areas, so every env() read in
+// this app was silently evaluating to 0 on real notched/home-indicator
+// devices — the safe-area-aware CSS already in place had nothing to read.
+export const viewport: Viewport = {
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

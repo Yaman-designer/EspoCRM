@@ -81,18 +81,22 @@ export function PropertyCardSkeleton({ className }: { className?: string }) {
 }
 
 // ── List row skeleton — mirrors PropertyListRow layout ────────────────────────
-// PropertyListRow is a 3-zone horizontal card:
-//   LEFT   w-36 (mobile) / w-52 (sm+)  — image, full-height, rounded-l-[20px]
-//   CENTER flex-1                       — price, ref, location, type, stats+CTA
-//   RIGHT  hidden sm:flex               — action icons
+// PropertyListRow is a horizontal card at every breakpoint (mobile stays
+// compact, it never restacks):
+//   LEFT   w-36 mobile / w-52 sm+ — image, rounded-l-[20px]
+//   CENTER flex-1                  — price (+ inline actions <sm), ref,
+//                                     location, type, stats
+//   RIGHT  sm:+ only               — action icons (below sm they're inline
+//                                     in the price row instead, matching
+//                                     PropertyListRow's own dual placement)
 
 export function PropertyListRowSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'flex min-w-[320px] overflow-hidden rounded-[20px] bg-card',
+        'flex min-w-70 overflow-hidden rounded-[20px] bg-card',
         'border border-border/25',
-        'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]',
+        'shadow-[0_1px_2px_rgba(16,24,40,0.04),0_2px_8px_rgba(16,24,40,0.05)]',
         className,
       )}
     >
@@ -102,8 +106,14 @@ export function PropertyListRowSkeleton({ className }: { className?: string }) {
       {/* CENTER: Info column */}
       <div className="flex min-w-0 flex-1 flex-col px-3 py-3 sm:px-4 sm:py-4">
 
-        {/* Row 1: Price */}
-        <Skeleton className="h-6 w-28 rounded-md" />
+        {/* Row 1: Price + inline action icons (mobile only) */}
+        <div className="flex items-center justify-between gap-2">
+          <Skeleton className="h-6 w-28 rounded-md" />
+          <div className="flex shrink-0 gap-1 sm:hidden">
+            <Skeleton className="size-7 rounded-full" />
+            <Skeleton className="size-7 rounded-full" />
+          </div>
+        </div>
 
         {/* Row 2: Reference */}
         <Skeleton className="mt-2 h-3 w-24 rounded-md" />
@@ -126,7 +136,7 @@ export function PropertyListRowSkeleton({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* RIGHT: Action panel — desktop only */}
+      {/* RIGHT: Action panel — sm:+ only, matching PropertyListRow */}
       <div className="hidden w-9 shrink-0 flex-col items-center justify-start gap-1 border-l border-border/10 py-4 sm:flex">
         <Skeleton className="size-9 rounded-full" />
         <Skeleton className="size-9 rounded-full" />
@@ -157,7 +167,7 @@ export function PropertySkeletonGrid({ count = 10 }: { count?: number }) {
 export function PropertySkeletonList({ count = 6 }: { count?: number }) {
   return (
     <div className="w-full">
-      <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(var(--card-list-min-w),1fr))]">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(var(--card-list-min-w),1fr))]">
         {Array.from({ length: count }, (_, i) => (
           <PropertyListRowSkeleton key={i} />
         ))}

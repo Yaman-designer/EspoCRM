@@ -10,7 +10,7 @@ import { getWebAssetUrl, FALLBACK_IMAGE } from '@/lib/image-url'
 import { MediaLightbox } from '@/components/shared'
 import { useFavoriteState } from '../hooks/useFavoriteState'
 import { buildPropertyNarrative } from '../lib/property-narrative'
-import { PAGE_PADDING_X } from '../lib/page-layout'
+import { PAGE_PADDING_X, SECTION_NAV_GAP } from '../lib/page-layout'
 import { buildEntitySlug } from '@/shared/detail-view'
 import { buildPropertyDetailPageViewModel } from '../view-models/detail-page.viewmodel'
 import { buildFinancialViewModel } from '../view-models/financial.viewmodel'
@@ -145,10 +145,22 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
 
         {/* ── In-page section navigation (Interaction Design Sprint 4) ──
             Sticky wayfinding over the existing IA — jumps to the same
-            zones below, reorders nothing, adds nothing new to read. */}
+            zones below, reorders nothing, adds nothing new to read.
+            Sticky-nav fix (2026-08-07): the nav and the main grid below now
+            share ONE wrapping div (instead of two adjacent siblings each
+            carrying their own PAGE_PADDING_X) — `position: sticky` can only
+            stay stuck while scrolling within its own containing block, and
+            a wrapper that held the nav alone was exactly nav-height tall,
+            giving it zero room to travel. Confirmed live: with the split
+            wrappers, the nav's computed style genuinely was
+            `position: sticky`, but it scrolled off-screen linearly with
+            scrollY regardless — a plain sticky probe div inserted at that
+            same nesting depth reproduced it independent of any of this
+            file's or PropertySectionNav's own classes. Sharing one
+            wrapper — as tall as nav + the entire section grid it navigates
+            — gives it a containing block worth sticking within. ── */}
         <div className={PAGE_PADDING_X}>
           <PropertySectionNav items={sectionNavItems} />
-        </div>
 
         {/* ── Layout architecture: Main Content + Independent Aside ──
             This page is deliberately NOT two equal-height columns. Main
@@ -228,7 +240,7 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
             Hub are the only two grid children now, in that literal order,
             the stacked mobile/tablet reading order is just plain DOM order
             (Hero → Command Hub → rest), no `order` utility needed. */}
-        <div className={cn('grid grid-cols-1 gap-5 pt-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,38%)]', PAGE_PADDING_X)}>
+        <div className={cn('grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,38%)]', SECTION_NAV_GAP)}>
 
           {/*
             IA Sprint 3 (2026-07-18) — reading order now follows the buyer/
@@ -348,6 +360,9 @@ export function PropertyDetailView({ property, onEdit, onDelete }: PropertyDetai
             />
           </div>
 
+        </div>
+        {/* ↑ closes the grid; ↓ closes the nav+grid shared wrapper (see the
+            sticky-nav fix note above the nav) */}
         </div>
 
         {/* ── Similar Properties ── */}

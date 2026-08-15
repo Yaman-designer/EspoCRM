@@ -142,6 +142,18 @@
   --duration-large:    280ms; /* segmented control indicator glide */
   --ease-premium: cubic-bezier(0.4, 0, 0.2, 1);  /* standard deceleration */
   --ease-spring:  cubic-bezier(0.22, 1, 0.36, 1); /* confident settle, zero overshoot — not a literal bounce */
+  /* A → B read as one continuous glide rather than a spring "arriving" and
+     giving a little at the end (--ease-spring's own job elsewhere, e.g.
+     FeedbackState's fb-mount — left untouched). Never overshoots (all
+     values stay within [0,1]). Classic "quart-out": fast away from the
+     start, then a smooth, even, fairly short deceleration — read as
+     precise and decisive rather than the softer, longer-tailed "expo-out"
+     curve this token started as, which could linger enough on arrival to
+     read as drifting rather than confident (iOS's own segmented-control/
+     tab-bar selection moves on a curve in this same family). Used by
+     BottomNavIndicator's capsule transform, and by its elevation-on-glide
+     shadow (bn-capsule-settle below) so both finish reading as one motion. */
+  --ease-glide: cubic-bezier(0.165, 0.84, 0.44, 1);
   /* ── Card layout tokens — shared minimum card widths ──
      Content-driven floors a card can never compress below (StatChip row +
      footer actions start reading as compressed under these). Referenced
@@ -153,7 +165,14 @@
        the width below which the desktop (sm:) StatChip row and footer
        ghost buttons start reading as tight.
      --card-list-min-w — narrowest width PropertyListRow's horizontal
-       image + content layout reads comfortably at (w-36/w-52 image rail). */
+       image + content layout reads comfortably at (w-36/w-52 image rail).
+       Only feeds the grid template at sm:+ — a phone viewport is routinely
+       narrower than this once shell padding is subtracted, and minmax()'s
+       lower bound doesn't shrink to fit, it overflows instead. Below sm,
+       PropertyGrid forces a single grid-cols-1 column (see PropertyGrid.tsx)
+       so the row is never forced wider than the viewport; PropertyListRow's
+       own composition (image rail + content) is intentionally unchanged and
+       stays compact/information-dense at every width — it does not restack. */
   --card-grid-min-w: 260px;
   --card-list-min-w: 420px;
   /* ── Form action bar (footer) layout token ──
@@ -202,6 +221,149 @@
     transition: box-shadow 0.15s ease;
     &:hover { box-shadow: var(--shadow-md); }
   }
+}
+
+/* ── Properties list — ambient page canvas ─────────────────────────────
+   Background audit (2026-08-07), refined (2026-08-07 pass 2) to be
+   token-driven and responsive rather than hand-tuned pixel values, then
+   (pass 3) given a responsive *presence* — expressive on a phone, where
+   there's little chrome around the cards to establish depth, tapered to
+   nothing by desktop, where the sidebar/toolbar/card grid already carry
+   plenty of structure and an ambient glow would just compete with it.
+
+   WHY THIS EXISTS: PropertyCard already owns real elevation
+   (shadow-design-* — see PropertyCard.tsx); the page behind it reused the
+   flat `--background` solid every other route uses, so scrolling gave zero
+   sense of a surface — cards read as cut out and dropped rather than
+   resting on something. Scoped to PropertyListRenderer's own root wrapper
+   only (`.properties-canvas`, not body/.dashboard-main) — no other route's
+   background changes, and nothing here is a global token override.
+
+   WHY TOKEN-DRIVEN: every color below is `color-mix()` of an existing
+   semantic token (--primary, --foreground, --card) diluted toward
+   transparent, never a hardcoded rgba(). There's no light/dark fork to
+   maintain — if/when a `.dark` theme is added, this canvas re-tints itself
+   for free because it's built from the same variables the rest of the UI
+   already re-themes from.
+
+   WHY CLAMP()/VMAX SIZING: the two ambient glows size themselves off the
+   viewport's larger axis (vmax) instead of fixed px, clamped to a
+   sane min/max — so the "light source" scales proportionally from a
+   360px phone up through a 1920px+ ultrawide instead of looking pinpoint
+   on one end or ballooning past the fold on the other. No breakpoint
+   ladder to maintain.
+
+   WHY THE STOPS ARE STAGGERED: each radial gradient uses 3 stops (not a
+   flat 2-stop fade) and the two glows use different size ratios / falloff
+   percentages from each other. A single soft edge at very low alpha is
+   exactly where 8-bit color banding shows up worst on wide/4K panels;
+   the extra middle stop smooths the falloff curve, and the deliberately
+   mismatched ellipses keep the two glows from ever reading as one
+   symmetrical shape. The noise layer below does further duty as a dither,
+   which is the standard fix for residual gradient banding.
+
+   WHY THE NOISE LAYER IS A MASK, NOT A COLORED IMAGE: the SVG
+   (feTurbulence, decoded to a static raster exactly once — never
+   re-evaluated, never animated) supplies only the grain *shape* via
+   `mask-image`; the actual ink is `background-color: var(--foreground)`.
+   That makes the grain theme-adaptive too (light grain on dark backgrounds,
+   dark grain on light ones) without a second asset.
+
+   WHY ONE `--canvas-strength` VARIABLE INSTEAD OF PER-BREAKPOINT
+   GRADIENTS: the gradients and the noise mask are each still defined
+   exactly once (on `::after` and `::before` respectively) — nothing below
+   is redefined per breakpoint. The three media queries only ever touch
+   this single custom property; both layers read it as their `opacity`,
+   so "how strong is the canvas at this width" lives in exactly one place.
+   `opacity` (not touching the gradients' own alpha stops) is what makes
+   that safe: fading a whole pre-rasterized layer to transparent is a
+   compositor no-op, not a style recalculation of the gradient itself.
+
+   PERFORMANCE: everything here is a `background-image`/`mask-image` the
+   browser rasterizes once and composites like any static image — no
+   animation, no live `filter` on a DOM element (the SVG's filter runs at
+   decode time inside the image, not per frame), no `background-attachment:
+   fixed` (which would force a repaint on every scroll tick), no
+   `will-change` (unnecessary for a static layer and wasteful of memory if
+   added). `position: relative` + `isolation: isolate` only affect stacking
+   order, not layout — no reflow cost. The responsive fade is pure CSS
+   (`opacity` driven by a custom property flipped in a media query) — no
+   JS, no ResizeObserver, no runtime measurement; at `min-width: 1024px`
+   the layer sits at `opacity: 0`, which browsers composite as a no-op, so
+   desktop pays nothing extra for a canvas it never shows. Net effect: one
+   extra paint at mount per layer, then the compositor scrolls/fades it
+   like the rest of the page. */
+.properties-canvas {
+  position: relative;
+  isolation: isolate;
+  background-color: var(--background);
+  /* Full strength (mobile default) — <768px keeps the effect exactly as
+     designed. Tapered down at each breakpoint below, never redefined. */
+  --canvas-strength: 1;
+}
+
+/* Tablet — effect reduced significantly, not switched off outright. */
+@media (min-width: 768px) {
+  .properties-canvas { --canvas-strength: 0.32; }
+}
+
+/* Desktop — ambient canvas removed entirely; the page falls back to the
+   plain `--background` solid set above, same as every other route. */
+@media (min-width: 1024px) {
+  .properties-canvas { --canvas-strength: 0; }
+}
+
+.properties-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  opacity: var(--canvas-strength);
+  background-repeat: no-repeat;
+  /* Glow footprint scales with the viewport's larger axis, clamped so it
+     never collapses to a pinprick on mobile or sprawls past the fold on
+     an ultrawide monitor. */
+  --canvas-glow-w: clamp(480px, 70vmax, 1400px);
+  --canvas-glow-h: clamp(260px, 38vmax, 680px);
+  --canvas-wash-h: clamp(280px, 30vmax, 520px);
+  background-image:
+    radial-gradient(
+      var(--canvas-glow-w) var(--canvas-glow-h) at 8% -8%,
+      color-mix(in oklab, var(--primary) 8%, transparent) 0%,
+      color-mix(in oklab, var(--primary) 3%, transparent) 45%,
+      transparent 70%
+    ),
+    radial-gradient(
+      calc(var(--canvas-glow-w) * 0.82) calc(var(--canvas-glow-h) * 0.92) at 96% 4%,
+      color-mix(in oklab, var(--foreground) 5%, transparent) 0%,
+      color-mix(in oklab, var(--foreground) 2%, transparent) 45%,
+      transparent 65%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--card) 42%, transparent),
+      transparent var(--canvas-wash-h)
+    );
+}
+
+.properties-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  /* Same strength variable as ::after, scaled down from its already-faint
+     0.025 base — "weaker grain on tablet, none on desktop" without a
+     second mask asset or a second rule. */
+  opacity: calc(0.025 * var(--canvas-strength));
+  pointer-events: none;
+  background-color: var(--foreground);
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  -webkit-mask-size: 180px 180px;
+  mask-size: 180px 180px;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -856,3 +1018,49 @@
      containers that compete with page-level UI are touched here. */
   z-index: 10 !important;
 }
+
+/* ── BottomNav — capsule elevation-on-glide ────────────────────────────────
+   Premium polish pass. The capsule's `transform` glide (BottomNavIndicator's
+   outer span) is a plain 2-point transition and stays that way — this is a
+   *separate*, purely decorative animation on the inner skin span only,
+   restarted each tab switch via that span's own `key={activeIndex}` (a
+   fresh DOM node replaces the old one, which is what makes a CSS animation
+   — as opposed to a transition — run again from 0%).
+   Runs on the same --duration-large/ease-glide pairing as the capsule's own
+   transform so both finish reading as one motion, not two separately-timed
+   effects.
+   "Embedded, not floating" pass: the earlier version's key shadow was a
+   primary-tinted drop shadow (`0 3px 6px rgba(0,97,188,…)`) — exactly the
+   cue that reads as "a colored chip placed on top of the track" rather
+   than "part of the track." Removed outright rather than softened further;
+   what's left is a barely-there *neutral* contact shadow (same rgba(16,24,
+   40,…) base every other shadow token in this file uses, not a bespoke
+   color) plus the paired inset highlight/shading, which is a *material*
+   cue (a slightly raised, slightly recessed ceramic surface) rather than
+   an *elevation* cue (a layer hovering above another). The ring on the
+   capsule itself (BottomNavIndicator.tsx) now carries proportionally more
+   of the "this is clearly the selected slot" job — border contrast doing
+   work a shadow used to. Zero horizontal offset throughout — never
+   side-lit. The 0%→100% delta stays a couple hundredths of alpha and a
+   fraction of a px of blur: felt on arrival, invisible in a screenshot
+   unless you zoom in. */
+@keyframes bn-capsule-settle {
+  0% {
+    box-shadow:
+      0 1px 1.5px rgba(16, 24, 40, 0.045),
+      inset 0 1px 0 rgba(255, 255, 255, 0.36),
+      inset 0 -1px 0 rgba(16, 24, 40, 0.055);
+  }
+  100% {
+    box-shadow:
+      0 1px 1px rgba(16, 24, 40, 0.03),
+      inset 0 1px 0 rgba(255, 255, 255, 0.32),
+      inset 0 -1px 0 rgba(16, 24, 40, 0.045);
+  }
+}
+.bn-capsule-settle {
+  animation: bn-capsule-settle var(--duration-large) var(--ease-glide) both;
+}
+/* No dedicated motion-reduce override needed — the app-wide catch-all above
+   (`@media (prefers-reduced-motion: reduce) { *, *::before, *::after { ... } }`)
+   already collapses every animation's duration to ~0, this one included. */

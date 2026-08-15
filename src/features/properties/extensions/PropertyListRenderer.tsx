@@ -236,7 +236,7 @@ export function PropertyListRenderer({
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-col">
+    <div className="properties-canvas flex flex-col">
 
       {/* Sticky toolbar */}
       <div className="sticky top-0 z-20 bg-background px-0 sm:px-2 pt-5 sm:pt-8 pb-3 sm:pb-5">

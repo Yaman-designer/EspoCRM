@@ -35,18 +35,20 @@ function StatChip({
   variant?: 'grid' | 'list'
 }) {
   if (variant === 'list') {
+    // Subtlest tier of the row's hierarchy — a light fill with no border
+    // (was border+bg/40, competing visually with price/reference above it).
     return (
       <div className={cn(
         'flex h-11 min-w-0 flex-1 items-center justify-center overflow-hidden',
-        'rounded-xl border border-border/50 bg-muted/40',
+        'rounded-xl bg-muted/28',
         // tight default; relax gap + padding when the center column has more room
         'gap-1 px-1.5 @[240px]:gap-1.5 @[240px]:px-2',
       )}>
-        <Icon className="size-4 shrink-0 text-muted-foreground/80" />
+        <Icon className="size-4 shrink-0 text-muted-foreground/60" />
         <span className="shrink-0 text-[13px] font-semibold leading-none tabular-nums text-foreground">{value}</span>
         {label && (
           // label is the first thing to disappear — hide below 320px center column
-          <span className="hidden shrink-0 text-[13px] font-medium leading-none text-muted-foreground/70 @[320px]:block">
+          <span className="hidden shrink-0 text-[13px] font-medium leading-none text-muted-foreground/55 @[320px]:block">
             {label}
           </span>
         )}
@@ -353,16 +355,33 @@ export const PropertyCard = memo(function PropertyCard({
 
 // ── PropertyListRow (list-view variant) ──────────────────────────────────────
 //
-// 3-zone layout (desktop) / 2-zone (mobile):
+// Horizontal row, same architecture at every breakpoint — mobile stays
+// compact/information-dense on purpose, it does not restack, move the image,
+// or grow taller than a couple of px:
+//   LEFT   — Image (w-36 mobile / w-52 desktop, unchanged size). Status badge
+//             bottom-left, visually lightweight. Favourite top-right.
+//   CENTER — Info column (flex-1). Price (strongest, shares its row with
+//             Edit/Delete on mobile only — see below) → REF (second,
+//             semibold) → Location (softest, 2-line clamp) → Type →
+//             Stats (subtlest tier).
+//   RIGHT  — Delete + Edit panel, sm:+ only.
 //
-//   LEFT   — Image (w-36 mobile / w-52 desktop). Status badge bottom-left.
-//             Favourite button top-right. Always flex-shrink: 0.
-//   CENTER — Info column (flex-1).
-//             Price → REF → Location → Type[12px] → Stats + CTA[16px].
-//             Mobile-only Edit+Delete inline in price row (sm:hidden).
-//   RIGHT  — Delete + Edit panel (desktop only, sm:w-20). Delete on top.
+// Mobile Edit/Delete placement: below sm the dedicated action column (RIGHT)
+// is hidden and the same two buttons render inline next to price instead,
+// smaller (28px). A fixed side column permanently reserves ~40px on *every*
+// row whether or not it's in use; moving the icons into the price row only
+// spends that width on the one row that needs it, and gives location/type/
+// stats the full content width underneath. Same dual-render idiom already
+// used for the stats row (mobile mini-cards vs. sm:+ StatChip row) — not a
+// new pattern, and sm:+ is untouched (identical markup/classes as before).
 //
-// Spacing grid: 8px base. Location→Type=12px, Type→Stats=16px.
+// Weight ladder (avoids multiple bold/black elements competing at once):
+// price = font-black, reference = font-semibold, stats = font-semibold,
+// location = font-medium. Only price is ever the heaviest weight in the row.
+//
+// PropertyGrid.tsx still caps this view to grid-cols-1 below sm: so a row
+// is never forced wider than its own column (see --card-list-min-w in
+// globals.css) — that's a container-sizing fix, not a card layout change.
 
 interface PropertyListRowProps {
   property:     RealEstateProperty
@@ -406,17 +425,17 @@ export const PropertyListRow = memo(function PropertyListRow({
       className={cn(
         'group flex min-w-0 cursor-pointer overflow-hidden rounded-[20px] bg-card',
         'border border-border/30',
-        'shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05),0_12px_32px_rgba(0,0,0,0.07)]',
+        'shadow-[0_1px_2px_rgba(16,24,40,0.04),0_2px_8px_rgba(16,24,40,0.05)]',
         'transition-[transform,border-color,box-shadow] duration-200 ease-out',
-        'hover:-translate-y-1 hover:border-border/55 hover:ring-1 hover:ring-primary/12',
-        'hover:shadow-[0_4px_16px_rgba(0,0,0,0.08),0_12px_32px_rgba(0,0,0,0.10),0_24px_48px_rgba(0,0,0,0.08)]',
+        'hover:-translate-y-0.5 hover:border-border/50',
+        'hover:shadow-[0_2px_4px_rgba(16,24,40,0.04),0_8px_20px_rgba(16,24,40,0.08)]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
       )}
     >
 
       {/* ── LEFT: Image ─────────────────────────────────────────────────────── */}
-      {/* w-36 (144px) mobile — never shrinks below 140px spec.                 */}
-      {/* w-52 (208px) desktop — substantial visual hero.                       */}
+      {/* w-36 (144px) mobile — unchanged, never shrinks below 140px spec.      */}
+      {/* w-52 (208px) desktop — unchanged, substantial visual hero.            */}
       <div className="relative w-36 shrink-0 self-stretch overflow-hidden rounded-l-[20px] sm:w-52">
         <Image
           src={imgSrc}
@@ -424,17 +443,26 @@ export const PropertyListRow = memo(function PropertyListRow({
           fill
           unoptimized
           draggable={false}
-          className="select-none object-cover brightness-[1.02] contrast-[1.06] saturate-[1.08] transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+          className="select-none object-cover object-center brightness-[1.02] contrast-[1.06] saturate-[1.08] transition-transform duration-300 ease-out group-hover:scale-[1.03]"
           sizes="(max-width: 639px) 144px, 208px"
           loading="lazy"
           onError={() => setImgSrc(FALLBACK_IMAGE)}
         />
-        <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-black/55" />
-        <div className="pointer-events-none absolute inset-0 [background:radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.12)_100%)]" />
+        {/* Single soft bottom-anchored gradient — status badge already carries
+            its own tinted background, so this is purely gentle depth, not a
+            legibility requirement. Replaces the old top+bottom+radial stack. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-black/40 via-black/8 to-transparent" />
 
-        {/* Status — bottom-left */}
+        {/* Status — bottom-left. Visible but visually lightweight on mobile
+            (smaller, semibold instead of bold) so it doesn't out-compete the
+            price/reference below it; sm:+ sizing is untouched. */}
         <div className="absolute bottom-3 left-3 z-10">
-          <PropertyStatusBadge status={status} variant="overlay" compact />
+          <PropertyStatusBadge
+            status={status}
+            variant="overlay"
+            compact
+            className="h-6 gap-1 px-2.5 text-[10px] font-semibold"
+          />
         </div>
 
         {/* Favourite — top-right. Button System Variant 3 (Icon Action),
@@ -459,23 +487,50 @@ export const PropertyListRow = memo(function PropertyListRow({
       {/* Two-column: content (flex-1) | actions (shrink-0).                    */}
       {/* Separating them removes the button-height inflation that was forcing   */}
       {/* ~74px of dead space between the price text and reference line.         */}
-      <div className="@container flex min-w-0 flex-1 items-start gap-2 px-3 py-2.5 sm:px-4 sm:py-3">
+      <div className="@container flex min-w-0 flex-1 items-start gap-2 px-3 py-2.5 sm:px-5 sm:py-3.5">
 
         {/* Content column — pure vertical flow, height unaffected by buttons */}
         <div className="flex min-w-0 flex-1 flex-col">
 
-          {/* 1 — Price */}
-          {price != null ? (
-            <p className="min-w-0 truncate text-[18px] font-extrabold leading-none tracking-tight text-foreground tabular-nums sm:text-[24px]">
-              {fmtPrice(price)}
-            </p>
-          ) : (
-            <p className="text-[11px] italic text-muted-foreground/50">{t('card.priceOnRequest')}</p>
-          )}
+          {/* 1 — Price, with Edit/Delete inline on mobile only (<sm). Below sm
+              they move back to the dedicated side column (unchanged, see the
+              end of this file) — the mobile-only pair here exists so every
+              row underneath (location/type/stats) gets the ~40px that column
+              would otherwise permanently reserve, on every row, whether or
+              not the icons are actually being used. Same dual-render idiom
+              already used below for the stats row. */}
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            {price != null ? (
+              <p className="min-w-0 flex-1 truncate text-[18px] font-black leading-none tracking-tight text-foreground tabular-nums sm:text-[24px]">
+                {fmtPrice(price)}
+              </p>
+            ) : (
+              <p className="flex-1 text-[11px] italic text-muted-foreground/50">{t('card.priceOnRequest')}</p>
+            )}
+            <div className="flex shrink-0 items-center gap-1 sm:hidden" onClick={e => e.stopPropagation()}>
+              <IconActionButton
+                icon={Pencil}
+                label={t('card.editProperty')}
+                onClick={() => onEdit(property)}
+                size="sm"
+                className="h-7 w-7"
+              />
+              <IconActionButton
+                icon={Trash2}
+                label={t('card.deleteProperty')}
+                onClick={() => onDelete(property)}
+                size="sm"
+                tone="destructive"
+                className="h-7 w-7"
+              />
+            </div>
+          </div>
 
-          {/* 2 — Reference + quality signals — 4px below price */}
-          <div className="mt-1 flex min-w-0 items-center gap-2">
-            <p className="min-w-0 truncate text-[12px] font-bold tracking-wide text-muted-foreground">
+          {/* 2 — Reference + quality signals. Second in the hierarchy — kept
+              distinctly darker than location, but semibold (not bold) so it
+              no longer competes at the same weight as price above it. */}
+          <div className="mt-1.5 flex min-w-0 items-center gap-2">
+            <p className="min-w-0 truncate text-[12px] font-semibold tracking-wide text-foreground/85">
               {heading}
             </p>
             {hasIndicators && (
@@ -488,30 +543,35 @@ export const PropertyListRow = memo(function PropertyListRow({
             )}
           </div>
 
-          {/* 3 — Location — 6px below reference */}
+          {/* 3 — Location. Softest tier: lighter weight/opacity than the
+              reference line. Two-line clamp instead of a hard one-line
+              ellipsis — with the actions column gone from this row, most
+              addresses now fit on one line anyway; the rare long one wraps
+              instead of disappearing after ~15 characters. */}
           {displayLocation && (
-            <div className="mt-1.5 flex min-w-0 items-center gap-1.5">
-              <MapPin className="size-3 shrink-0 text-muted-foreground/50" />
-              <span className="min-w-0 truncate text-[12px] font-medium text-muted-foreground/75">
+            <div className="mt-2 flex min-w-0 items-start gap-1.5">
+              <MapPin className="mt-0.5 size-3 shrink-0 text-muted-foreground/40" />
+              <span className="line-clamp-2 min-w-0 text-[12px] font-medium leading-snug text-muted-foreground/60">
                 {displayLocation}
               </span>
             </div>
           )}
 
-          {/* 4 — Property type — 8px below location */}
+          {/* 4 — Property type */}
           {type && (
-            <div className="mt-2">
+            <div className="mt-2.5">
               <span className="inline-flex cursor-default select-none items-center rounded-full border border-accent/60 bg-accent px-3 py-1 text-[11px] font-medium tracking-wide text-accent-foreground">
                 {getPropertyTypeLabel(type, t, { compact: true })}
               </span>
             </div>
           )}
 
-          {/* 5 — Stats row */}
-          {/* Mobile: vertical icon-above-value mini cards — horizontal chips can't
-              fit in the ~107px content column (31.7px per chip → 19.7px inner after
-              px-1.5 padding → clips even the size-4 icon alone). */}
-          <div className="mt-2 flex gap-1 sm:hidden">
+          {/* 5 — Stats row. Subtlest tier — semibold (not bold) so it doesn't
+              compete with price/reference, legible value size (was 8.5px,
+              unreadable at a glance), lighter fill so it recedes visually. */}
+          {/* <sm: vertical icon-above-value mini cards — the ~144px image rail
+              doesn't leave room for horizontal icon+value+label chips here. */}
+          <div className="mt-3 flex gap-2 sm:hidden">
             {([
               { S: BedDouble,  v: bedroomCount  ?? '—'                               },
               { S: Bath,       v: bathroomCount ?? '—'                               },
@@ -519,16 +579,16 @@ export const PropertyListRow = memo(function PropertyListRow({
             ] as { S: ComponentType<{ className?: string }>; v: React.ReactNode }[]).map(({ S: Stat, v }, i) => (
               <div
                 key={i}
-                className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl bg-muted/35 py-2"
+                className="flex flex-1 flex-col items-center justify-center gap-1.5 rounded-xl bg-muted/16 py-2"
               >
-                <Stat className="size-3 shrink-0 text-muted-foreground/60" />
-                <span className="text-[8.5px] font-bold tabular-nums leading-none text-foreground">
+                <Stat className="size-3.5 shrink-0 text-muted-foreground/45" />
+                <span className="text-[11px] font-semibold tabular-nums leading-none text-foreground">
                   {v}
                 </span>
               </div>
             ))}
           </div>
-          {/* Desktop: horizontal stat chips with icon + value + label */}
+          {/* sm+: horizontal stat chips with icon + value + label, equal gap */}
           <div className="mt-2.5 hidden items-center gap-1.5 @[260px]:gap-2 sm:flex">
             <StatChip Icon={BedDouble} value={bedroomCount  ?? '—'}                           label={t('card.beds')}  variant="list" />
             <StatChip Icon={Bath}      value={bathroomCount ?? '—'}                           label={t('card.baths')} variant="list" />
@@ -537,13 +597,14 @@ export const PropertyListRow = memo(function PropertyListRow({
 
         </div>
 
-        {/* Action buttons — aligned to start, never inflate content height.
-            Button System Variant 3 (Icon Action), 'card' surface — fixed at
-            32px ('sm' size, h-8 w-8 override) to match Favorite above and
-            the grid card's own desktop-tier icon actions, resolving what was
-            previously a 32px-Favorite-vs-36px-Edit/Delete mismatch inside
-            this same row. */}
-        <div className="flex shrink-0 flex-col gap-0.5" onClick={e => e.stopPropagation()}>
+        {/* Action buttons — sm:+ only. Below sm, Edit/Delete render inline
+            next to price instead (above) so location/type/stats reclaim the
+            width this column would otherwise reserve on every row. Aligned
+            to start, never inflate content height. Button System Variant 3
+            (Icon Action), 'card' surface — fixed at 32px ('sm' size, h-8 w-8
+            override) to match Favorite above and the grid card's own
+            desktop-tier icon actions. */}
+        <div className="hidden shrink-0 flex-col gap-0.5 sm:flex" onClick={e => e.stopPropagation()}>
           <IconActionButton
             icon={Trash2}
             label={t('card.deleteProperty')}

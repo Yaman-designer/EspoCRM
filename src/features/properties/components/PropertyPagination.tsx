@@ -51,7 +51,7 @@ export function PropertyPagination({
   const pageRange = getPageRange(page, totalPages)
 
   return (
-    <div className="border-t border-border/20 pt-4">
+    <div data-slot="pagination-footer" className="border-t border-border/20 pt-4">
 
       {/* Mobile: page nav centered, then meta row below */}
       {/* Desktop: three columns — [summary] [page nav] [page size] */}

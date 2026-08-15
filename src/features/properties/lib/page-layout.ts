@@ -38,3 +38,18 @@
 // identical strings maintained by hand in two files before this pass; the
 // next edit to either one is exactly how they'd have drifted apart.
 export const PAGE_PADDING_X = 'min-[1280px]:px-2 min-[1440px]:px-4 min-[1920px]:px-6'
+
+// ── Sticky-nav breathing room (2026-08-08) ──────────────────────────────
+// The vertical gap between PropertySectionNav and the content that follows
+// it (applied as this constant's own padding-top on that content, not a
+// margin on the nav) — Mobile 16px / Tablet 24px / Desktop 32px, each the
+// upper end of the brief's given range for a deliberately generous,
+// "premium" gap rather than the minimum.
+//
+// Structural, not scroll-driven, by construction: `position: sticky` never
+// removes an element from normal flow (unlike `fixed`/`absolute`), even
+// while pinned — so this padding-top on the next box renders identically
+// whether the nav is at rest or actively stuck. There is no separate
+// "stuck" spacing value to swap in on scroll, and so no layout shift to
+// cause: the gap is simply always there.
+export const SECTION_NAV_GAP = 'pt-4 md:pt-6 lg:pt-8'

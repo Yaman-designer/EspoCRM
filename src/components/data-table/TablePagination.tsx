@@ -40,6 +40,7 @@ export function TablePagination({
 
   return (
     <div
+      data-slot="pagination-footer"
       className={cn(
         'flex items-center justify-between gap-4 border-t border-border/50 bg-card px-5 py-3',
         className,
