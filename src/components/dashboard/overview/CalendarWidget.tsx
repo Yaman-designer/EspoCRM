@@ -21,17 +21,42 @@ function buildGrid(year: number, month: number): (number | null)[] {
   return cells
 }
 
-export function CalendarWidget() {
-  const { year, month, today, activeDays } = CALENDAR
+interface CalendarWidgetProps {
+  /** Defaults to the built-in mock month — pass explicit values to drive this from a real view model. */
+  year?: number
+  month?: number
+  today?: number
+  activeDays?: number[]
+  /** Day currently highlighted as "selected" (distinct from `today`). */
+  selectedDay?: number | null
+  onSelectDay?: (day: number) => void
+  onPrevMonth?: () => void
+  onNextMonth?: () => void
+  /** Strip the card chrome (border/shadow/padding) when nesting inside another panel. */
+  className?: string
+}
+
+export function CalendarWidget({
+  year = CALENDAR.year,
+  month = CALENDAR.month,
+  today = CALENDAR.today,
+  activeDays = CALENDAR.activeDays,
+  selectedDay = null,
+  onSelectDay,
+  onPrevMonth,
+  onNextMonth,
+  className,
+}: CalendarWidgetProps = {}) {
   const cells = buildGrid(year, month)
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-design-sm">
+    <div className={cn('rounded-2xl border border-border bg-card p-5 shadow-design-sm', className)}>
 
       {/* Navigation header */}
       <div className="mb-4 flex items-center justify-between">
         <button
           aria-label="Previous month"
+          onClick={onPrevMonth}
           className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -41,6 +66,7 @@ export function CalendarWidget() {
         </p>
         <button
           aria-label="Next month"
+          onClick={onNextMonth}
           className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted"
         >
           <ChevronRight className="h-4 w-4" />
@@ -61,18 +87,24 @@ export function CalendarWidget() {
         {cells.map((day, i) => {
           if (day === null) return <div key={`e-${i}`} className="h-8" />
           const isToday = day === today
+          const isSelected = day === selectedDay && !isToday
           const isActive = activeDays.includes(day)
           return (
             <button
               key={day}
+              onClick={() => onSelectDay?.(day)}
               className={cn(
-                'mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors',
+                'relative mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors',
                 isToday && 'bg-primary text-primary-foreground shadow-design-sm',
-                !isToday && isActive && 'bg-primary/10 font-semibold text-primary',
-                !isToday && !isActive && 'text-foreground hover:bg-muted',
+                isSelected && 'bg-primary/15 font-semibold text-primary ring-1 ring-primary/40',
+                !isToday && !isSelected && isActive && 'bg-primary/10 font-semibold text-primary',
+                !isToday && !isSelected && !isActive && 'text-foreground hover:bg-muted',
               )}
             >
               {day}
+              {isActive && !isToday && (
+                <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-primary" />
+              )}
             </button>
           )
         })}

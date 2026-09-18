@@ -61,7 +61,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             underneath the bar. Keep these two in sync if BottomNav's own
             dimensions change. Desktop (md+) has no bottom nav, so no
             reservation is needed. */}
-        <main className="flex-1 p-4 sm:p-5 md:p-6 max-md:pb-[calc(96px+env(safe-area-inset-bottom))]">{children}</main>
+        <main className="flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6 max-md:pb-[calc(96px+env(safe-area-inset-bottom))]">{children}</main>
       </div>
 
       <BackToTopButton />

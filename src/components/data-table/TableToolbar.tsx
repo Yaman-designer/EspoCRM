@@ -54,8 +54,8 @@ export function TableToolbar({
   const { t } = useTranslation('common')
   const resolvedAddLabel = addLabel ?? t('table.addNew')
   return (
-    <div className={cn('border-b border-border/50 bg-card px-5 py-4', className)}>
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+    <div className={cn('border-b border-border/50 bg-card px-3 py-3 sm:px-4 sm:py-3.5 md:px-5 md:py-4', className)}>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5">
         {/* Left: title (only rendered when provided) */}
         {title && (
           <div className="min-w-0">
@@ -78,22 +78,34 @@ export function TableToolbar({
             </span>
           )}
 
+          {/*
+           * ml-auto pins this cluster to the right on desktop. Explicit
+           * `order` values below prioritize Search then the primary Add
+           * action on mobile, letting secondary controls (columns, view
+           * toggle, refresh, extras) wrap onto their own compact row —
+           * `sm:order-0` restores original DOM order (unchanged desktop
+           * layout) at the sm breakpoint and up.
+           */}
           <div className="flex flex-wrap items-center gap-2 ml-auto">
             {searchable && (
-              <div className="relative">
+              <div className="relative order-1 w-full sm:order-0 sm:w-auto">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/60" />
                 <Input
                   value={search}
                   onChange={(e) => onSearchChange(e.target.value)}
                   placeholder={searchPlaceholder}
-                  className="h-8 w-48 pl-8 text-xs placeholder:text-muted-foreground/50 focus-visible:ring-primary/30"
+                  className="h-8 w-full pl-8 text-xs placeholder:text-muted-foreground/50 focus-visible:ring-primary/30 sm:w-48"
                 />
               </div>
             )}
 
-            {columnVisibility}
+            {columnVisibility && (
+              <span className="order-3 inline-flex sm:order-0">{columnVisibility}</span>
+            )}
 
-            {viewToggle}
+            {viewToggle && (
+              <span className="order-4 inline-flex sm:order-0">{viewToggle}</span>
+            )}
 
             {onRefetch && (
               <Button
@@ -102,16 +114,18 @@ export function TableToolbar({
                 onClick={onRefetch}
                 disabled={isRefetching}
                 aria-label={t('table.refresh')}
-                className="h-8 w-8 border-border/60"
+                className="order-5 h-8 w-8 border-border/60 sm:order-0"
               >
                 <RefreshCw className={cn('h-3.5 w-3.5', isRefetching && 'animate-spin')} />
               </Button>
             )}
 
-            {extraActions}
+            {extraActions && (
+              <span className="order-6 inline-flex sm:order-0">{extraActions}</span>
+            )}
 
             {addable && onAdd && (
-              <Button size="sm" onClick={onAdd} className="h-8 gap-1.5 text-xs font-medium">
+              <Button size="sm" onClick={onAdd} className="order-2 h-8 gap-1.5 text-xs font-medium sm:order-0">
                 <Plus className="h-4 w-4" />
                 {resolvedAddLabel}
               </Button>

@@ -21,7 +21,7 @@ export function QuickFilterBar({
   return (
     <div
       className={cn(
-        'flex items-center gap-1.5 overflow-x-auto border-b border-border/40 bg-card/80 px-5 py-2',
+        'flex items-center gap-1.5 overflow-x-auto border-b border-border/40 bg-card/80 px-3 py-2 sm:px-4 md:px-5',
         '[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
       )}
     >

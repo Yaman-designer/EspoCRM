@@ -265,7 +265,7 @@ export function CRMResourcePage<T extends { id: string }>({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className={hasListRenderer ? 'flex flex-col' : 'flex flex-col gap-5 p-6'}>
+    <div className={hasListRenderer ? 'flex flex-col' : 'flex flex-col gap-3 sm:gap-4 lg:gap-5'}>
 
       {/* PageHeader — omitted when listRenderer supplies its own toolbar/title */}
       {!hasListRenderer && (
@@ -278,7 +278,7 @@ export function CRMResourcePage<T extends { id: string }>({
 
       {/* Truncation warning — shown when EspoCRM has more records than the fetch limit */}
       {isTruncated && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/8 px-4 py-3 text-sm">
+        <div className="flex items-start gap-2.5 sm:gap-3 rounded-lg border border-amber-500/20 bg-amber-500/8 px-3 py-2.5 sm:px-4 sm:py-3 text-sm">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
           <p className="text-amber-700">
             Showing {data!.list.length.toLocaleString()} of {data!.total.toLocaleString()} records —

@@ -220,12 +220,28 @@ export function PropertySectionNav({ items }: PropertySectionNavProps) {
   return (
     <>
     {/* Sentinel for the "stuck" shadow — see the IntersectionObserver effect
-        above. Zero-height, purely a scroll-position marker. */}
-    <div ref={sentinelRef} aria-hidden="true" className="h-px" />
+        above. Zero-height, purely a scroll-position marker. Hidden together
+        with the nav below (md:hidden) — kept as a sibling of the shared
+        nav+grid wrapper in PropertyDetailView.tsx rather than wrapped in a
+        new div there, which would give the nav a too-short containing block
+        again (see that file's own sticky-nav-fix note) and, once hidden via
+        CSS only, still leave a live IntersectionObserver target with no
+        visual purpose above `md`. */}
+    <div ref={sentinelRef} aria-hidden="true" className="h-px md:hidden" />
     <nav
       ref={containerRef}
       aria-label={t('nav.sectionNavigation')}
       className={cn(
+        // Mobile-only pass (2026-08-08). Section nav is a mobile affordance
+        // — tablet/desktop show every section inline on one continuous
+        // scroll, so a same-page jump menu is redundant there (confirmed:
+        // this was an explicit, deliberate product decision, not a gap).
+        // `md:hidden` (this app's own established mobile-only breakpoint —
+        // BottomNav.tsx uses the identical convention) removes the nav from
+        // rendering entirely at `md`+, so it also takes zero layout space:
+        // content below flows up into it with no gap, no JS viewport
+        // detection involved.
+        'md:hidden',
         'relative z-30 -mx-4 flex items-center gap-0.5 overflow-hidden px-4 py-2.5',
         'sm:-mx-5 sm:px-5 md:-mx-6 md:px-6 lg:-mx-7 lg:px-7 xl:-mx-8 xl:px-8',
         // sticky at every breakpoint, not just lg+ — 56px matches the real

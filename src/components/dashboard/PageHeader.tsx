@@ -33,7 +33,7 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn('flex items-center justify-between gap-4', className)}>
+    <div className={cn('flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4', className)}>
       <div className="min-w-0">
         <h1 className="text-[22px] font-bold tracking-tight text-foreground">{title}</h1>
         {subtitle && (
